@@ -15,12 +15,12 @@ get_hash() {
 read -r -d '' COMMON_CSS << 'CSS_END'
 :root {
   --paper: #fafaf7; --surface: #ffffff; --ink: #16171f; --ink-soft: #6b6d7c;
-  --grid: rgba(20,22,40,0.05); --line: #e8e6df;
+  --grid: rgba(20,22,40,0.09); --line: #e8e6df;
   --shadow: 0 2px 12px rgba(20,22,40,0.05); --shadow-lift: 0 18px 48px rgba(20,22,40,0.14);
 }
 [data-theme="dark"] {
   --paper: #0d0e14; --surface: #161824; --ink: #ECECF2; --ink-soft: #8b8da3;
-  --grid: rgba(180,190,255,0.045); --line: #262838;
+  --grid: rgba(180,190,255,0.085); --line: #262838;
   --shadow: 0 2px 12px rgba(0,0,0,0.3); --shadow-lift: 0 18px 48px rgba(0,0,0,0.55);
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -64,9 +64,9 @@ for subject_dir in "$PDFS_DIR"/*/; do
 
   # 科目別カラー＆シンボル
   if [ "$subject" = "物理" ]; then
-    accent_l="#2d5fd6"; accent_d="#6f9bff"; soft_l="rgba(45,95,214,0.08)"; soft_d="rgba(111,155,255,0.12)"; symbol="Ph"
+    accent_l="#2d5fd6"; accent_d="#6f9bff"; soft_l="rgba(45,95,214,0.08)"; soft_d="rgba(111,155,255,0.12)"; symbol="Phys"
   else
-    accent_l="#d6452f"; accent_d="#ff7a64"; soft_l="rgba(214,69,47,0.08)"; soft_d="rgba(255,122,100,0.12)"; symbol="Ch"
+    accent_l="#d6452f"; accent_d="#ff7a64"; soft_l="rgba(214,69,47,0.08)"; soft_d="rgba(255,122,100,0.12)"; symbol="Chem"
   fi
 
   ACCENT_CSS=":root{--accent:${accent_l};--accent-soft:${soft_l};}[data-theme=\"dark\"]{--accent:${accent_d};--accent-soft:${soft_d};}"

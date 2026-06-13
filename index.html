@@ -13,7 +13,7 @@
   <style>
     :root {
       --paper: #fafaf7; --surface: #ffffff; --ink: #16171f; --ink-soft: #6b6d7c;
-      --grid: rgba(20,22,40,0.05); --line: #e8e6df;
+      --grid: rgba(20,22,40,0.09); --line: #e8e6df;
       --phys: #2d5fd6; --phys-soft: rgba(45,95,214,0.08);
       --chem: #d6452f; --chem-soft: rgba(214,69,47,0.08);
       --shadow: 0 2px 12px rgba(20,22,40,0.05);
@@ -21,7 +21,7 @@
     }
     [data-theme="dark"] {
       --paper: #0d0e14; --surface: #161824; --ink: #ECECF2; --ink-soft: #8b8da3;
-      --grid: rgba(180,190,255,0.045); --line: #262838;
+      --grid: rgba(180,190,255,0.085); --line: #262838;
       --phys: #6f9bff; --phys-soft: rgba(111,155,255,0.12);
       --chem: #ff7a64; --chem-soft: rgba(255,122,100,0.12);
       --shadow: 0 2px 12px rgba(0,0,0,0.3);
@@ -72,7 +72,7 @@
     .tile-num { font-family: "JetBrains Mono", monospace; font-size: 13px; font-weight: 600; color: var(--tile-accent); }
     .tile-cat { font-family: "JetBrains Mono", monospace; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--ink-soft); text-align: right; }
     .tile-symbol {
-      font-family: "Space Grotesk", sans-serif; font-size: 92px; font-weight: 700;
+      font-family: "Space Grotesk", sans-serif; font-size: 52px; font-weight: 700;
       line-height: 0.9; color: var(--tile-accent); position: relative; z-index: 1; letter-spacing: -0.04em;
     }
     .tile-foot { position: relative; z-index: 1; }
@@ -98,7 +98,7 @@
       header { padding: 22px 24px; }
       .container { padding: 40px 24px 60px; }
       .tile { aspect-ratio: auto; min-height: 220px; }
-      .tile-symbol { font-size: 72px; }
+      .tile-symbol { font-size: 44px; }
     }
     @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
   </style>
@@ -119,7 +119,7 @@
 
   <div class="pw-overlay phys-pw" id="pw-overlay-物理">
     <div class="pw-box">
-      <div class="pw-symbol">Ph</div>
+      <div class="pw-symbol">Phys</div>
       <h3>物理 — パスワード</h3>
       <div class="pw-error" id="pw-error-物理">パスワードが違います</div>
       <form id="pw-form-物理" method="post" action="javascript:void(0)">
@@ -133,7 +133,7 @@
 
   <div class="pw-overlay chem-pw" id="pw-overlay-化学">
     <div class="pw-box">
-      <div class="pw-symbol">Ch</div>
+      <div class="pw-symbol">Chem</div>
       <h3>化学 — パスワード</h3>
       <div class="pw-error" id="pw-error-化学">パスワードが違います</div>
       <form id="pw-form-化学" method="post" action="javascript:void(0)">
@@ -161,7 +161,7 @@
       '物理': '47d662997d0dde2569663e46e3346b6f71f82a297ae6507fcb525ac5112a39c7',
       '化学': '94680fd24bf04a3e411f3772c611057d39a3f67999858aa768fb927225542300'
     };
-    var SYMBOLS = { '物理': 'Ph', '化学': 'Ch' };
+    var SYMBOLS = { '物理': 'Phys', '化学': 'Chem' };
     var EN = { '物理': 'Physics', '化学': 'Chemistry' };
     async function sha256(str) {
       var buf = new TextEncoder().encode(str);
