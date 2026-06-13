@@ -4,49 +4,123 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#fafaf7" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0d0e14" media="(prefers-color-scheme: dark)">
   <title>PDF ライブラリ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --paper: #fafaf7; --surface: #ffffff; --ink: #16171f; --ink-soft: #6b6d7c;
+      --grid: rgba(20,22,40,0.05); --line: #e8e6df;
+      --phys: #2d5fd6; --phys-soft: rgba(45,95,214,0.08);
+      --chem: #d6452f; --chem-soft: rgba(214,69,47,0.08);
+      --shadow: 0 2px 12px rgba(20,22,40,0.05);
+      --shadow-lift: 0 18px 48px rgba(20,22,40,0.14);
+    }
+    [data-theme="dark"] {
+      --paper: #0d0e14; --surface: #161824; --ink: #ECECF2; --ink-soft: #8b8da3;
+      --grid: rgba(180,190,255,0.045); --line: #262838;
+      --phys: #6f9bff; --phys-soft: rgba(111,155,255,0.12);
+      --chem: #ff7a64; --chem-soft: rgba(255,122,100,0.12);
+      --shadow: 0 2px 12px rgba(0,0,0,0.3);
+      --shadow-lift: 0 18px 48px rgba(0,0,0,0.55);
+    }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif; background: #f5f5f7; color: #1d1d1f; min-height: 100vh; }
-    header { background: #fff; border-bottom: 1px solid #d2d2d7; padding: 20px 40px; position: sticky; top: 0; z-index: 100; }
-    header h1 { font-size: 24px; font-weight: 600; }
-    header p { font-size: 13px; color: #86868b; margin-top: 4px; }
-    .container { max-width: 960px; margin: 48px auto; padding: 0 20px; }
-    .folder-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; }
-    .folder-card { background: #fff; border-radius: 16px; padding: 32px 24px; text-align: center; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.06); transition: box-shadow 0.2s, transform 0.2s; border: none; width: 100%; font-family: inherit; color: #1d1d1f; }
-    .folder-card:hover { box-shadow: 0 6px 20px rgba(0,0,0,0.1); transform: translateY(-2px); }
-    .folder-card-icon { font-size: 48px; margin-bottom: 12px; }
-    .folder-card-name { font-size: 20px; font-weight: 600; }
-    .folder-card-count { font-size: 13px; color: #86868b; margin-top: 6px; }
-    .pw-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 300; justify-content: center; align-items: center; }
+    body {
+      font-family: "Zen Kaku Gothic New", -apple-system, sans-serif;
+      background: var(--paper); color: var(--ink); min-height: 100vh;
+      background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+      background-size: 26px 26px;
+      transition: background-color 0.4s, color 0.4s;
+    }
+    header {
+      padding: 28px 40px; display: flex; align-items: flex-start; justify-content: space-between;
+      border-bottom: 1px solid var(--line); background: color-mix(in srgb, var(--paper) 80%, transparent);
+      backdrop-filter: blur(12px); position: sticky; top: 0; z-index: 100;
+    }
+    .brand .eyebrow {
+      font-family: "Space Grotesk", monospace; font-size: 11px; font-weight: 600;
+      letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 6px;
+    }
+    .brand h1 { font-family: "Space Grotesk", "Zen Kaku Gothic New", sans-serif; font-size: 27px; font-weight: 700; letter-spacing: -0.02em; line-height: 1; }
+    .brand p { font-family: "JetBrains Mono", monospace; font-size: 11px; color: var(--ink-soft); margin-top: 8px; }
+    .theme-toggle {
+      width: 46px; height: 46px; border-radius: 14px; border: 1px solid var(--line);
+      background: var(--surface); cursor: pointer; font-size: 19px; display: flex;
+      align-items: center; justify-content: center; transition: transform 0.2s, border-color 0.2s; flex-shrink: 0;
+    }
+    .theme-toggle:hover { transform: rotate(-12deg) scale(1.06); border-color: var(--ink-soft); }
+    .container { max-width: 880px; margin: 0 auto; padding: 64px 32px 80px; }
+    .lede { font-size: 14px; color: var(--ink-soft); margin-bottom: 40px; max-width: 440px; line-height: 1.7; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 28px; }
+    .tile {
+      position: relative; background: var(--surface); border: 1px solid var(--line);
+      border-radius: 22px; padding: 30px; cursor: pointer; width: 100%; text-align: left;
+      font-family: inherit; color: var(--ink); box-shadow: var(--shadow);
+      transition: transform 0.3s cubic-bezier(0.2,0.8,0.2,1), box-shadow 0.3s, border-color 0.3s;
+      overflow: hidden; aspect-ratio: 1 / 1; display: flex; flex-direction: column; justify-content: space-between;
+    }
+    .tile::after {
+      content: ""; position: absolute; inset: 0; background: var(--tile-soft);
+      opacity: 0; transition: opacity 0.3s; pointer-events: none;
+    }
+    .tile:hover { transform: translateY(-6px); box-shadow: var(--shadow-lift); border-color: var(--tile-accent); }
+    .tile:hover::after { opacity: 1; }
+    .tile-top { display: flex; align-items: flex-start; justify-content: space-between; position: relative; z-index: 1; }
+    .tile-num { font-family: "JetBrains Mono", monospace; font-size: 13px; font-weight: 600; color: var(--tile-accent); }
+    .tile-cat { font-family: "JetBrains Mono", monospace; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--ink-soft); text-align: right; }
+    .tile-symbol {
+      font-family: "Space Grotesk", sans-serif; font-size: 92px; font-weight: 700;
+      line-height: 0.9; color: var(--tile-accent); position: relative; z-index: 1; letter-spacing: -0.04em;
+    }
+    .tile-foot { position: relative; z-index: 1; }
+    .tile-name { font-size: 24px; font-weight: 900; letter-spacing: 0.02em; }
+    .tile-en { font-family: "Space Grotesk", monospace; font-size: 12px; color: var(--ink-soft); margin-top: 2px; letter-spacing: 0.05em; }
+    .phys { --tile-accent: var(--phys); --tile-soft: var(--phys-soft); }
+    .chem { --tile-accent: var(--chem); --tile-soft: var(--chem-soft); }
+    .empty { padding: 80px; text-align: center; color: var(--ink-soft); grid-column: 1/-1; }
+    .pw-overlay { display: none; position: fixed; inset: 0; background: rgba(8,9,14,0.55); z-index: 300; justify-content: center; align-items: center; backdrop-filter: blur(10px); }
     .pw-overlay.active { display: flex; }
-    .pw-box { background: #fff; border-radius: 16px; padding: 32px; max-width: 360px; width: 90%; text-align: center; }
-    .pw-box h3 { font-size: 18px; font-weight: 600; margin-bottom: 16px; }
-    .pw-box input[type="text"],
-    .pw-box input[type="password"] { width: 100%; padding: 12px 16px; border-radius: 10px; border: 1px solid #d2d2d7; font-size: 16px; outline: none; margin-bottom: 12px; font-family: inherit; }
-    .pw-box input:focus { border-color: #007aff; }
-    .pw-submit { width: 100%; padding: 12px; border-radius: 10px; border: none; background: #007aff; color: #fff; font-size: 16px; font-weight: 600; cursor: pointer; font-family: inherit; }
-    .pw-submit:hover { background: #0066d6; }
-    .pw-error { color: #ff3b30; font-size: 13px; margin-bottom: 8px; display: none; }
-    .pw-cancel { width: 100%; padding: 10px; border-radius: 10px; border: none; background: transparent; color: #86868b; margin-top: 8px; font-size: 14px; cursor: pointer; font-family: inherit; }
-    /* Hidden iframe for password save trigger */
-    .pw-save-frame { position: absolute; width: 0; height: 0; border: none; visibility: hidden; }
+    .pw-box { background: var(--surface); border: 1px solid var(--line); border-radius: 24px; padding: 38px 34px; max-width: 380px; width: 90%; box-shadow: var(--shadow-lift); }
+    .pw-symbol { font-family: "Space Grotesk", sans-serif; font-size: 44px; font-weight: 700; line-height: 1; color: var(--pw-accent); margin-bottom: 12px; }
+    .pw-box h3 { font-size: 18px; font-weight: 700; margin-bottom: 22px; }
+    .pw-box input[type="text"], .pw-box input[type="password"] { width: 100%; padding: 15px 18px; border-radius: 13px; border: 1px solid var(--line); font-size: 16px; outline: none; margin-bottom: 14px; font-family: inherit; background: var(--paper); color: var(--ink); transition: border-color 0.2s; }
+    .pw-box input:focus { border-color: var(--pw-accent); }
+    .pw-submit { width: 100%; padding: 15px; border-radius: 13px; border: none; background: var(--pw-accent); color: #fff; font-size: 16px; font-weight: 700; cursor: pointer; font-family: inherit; transition: opacity 0.2s; }
+    .pw-submit:hover { opacity: 0.9; }
+    .pw-error { color: #e0392b; font-size: 13px; margin-bottom: 10px; display: none; }
+    .pw-cancel { width: 100%; padding: 12px; border: none; background: transparent; color: var(--ink-soft); margin-top: 6px; font-size: 14px; cursor: pointer; font-family: inherit; }
+    .phys-pw { --pw-accent: var(--phys); }
+    .chem-pw { --pw-accent: var(--chem); }
+    @media (max-width: 600px) {
+      header { padding: 22px 24px; }
+      .container { padding: 40px 24px 60px; }
+      .tile { aspect-ratio: auto; min-height: 220px; }
+      .tile-symbol { font-size: 72px; }
+    }
+    @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
   </style>
 </head>
 <body>
   <header>
-    <h1>PDF ライブラリ</h1>
-    <p id="update-time"></p>
+    <div class="brand">
+      <div class="eyebrow">Lecture Archive</div>
+      <h1>PDF ライブラリ</h1>
+      <p id="update-time"></p>
+    </div>
+    <button class="theme-toggle" id="theme-toggle" title="テーマ切り替え">🌙</button>
   </header>
   <div class="container">
-    <div class="folder-grid" id="folders"></div>
+    <p class="lede">授業プリント・確認テストのアーカイブ。科目を選んでパスワードを入力してください。</p>
+    <div class="grid" id="folders"></div>
   </div>
 
-  <!-- 物理用ログインフォーム（Chrome用に独立） -->
-  <div class="pw-overlay" id="pw-overlay-物理">
+  <div class="pw-overlay phys-pw" id="pw-overlay-物理">
     <div class="pw-box">
-      <h3>物理 のパスワード</h3>
+      <div class="pw-symbol">Ph</div>
+      <h3>物理 — パスワード</h3>
       <div class="pw-error" id="pw-error-物理">パスワードが違います</div>
       <form id="pw-form-物理" method="post" action="javascript:void(0)">
         <input type="text" name="username" value="pdf-物理" autocomplete="username" style="position:absolute;opacity:0;height:0;overflow:hidden;pointer-events:none" tabindex="-1">
@@ -57,10 +131,10 @@
     </div>
   </div>
 
-  <!-- 化学用ログインフォーム（Chrome用に独立） -->
-  <div class="pw-overlay" id="pw-overlay-化学">
+  <div class="pw-overlay chem-pw" id="pw-overlay-化学">
     <div class="pw-box">
-      <h3>化学 のパスワード</h3>
+      <div class="pw-symbol">Ch</div>
+      <h3>化学 — パスワード</h3>
       <div class="pw-error" id="pw-error-化学">パスワードが違います</div>
       <form id="pw-form-化学" method="post" action="javascript:void(0)">
         <input type="text" name="username" value="pdf-化学" autocomplete="username" style="position:absolute;opacity:0;height:0;overflow:hidden;pointer-events:none" tabindex="-1">
@@ -72,38 +146,50 @@
   </div>
 
   <script>
+    function applyTheme(t) {
+      document.documentElement.setAttribute('data-theme', t);
+      document.getElementById('theme-toggle').textContent = t === 'dark' ? '☀️' : '🌙';
+      localStorage.setItem('pdf-site-theme', t);
+    }
+    var saved = localStorage.getItem('pdf-site-theme');
+    applyTheme(saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+    document.getElementById('theme-toggle').addEventListener('click', function() {
+      applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+    });
+
     var HASHES = {
       '物理': '47d662997d0dde2569663e46e3346b6f71f82a297ae6507fcb525ac5112a39c7',
       '化学': '94680fd24bf04a3e411f3772c611057d39a3f67999858aa768fb927225542300'
     };
-
+    var SYMBOLS = { '物理': 'Ph', '化学': 'Ch' };
+    var EN = { '物理': 'Physics', '化学': 'Chemistry' };
     async function sha256(str) {
       var buf = new TextEncoder().encode(str);
       var hash = await crypto.subtle.digest('SHA-256', buf);
       return Array.from(new Uint8Array(hash)).map(function(b) { return b.toString(16).padStart(2, '0'); }).join('');
     }
-
     async function load() {
       try {
         var res = await fetch('filelist.json?' + Date.now());
         var data = await res.json();
-        document.getElementById('update-time').textContent = '最終更新: ' + data.updated;
+        document.getElementById('update-time').textContent = 'updated ' + data.updated;
         var el = document.getElementById('folders');
-        if (!data.folders || data.folders.length === 0) { el.innerHTML = '<div style="padding:80px;text-align:center;color:#86868b">フォルダがありません</div>'; return; }
+        if (!data.folders || data.folders.length === 0) { el.innerHTML = '<div class="empty">フォルダがありません</div>'; return; }
         el.innerHTML = data.folders.map(function(f) {
-          return '<button class="folder-card" onclick="tryOpen(\'' + f.name + '\')">' +
-            '<div class="folder-card-icon">📁</div>' +
-            '<div class="folder-card-name">' + f.name + '</div>' +
-            '<div class="folder-card-count">' + f.totalFiles + '件のPDF</div></button>';
+          var cls = f.name === '物理' ? 'phys' : 'chem';
+          var sym = SYMBOLS[f.name] || f.name.charAt(0);
+          var en = EN[f.name] || '';
+          var num = String(f.totalFiles).padStart(2, '0');
+          return '<button class="tile ' + cls + '" onclick="tryOpen(\'' + f.name + '\')">' +
+            '<div class="tile-top"><span class="tile-num">' + num + '</span><span class="tile-cat">' + (f.subs ? f.subs.length : 0) + ' categories</span></div>' +
+            '<div class="tile-symbol">' + sym + '</div>' +
+            '<div class="tile-foot"><div class="tile-name">' + f.name + '</div><div class="tile-en">' + en + '</div></div>' +
+            '</button>';
         }).join('');
-      } catch(e) { document.getElementById('folders').innerHTML = '<div style="padding:80px;text-align:center;color:#86868b">読み込みに失敗しました</div>'; }
+      } catch(e) { document.getElementById('folders').innerHTML = '<div class="empty">読み込みに失敗しました</div>'; }
     }
-
     function tryOpen(subject) {
-      if (sessionStorage.getItem('pw_' + subject) === 'ok') {
-        location.href = encodeURIComponent(subject) + '/';
-        return;
-      }
+      if (sessionStorage.getItem('pw_' + subject) === 'ok') { location.href = encodeURIComponent(subject) + '/'; return; }
       var overlay = document.getElementById('pw-overlay-' + subject);
       var input = document.getElementById('pw-input-' + subject);
       document.getElementById('pw-error-' + subject).style.display = 'none';
@@ -111,40 +197,24 @@
       overlay.classList.add('active');
       setTimeout(function() { input.focus(); }, 100);
     }
-
-    function closePw(subject) {
-      document.getElementById('pw-overlay-' + subject).classList.remove('active');
-    }
-
-    // 各教科のフォームにsubmitイベントを設定
+    function closePw(subject) { document.getElementById('pw-overlay-' + subject).classList.remove('active'); }
     ['物理', '化学'].forEach(function(subject) {
       var form = document.getElementById('pw-form-' + subject);
       form.addEventListener('submit', async function(e) {
         e.preventDefault();
         var input = document.getElementById('pw-input-' + subject);
-        var pw = input.value;
-        var hash = await sha256(pw);
+        var hash = await sha256(input.value);
         if (hash === HASHES[subject]) {
           sessionStorage.setItem('pw_' + subject, 'ok');
-          // Chromeにパスワード保存を促すため、フォームを一瞬通常送信風にする
           form.action = location.href;
-          setTimeout(function() {
-            form.action = 'javascript:void(0)';
-            location.href = encodeURIComponent(subject) + '/';
-          }, 100);
+          setTimeout(function() { form.action = 'javascript:void(0)'; location.href = encodeURIComponent(subject) + '/'; }, 100);
         } else {
           document.getElementById('pw-error-' + subject).style.display = 'block';
-          input.value = '';
-          input.focus();
+          input.value = ''; input.focus();
         }
       });
-
-      // オーバーレイクリックで閉じる
-      document.getElementById('pw-overlay-' + subject).addEventListener('click', function(e) {
-        if (e.target === this) closePw(subject);
-      });
+      document.getElementById('pw-overlay-' + subject).addEventListener('click', function(e) { if (e.target === this) closePw(subject); });
     });
-
     load();
   </script>
 </body>
