@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <title>PDF ライブラリ</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif; background: #f5f5f7; color: #1d1d1f; min-height: 100vh; }
+    header { background: #fff; border-bottom: 1px solid #d2d2d7; padding: 20px 40px; position: sticky; top: 0; z-index: 100; }
+    header h1 { font-size: 24px; font-weight: 600; }
+    header p { font-size: 13px; color: #86868b; margin-top: 4px; }
+    .container { max-width: 960px; margin: 48px auto; padding: 0 20px; }
+    .folder-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; }
+    .folder-card { background: #fff; border-radius: 16px; padding: 32px 24px; text-align: center; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.06); transition: box-shadow 0.2s, transform 0.2s; border: none; width: 100%; font-family: inherit; color: #1d1d1f; }
+    .folder-card:hover { box-shadow: 0 6px 20px rgba(0,0,0,0.1); transform: translateY(-2px); }
+    .folder-card-icon { font-size: 48px; margin-bottom: 12px; }
+    .folder-card-name { font-size: 20px; font-weight: 600; }
+    .folder-card-count { font-size: 13px; color: #86868b; margin-top: 6px; }
+    .pw-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 300; justify-content: center; align-items: center; }
+    .pw-overlay.active { display: flex; }
+    .pw-box { background: #fff; border-radius: 16px; padding: 32px; max-width: 360px; width: 90%; text-align: center; }
+    .pw-box h3 { font-size: 18px; font-weight: 600; margin-bottom: 16px; }
+    .pw-box input[type="text"],
+    .pw-box input[type="password"] { width: 100%; padding: 12px 16px; border-radius: 10px; border: 1px solid #d2d2d7; font-size: 16px; outline: none; margin-bottom: 12px; font-family: inherit; }
+    .pw-box input:focus { border-color: #007aff; }
+    .pw-submit { width: 100%; padding: 12px; border-radius: 10px; border: none; background: #007aff; color: #fff; font-size: 16px; font-weight: 600; cursor: pointer; font-family: inherit; }
+    .pw-submit:hover { background: #0066d6; }
+    .pw-error { color: #ff3b30; font-size: 13px; margin-bottom: 8px; display: none; }
+    .pw-cancel { width: 100%; padding: 10px; border-radius: 10px; border: none; background: transparent; color: #86868b; margin-top: 8px; font-size: 14px; cursor: pointer; font-family: inherit; }
+    /* Hidden iframe for password save trigger */
+    .pw-save-frame { position: absolute; width: 0; height: 0; border: none; visibility: hidden; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>PDF ライブラリ</h1>
+    <p id="update-time"></p>
+  </header>
+  <div class="container">
+    <div class="folder-grid" id="folders"></div>
+  </div>
+
+  <!-- 物理用ログインフォーム（Chrome用に独立） -->
+  <div class="pw-overlay" id="pw-overlay-物理">
+    <div class="pw-box">
+      <h3>物理 のパスワード</h3>
+      <div class="pw-error" id="pw-error-物理">パスワードが違います</div>
+      <form id="pw-form-物理" method="post" action="javascript:void(0)">
+        <input type="text" name="username" value="pdf-物理" autocomplete="username" style="position:absolute;opacity:0;height:0;overflow:hidden;pointer-events:none" tabindex="-1">
+        <input type="password" id="pw-input-物理" name="password" autocomplete="current-password" placeholder="パスワードを入力">
+        <button type="submit" class="pw-submit">開く</button>
+      </form>
+      <button class="pw-cancel" onclick="closePw('物理')">キャンセル</button>
+    </div>
+  </div>
+
+  <!-- 化学用ログインフォーム（Chrome用に独立） -->
+  <div class="pw-overlay" id="pw-overlay-化学">
+    <div class="pw-box">
+      <h3>化学 のパスワード</h3>
+      <div class="pw-error" id="pw-error-化学">パスワードが違います</div>
+      <form id="pw-form-化学" method="post" action="javascript:void(0)">
+        <input type="text" name="username" value="pdf-化学" autocomplete="username" style="position:absolute;opacity:0;height:0;overflow:hidden;pointer-events:none" tabindex="-1">
+        <input type="password" id="pw-input-化学" name="password" autocomplete="current-password" placeholder="パスワードを入力">
+        <button type="submit" class="pw-submit">開く</button>
+      </form>
+      <button class="pw-cancel" onclick="closePw('化学')">キャンセル</button>
+    </div>
+  </div>
+
+  <script>
+    var HASHES = {
+      '物理': '47d662997d0dde2569663e46e3346b6f71f82a297ae6507fcb525ac5112a39c7',
+      '化学': '94680fd24bf04a3e411f3772c611057d39a3f67999858aa768fb927225542300'
+    };
+
+    async function sha256(str) {
+      var buf = new TextEncoder().encode(str);
+      var hash = await crypto.subtle.digest('SHA-256', buf);
+      return Array.from(new Uint8Array(hash)).map(function(b) { return b.toString(16).padStart(2, '0'); }).join('');
+    }
+
+    async function load() {
+      try {
+        var res = await fetch('filelist.json?' + Date.now());
+        var data = await res.json();
+        document.getElementById('update-time').textContent = '最終更新: ' + data.updated;
+        var el = document.getElementById('folders');
+        if (!data.folders || data.folders.length === 0) { el.innerHTML = '<div style="padding:80px;text-align:center;color:#86868b">フォルダがありません</div>'; return; }
+        el.innerHTML = data.folders.map(function(f) {
+          return '<button class="folder-card" onclick="tryOpen(\'' + f.name + '\')">' +
+            '<div class="folder-card-icon">📁</div>' +
+            '<div class="folder-card-name">' + f.name + '</div>' +
+            '<div class="folder-card-count">' + f.totalFiles + '件のPDF</div></button>';
+        }).join('');
+      } catch(e) { document.getElementById('folders').innerHTML = '<div style="padding:80px;text-align:center;color:#86868b">読み込みに失敗しました</div>'; }
+    }
+
+    function tryOpen(subject) {
+      if (sessionStorage.getItem('pw_' + subject) === 'ok') {
+        location.href = encodeURIComponent(subject) + '/';
+        return;
+      }
+      var overlay = document.getElementById('pw-overlay-' + subject);
+      var input = document.getElementById('pw-input-' + subject);
+      document.getElementById('pw-error-' + subject).style.display = 'none';
+      input.value = '';
+      overlay.classList.add('active');
+      setTimeout(function() { input.focus(); }, 100);
+    }
+
+    function closePw(subject) {
+      document.getElementById('pw-overlay-' + subject).classList.remove('active');
+    }
+
+    // 各教科のフォームにsubmitイベントを設定
+    ['物理', '化学'].forEach(function(subject) {
+      var form = document.getElementById('pw-form-' + subject);
+      form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        var input = document.getElementById('pw-input-' + subject);
+        var pw = input.value;
+        var hash = await sha256(pw);
+        if (hash === HASHES[subject]) {
+          sessionStorage.setItem('pw_' + subject, 'ok');
+          // Chromeにパスワード保存を促すため、フォームを一瞬通常送信風にする
+          form.action = location.href;
+          setTimeout(function() {
+            form.action = 'javascript:void(0)';
+            location.href = encodeURIComponent(subject) + '/';
+          }, 100);
+        } else {
+          document.getElementById('pw-error-' + subject).style.display = 'block';
+          input.value = '';
+          input.focus();
+        }
+      });
+
+      // オーバーレイクリックで閉じる
+      document.getElementById('pw-overlay-' + subject).addEventListener('click', function(e) {
+        if (e.target === this) closePw(subject);
+      });
+    });
+
+    load();
+  </script>
+</body>
+</html>
