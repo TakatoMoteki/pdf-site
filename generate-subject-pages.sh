@@ -3,16 +3,58 @@ SITE_DIR="$HOME/pdf-site"
 PDFS_DIR="$SITE_DIR/pdfs"
 SITE_URL="https://takatomoteki.github.io/pdf-site"
 
-PW_HASH_physics="47d662997d0dde2569663e46e3346b6f71f82a297ae6507fcb525ac5112a39c7"
-PW_HASH_chemistry="94680fd24bf04a3e411f3772c611057d39a3f67999858aa768fb927225542300"
-
 get_hash() {
   case "$1" in
-    "物理") echo "$PW_HASH_physics" ;;
-    "化学") echo "$PW_HASH_chemistry" ;;
+    "物理") echo "47d662997d0dde2569663e46e3346b6f71f82a297ae6507fcb525ac5112a39c7" ;;
+    "化学") echo "94680fd24bf04a3e411f3772c611057d39a3f67999858aa768fb927225542300" ;;
     *) echo "" ;;
   esac
 }
+
+# 共通CSS（テーマ変数＋方眼背景＋元素カラー）
+read -r -d '' COMMON_CSS << 'CSS_END'
+:root {
+  --paper: #fafaf7; --surface: #ffffff; --ink: #16171f; --ink-soft: #6b6d7c;
+  --grid: rgba(20,22,40,0.05); --line: #e8e6df;
+  --shadow: 0 2px 12px rgba(20,22,40,0.05); --shadow-lift: 0 18px 48px rgba(20,22,40,0.14);
+}
+[data-theme="dark"] {
+  --paper: #0d0e14; --surface: #161824; --ink: #ECECF2; --ink-soft: #8b8da3;
+  --grid: rgba(180,190,255,0.045); --line: #262838;
+  --shadow: 0 2px 12px rgba(0,0,0,0.3); --shadow-lift: 0 18px 48px rgba(0,0,0,0.55);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: "Zen Kaku Gothic New", -apple-system, sans-serif;
+  background: var(--paper); color: var(--ink); min-height: 100vh;
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 26px 26px; transition: background-color 0.4s, color 0.4s;
+}
+header {
+  padding: 22px 40px; border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 100;
+  background: color-mix(in srgb, var(--paper) 80%, transparent); backdrop-filter: blur(12px);
+  display: flex; align-items: flex-start; justify-content: space-between;
+}
+.nav { font-family: "JetBrains Mono", monospace; font-size: 12px; color: var(--ink-soft); margin-bottom: 10px; display: flex; gap: 8px; align-items: center; }
+.nav a { color: var(--accent); text-decoration: none; }
+.nav a:hover { text-decoration: underline; }
+.title-row { display: flex; align-items: center; gap: 14px; }
+.title-symbol { font-family: "Space Grotesk", sans-serif; font-size: 34px; font-weight: 700; color: var(--accent); line-height: 1; letter-spacing: -0.03em; }
+header h1 { font-family: "Space Grotesk", "Zen Kaku Gothic New", sans-serif; font-size: 24px; font-weight: 700; letter-spacing: -0.01em; }
+header .meta { font-family: "JetBrains Mono", monospace; font-size: 11px; color: var(--ink-soft); margin-top: 6px; }
+.theme-toggle { width: 44px; height: 44px; border-radius: 13px; border: 1px solid var(--line); background: var(--surface); cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; transition: transform 0.2s; flex-shrink: 0; }
+.theme-toggle:hover { transform: rotate(-12deg) scale(1.06); }
+.container { max-width: 860px; margin: 0 auto; padding: 48px 32px 80px; }
+.empty { padding: 80px; text-align: center; color: var(--ink-soft); }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+CSS_END
+
+# 共通テーマJS
+read -r -d '' THEME_JS << 'JS_END'
+function applyTheme(t){document.documentElement.setAttribute('data-theme',t);var b=document.getElementById('theme-toggle');if(b)b.textContent=t==='dark'?'☀️':'🌙';localStorage.setItem('pdf-site-theme',t);}
+applyTheme(localStorage.getItem('pdf-site-theme')||(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'));
+var _tt=document.getElementById('theme-toggle');if(_tt)_tt.addEventListener('click',function(){applyTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark');});
+JS_END
 
 for subject_dir in "$PDFS_DIR"/*/; do
   [ -d "$subject_dir" ] || continue
@@ -20,30 +62,26 @@ for subject_dir in "$PDFS_DIR"/*/; do
   hash="$(get_hash "$subject")"
   mkdir -p "$SITE_DIR/$subject"
 
-  PW_CHECK='
-    var PW_HASH = "'"$hash"'";
-    var PW_KEY = "pw_'"$subject"'";
-    async function sha256(str) {
-      var buf = new TextEncoder().encode(str);
-      var h = await crypto.subtle.digest("SHA-256", buf);
-      return Array.from(new Uint8Array(h)).map(function(b){return b.toString(16).padStart(2,"0")}).join("");
-    }
-    function checkAuth() {
-      if (sessionStorage.getItem(PW_KEY) !== "ok") { location.href = "../"; return false; }
-      return true;
-    }
-  '
+  # 科目別カラー＆シンボル
+  if [ "$subject" = "物理" ]; then
+    accent_l="#2d5fd6"; accent_d="#6f9bff"; soft_l="rgba(45,95,214,0.08)"; soft_d="rgba(111,155,255,0.12)"; symbol="Ph"
+  else
+    accent_l="#d6452f"; accent_d="#ff7a64"; soft_l="rgba(214,69,47,0.08)"; soft_d="rgba(255,122,100,0.12)"; symbol="Ch"
+  fi
 
+  ACCENT_CSS=":root{--accent:${accent_l};--accent-soft:${soft_l};}[data-theme=\"dark\"]{--accent:${accent_d};--accent-soft:${soft_d};}"
+
+  PW_CHECK='var PW_KEY="pw_'"$subject"'";function checkAuth(){if(sessionStorage.getItem(PW_KEY)!=="ok"){location.href="../";return false;}return true;}'
+
+  # ── サブカテゴリページ（PDF一覧）──
   for sub_dir in "$subject_dir"*/; do
     [ -d "$sub_dir" ] || continue
     subname="$(basename "$sub_dir")"
-
     pdf_count=0
     for f in "$sub_dir"*.pdf "$sub_dir"*.PDF; do
       [ -f "$f" ] && pdf_count=$((pdf_count + 1))
     done
     [ "$pdf_count" -eq 0 ] && continue
-
     mkdir -p "$SITE_DIR/$subject/$subname"
 
     cat > "$SITE_DIR/$subject/$subname/index.html" << SUBEOF
@@ -53,23 +91,55 @@ for subject_dir in "$PDFS_DIR"/*/; do
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>${subname} - ${subject}</title>
+<meta name="theme-color" content="#fafaf7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0d0e14" media="(prefers-color-scheme: dark)">
+<title>${subname} — ${subject}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
-*{margin:0;padding:0;box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;background:#f5f5f7;color:#1d1d1f;min-height:100vh}header{background:#fff;border-bottom:1px solid #d2d2d7;padding:16px 40px;position:sticky;top:0;z-index:100}.nav{display:flex;align-items:center;gap:8px;font-size:13px;color:#86868b;margin-bottom:8px}.nav a{text-decoration:none;color:#007aff}header h1{font-size:22px;font-weight:600}header p{font-size:13px;color:#86868b;margin-top:4px}.container{max-width:960px;margin:24px auto;padding:0 20px}.pdf-list{display:flex;flex-direction:column}.pdf-item{background:#fff;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #f0f0f5}.pdf-item:first-child{border-radius:12px 12px 0 0}.pdf-item:last-child{border-bottom:none;border-radius:0 0 12px 12px}.pdf-item:only-child{border-radius:12px}.pdf-item:hover{background:#fafafa}.pdf-info{display:flex;align-items:center;gap:14px;min-width:0;flex:1}.pdf-icon{width:38px;height:38px;background:#ff3b30;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:11px;flex-shrink:0}.pdf-name{font-size:15px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pdf-meta{font-size:12px;color:#86868b;margin-top:2px}.pdf-actions{display:flex;gap:8px;flex-shrink:0}.btn{padding:7px 14px;border-radius:8px;border:none;font-size:13px;font-weight:500;cursor:pointer;text-decoration:none;display:inline-block;text-align:center}.btn-view{background:#007aff;color:#fff}.btn-dl{background:#e8e8ed;color:#1d1d1f}.viewer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;justify-content:center;align-items:center}.viewer-overlay.active{display:flex}.viewer{background:#fff;border-radius:16px;width:95vw;height:93vh;display:flex;flex-direction:column;overflow:hidden}.viewer-header{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;border-bottom:1px solid #d2d2d7;flex-shrink:0}.viewer-header h2{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;margin-right:12px}.viewer-close{padding:6px 16px;border-radius:8px;border:none;background:#e8e8ed;font-size:14px;cursor:pointer}.viewer-body{flex:1;overflow:hidden}.viewer-body iframe{width:100%;height:100%;border:none}@media(max-width:600px){header{padding:14px 20px}.pdf-item{flex-direction:column;align-items:flex-start;gap:10px}.pdf-actions{width:100%}.btn{flex:1;text-align:center}.viewer{width:100vw;height:100vh;border-radius:0}}
+${COMMON_CSS}
+${ACCENT_CSS}
+.pdf-list{display:flex;flex-direction:column;gap:12px}
+.pdf-item{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px 22px;display:flex;align-items:center;justify-content:space-between;gap:16px;box-shadow:var(--shadow);transition:transform 0.2s,box-shadow 0.2s,border-color 0.2s}
+.pdf-item:hover{transform:translateY(-2px);box-shadow:var(--shadow-lift);border-color:var(--accent)}
+.pdf-info{display:flex;align-items:center;gap:16px;min-width:0;flex:1}
+.pdf-mark{width:44px;height:44px;border-radius:11px;background:var(--accent-soft);color:var(--accent);display:flex;align-items:center;justify-content:center;font-family:"Space Grotesk",monospace;font-weight:700;font-size:12px;flex-shrink:0;letter-spacing:0.02em}
+.pdf-name{font-size:15px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pdf-meta{font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--ink-soft);margin-top:3px}
+.pdf-actions{display:flex;gap:8px;flex-shrink:0}
+.btn{padding:9px 16px;border-radius:10px;border:none;font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;display:inline-block;text-align:center;font-family:inherit;transition:opacity 0.2s,transform 0.1s}
+.btn:active{transform:scale(0.96)}
+.btn-view{background:var(--accent);color:#fff}
+.btn-view:hover{opacity:0.9}
+.btn-dl{background:transparent;color:var(--ink-soft);border:1px solid var(--line)}
+.btn-dl:hover{border-color:var(--accent);color:var(--accent)}
+.viewer-overlay{display:none;position:fixed;inset:0;background:rgba(8,9,14,0.6);z-index:200;justify-content:center;align-items:center;backdrop-filter:blur(8px)}
+.viewer-overlay.active{display:flex}
+.viewer{background:var(--surface);border-radius:18px;width:95vw;height:93vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:var(--shadow-lift)}
+.viewer-header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--line);flex-shrink:0}
+.viewer-header h2{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;margin-right:12px}
+.viewer-close{padding:8px 18px;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--ink);font-size:14px;cursor:pointer;font-family:inherit}
+.viewer-body{flex:1;overflow:hidden;background:#525659}
+.viewer-body iframe{width:100%;height:100%;border:none}
+@media(max-width:600px){header{padding:18px 24px}.container{padding:32px 24px 60px}.pdf-item{flex-direction:column;align-items:flex-start}.pdf-actions{width:100%}.btn{flex:1}.viewer{width:100vw;height:100vh;border-radius:0}}
 </style>
 </head>
 <body>
 <header>
-<div class="nav"><a href="../../">トップ</a><span>›</span><a href="../">${subject}</a><span>›</span><span>${subname}</span></div>
-<h1>${subname}</h1><p id="update-time"></p>
+<div>
+<div class="nav"><a href="../../">トップ</a><span>/</span><a href="../">${subject}</a><span>/</span><span>${subname}</span></div>
+<div class="title-row"><span class="title-symbol">${symbol}</span><div><h1>${subname}</h1><div class="meta" id="update-time"></div></div></div>
+</div>
+<button class="theme-toggle" id="theme-toggle">🌙</button>
 </header>
-<div class="container"><div class="pdf-list" id="pdf-list"><div style="padding:80px;text-align:center;color:#86868b">読み込み中...</div></div></div>
+<div class="container"><div class="pdf-list" id="pdf-list"><div class="empty">読み込み中...</div></div></div>
 <div class="viewer-overlay" id="viewer"><div class="viewer"><div class="viewer-header"><h2 id="viewer-title">PDF</h2><button class="viewer-close" onclick="closeViewer()">閉じる</button></div><div class="viewer-body" id="viewer-body"></div></div></div>
 <script>
+${THEME_JS}
 var SITE_URL='${SITE_URL}';
 ${PW_CHECK}
-if(!checkAuth()) throw new Error('auth');
-async function load(){try{var res=await fetch('../../filelist.json?'+Date.now());var data=await res.json();document.getElementById('update-time').textContent='最終更新: '+data.updated;var folder=data.folders.find(function(f){return f.name==='${subject}';});if(!folder)return;var sub=folder.subs.find(function(s){return s.name==='${subname}';});var el=document.getElementById('pdf-list');if(!sub||sub.files.length===0){el.innerHTML='<div style="padding:80px;text-align:center;color:#86868b">PDFがありません</div>';return;}el.innerHTML=sub.files.map(function(f){var relPath='pdfs/${subject}/${subname}/'+encodeURIComponent(f.name);var directPath='../../'+relPath;var gview='https://docs.google.com/gview?url='+encodeURIComponent(SITE_URL+'/'+relPath)+'&embedded=true';var dateText=f.date?' · '+f.date:'';return'<div class="pdf-item"><div class="pdf-info"><div class="pdf-icon">PDF</div><div><div class="pdf-name">'+f.name+'</div><div class="pdf-meta">'+f.size+dateText+'</div></div></div><div class="pdf-actions"><button class="btn btn-view" data-gview="'+gview+'" data-name="'+f.name.replace(/"/g,'&quot;')+'">閲覧</button><a class="btn btn-dl" href="'+directPath+'" download>DL</a></div></div>';}).join('');document.querySelectorAll('.btn-view').forEach(function(btn){btn.addEventListener('click',function(){openViewer(this.dataset.name,this.dataset.gview);});});}catch(e){document.getElementById('pdf-list').innerHTML='<div style="padding:80px;text-align:center;color:#86868b">読み込み失敗</div>';}}
+if(!checkAuth())throw new Error('auth');
+async function load(){try{var res=await fetch('../../filelist.json?'+Date.now());var data=await res.json();document.getElementById('update-time').textContent='updated '+data.updated;var folder=data.folders.find(function(f){return f.name==='${subject}';});if(!folder)return;var sub=folder.subs.find(function(s){return s.name==='${subname}';});var el=document.getElementById('pdf-list');if(!sub||sub.files.length===0){el.innerHTML='<div class="empty">PDFがありません</div>';return;}el.innerHTML=sub.files.map(function(f){var relPath='pdfs/${subject}/${subname}/'+encodeURIComponent(f.name);var directPath='../../'+relPath;var gview='https://docs.google.com/gview?url='+encodeURIComponent(SITE_URL+'/'+relPath)+'&embedded=true';var dateText=f.date?f.size+' · '+f.date:f.size;return'<div class="pdf-item"><div class="pdf-info"><div class="pdf-mark">PDF</div><div style="min-width:0"><div class="pdf-name">'+f.name+'</div><div class="pdf-meta">'+dateText+'</div></div></div><div class="pdf-actions"><button class="btn btn-view" data-gview="'+gview+'" data-name="'+f.name.replace(/"/g,'&quot;')+'">閲覧</button><a class="btn btn-dl" href="'+directPath+'" download>DL</a></div></div>';}).join('');document.querySelectorAll('.btn-view').forEach(function(btn){btn.addEventListener('click',function(){openViewer(this.dataset.name,this.dataset.gview);});});}catch(e){document.getElementById('pdf-list').innerHTML='<div class="empty">読み込み失敗</div>';}}
 function openViewer(n,url){document.getElementById('viewer-title').textContent=n;document.getElementById('viewer').classList.add('active');document.getElementById('viewer-body').innerHTML='<iframe src="'+url+'"></iframe>';}
 function closeViewer(){document.getElementById('viewer').classList.remove('active');document.getElementById('viewer-body').innerHTML='';}
 document.getElementById('viewer').addEventListener('click',function(e){if(e.target===this)closeViewer();});
@@ -81,6 +151,7 @@ load();
 SUBEOF
   done
 
+  # ── 教科トップページ（カテゴリ一覧）──
   cat > "$SITE_DIR/$subject/index.html" << CATEOF
 <!DOCTYPE html>
 <html lang="ja">
@@ -88,21 +159,42 @@ SUBEOF
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>${subject} - PDF ライブラリ</title>
+<meta name="theme-color" content="#fafaf7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0d0e14" media="(prefers-color-scheme: dark)">
+<title>${subject} — PDF ライブラリ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
-*{margin:0;padding:0;box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;background:#f5f5f7;color:#1d1d1f;min-height:100vh}header{background:#fff;border-bottom:1px solid #d2d2d7;padding:16px 40px;position:sticky;top:0;z-index:100}.nav{display:flex;align-items:center;gap:8px;font-size:13px;color:#86868b;margin-bottom:8px}.nav a{text-decoration:none;color:#007aff}header h1{font-size:24px;font-weight:600}.container{max-width:960px;margin:32px auto;padding:0 20px}.cat-list{display:flex;flex-direction:column;gap:12px}.cat-card{background:#fff;border-radius:14px;padding:20px 24px;text-decoration:none;color:#1d1d1f;display:flex;align-items:center;gap:16px;box-shadow:0 1px 3px rgba(0,0,0,0.06);transition:box-shadow 0.2s,transform 0.2s}.cat-card:hover{box-shadow:0 4px 12px rgba(0,0,0,0.1);transform:translateY(-1px)}.cat-num{width:36px;height:36px;border-radius:50%;background:#007aff;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;flex-shrink:0}.cat-info{flex:1}.cat-name{font-size:17px;font-weight:600}.cat-count{font-size:13px;color:#86868b;margin-top:2px}.cat-arrow{color:#86868b;font-size:20px}
+${COMMON_CSS}
+${ACCENT_CSS}
+.cat-list{display:flex;flex-direction:column;gap:14px}
+.cat-card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:24px 26px;text-decoration:none;color:var(--ink);display:flex;align-items:center;gap:20px;box-shadow:var(--shadow);transition:transform 0.25s cubic-bezier(0.2,0.8,0.2,1),box-shadow 0.25s,border-color 0.25s;position:relative;overflow:hidden}
+.cat-card::after{content:"";position:absolute;inset:0;background:var(--accent-soft);opacity:0;transition:opacity 0.25s;pointer-events:none}
+.cat-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift);border-color:var(--accent)}
+.cat-card:hover::after{opacity:1}
+.cat-idx{font-family:"Space Grotesk",monospace;font-size:15px;font-weight:700;color:var(--accent);width:34px;flex-shrink:0;position:relative;z-index:1}
+.cat-info{flex:1;position:relative;z-index:1}
+.cat-name{font-size:18px;font-weight:700;letter-spacing:0.01em}
+.cat-count{font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--ink-soft);margin-top:4px}
+.cat-arrow{color:var(--ink-soft);font-size:20px;position:relative;z-index:1;transition:transform 0.2s,color 0.2s}
+.cat-card:hover .cat-arrow{transform:translateX(4px);color:var(--accent)}
+@media(max-width:600px){header{padding:18px 24px}.container{padding:32px 24px 60px}}
 </style>
 </head>
 <body>
 <header>
-<div class="nav"><a href="../">トップ</a><span>›</span><span>${subject}</span></div>
-<h1>${subject}</h1>
+<div>
+<div class="nav"><a href="../">トップ</a><span>/</span><span>${subject}</span></div>
+<div class="title-row"><span class="title-symbol">${symbol}</span><h1>${subject}</h1></div>
+</div>
+<button class="theme-toggle" id="theme-toggle">🌙</button>
 </header>
-<div class="container"><div class="cat-list" id="cats"><div style="padding:80px;text-align:center;color:#86868b">読み込み中...</div></div></div>
+<div class="container"><div class="cat-list" id="cats"><div class="empty">読み込み中...</div></div></div>
 <script>
+${THEME_JS}
 ${PW_CHECK}
-if(!checkAuth()) throw new Error('auth');
-async function load(){try{var res=await fetch('../filelist.json?'+Date.now());var data=await res.json();var folder=data.folders.find(function(f){return f.name==='${subject}';});var el=document.getElementById('cats');if(!folder||!folder.subs||folder.subs.length===0){el.innerHTML='<div style="padding:80px;text-align:center;color:#86868b">カテゴリがありません</div>';return;}el.innerHTML=folder.subs.map(function(s,i){return'<a class="cat-card" href="'+encodeURIComponent(s.name)+'/"><div class="cat-num">'+(i+1)+'</div><div class="cat-info"><div class="cat-name">'+s.name+'</div><div class="cat-count">'+s.files.length+'件のPDF</div></div><div class="cat-arrow">›</div></a>';}).join('');}catch(e){document.getElementById('cats').innerHTML='<div style="padding:80px;text-align:center;color:#86868b">読み込み失敗</div>';}}
+if(!checkAuth())throw new Error('auth');
+async function load(){try{var res=await fetch('../filelist.json?'+Date.now());var data=await res.json();var folder=data.folders.find(function(f){return f.name==='${subject}';});var el=document.getElementById('cats');if(!folder||!folder.subs||folder.subs.length===0){el.innerHTML='<div class="empty">カテゴリがありません</div>';return;}el.innerHTML=folder.subs.map(function(s,i){var num=String(i+1).padStart(2,'0');return'<a class="cat-card" href="'+encodeURIComponent(s.name)+'/"><div class="cat-idx">'+num+'</div><div class="cat-info"><div class="cat-name">'+s.name+'</div><div class="cat-count">'+s.files.length+' files</div></div><div class="cat-arrow">→</div></a>';}).join('');}catch(e){document.getElementById('cats').innerHTML='<div class="empty">読み込み失敗</div>';}}
 load();
 </script>
 </body>
