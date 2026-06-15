@@ -220,7 +220,8 @@
         sessionStorage.setItem('pw_' + subject, 'ok');
         proceed(subject);
       }catch(e){
-        document.getElementById('pw-error-' + subject).textContent = 'Face IDに失敗しました。パスワードで開いてください';
+        openPwBox(subject);
+        document.getElementById('pw-error-' + subject).textContent = 'Face IDをキャンセルしました。パスワードで開けます';
         document.getElementById('pw-error-' + subject).style.display = 'block';
       }
     }
@@ -250,20 +251,23 @@
 
     function tryOpen(subject) {
       if (sessionStorage.getItem('pw_' + subject) === 'ok') { proceed(subject); return; }
+      // Face ID登録済みなら画面を出さず、その場で即起動
+      if (hasFaceID(subject)) { doFaceID(subject); return; }
+      openPwBox(subject);
+    }
+
+    function openPwBox(subject) {
       var overlay = document.getElementById('pw-overlay-' + subject);
       var input = document.getElementById('pw-input-' + subject);
       document.getElementById('pw-error-' + subject).style.display = 'none';
       document.getElementById('faceid-offer-' + subject).classList.remove('show');
       input.value = '';
-      // Face IDが登録済みならボタンを表示
       var fbtn = document.getElementById('faceid-btn-' + subject);
       var fdiv = document.getElementById('pw-divider-' + subject);
       if (hasFaceID(subject)) { fbtn.classList.add('show'); fdiv.classList.add('show'); }
       else { fbtn.classList.remove('show'); fdiv.classList.remove('show'); }
       overlay.classList.add('active');
-      // 登録済みなら自動でFace IDを起動
-      if (hasFaceID(subject)) { setTimeout(function(){ doFaceID(subject); }, 300); }
-      else { setTimeout(function() { input.focus(); }, 100); }
+      if (!hasFaceID(subject)) setTimeout(function() { input.focus(); }, 100);
     }
 
     function closePw(subject) { document.getElementById('pw-overlay-' + subject).classList.remove('active'); }
