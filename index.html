@@ -32,49 +32,29 @@
       font-family: "Zen Kaku Gothic New", -apple-system, sans-serif;
       background: var(--paper); color: var(--ink); min-height: 100vh;
       background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
-      background-size: 26px 26px;
-      transition: background-color 0.4s, color 0.4s;
+      background-size: 26px 26px; transition: background-color 0.4s, color 0.4s;
     }
     header {
       padding: 28px 40px; display: flex; align-items: flex-start; justify-content: space-between;
       border-bottom: 1px solid var(--line); background: color-mix(in srgb, var(--paper) 80%, transparent);
       backdrop-filter: blur(12px); position: sticky; top: 0; z-index: 100;
     }
-    .brand .eyebrow {
-      font-family: "Space Grotesk", monospace; font-size: 11px; font-weight: 600;
-      letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 6px;
-    }
+    .brand .eyebrow { font-family: "Space Grotesk", monospace; font-size: 11px; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 6px; }
     .brand h1 { font-family: "Space Grotesk", "Zen Kaku Gothic New", sans-serif; font-size: 27px; font-weight: 700; letter-spacing: -0.02em; line-height: 1; }
     .brand p { font-family: "JetBrains Mono", monospace; font-size: 11px; color: var(--ink-soft); margin-top: 8px; }
-    .theme-toggle {
-      width: 46px; height: 46px; border-radius: 14px; border: 1px solid var(--line);
-      background: var(--surface); cursor: pointer; font-size: 19px; display: flex;
-      align-items: center; justify-content: center; transition: transform 0.2s, border-color 0.2s; flex-shrink: 0;
-    }
-    .theme-toggle:hover { transform: rotate(-12deg) scale(1.06); border-color: var(--ink-soft); }
+    .theme-toggle { width: 46px; height: 46px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface); cursor: pointer; font-size: 19px; display: flex; align-items: center; justify-content: center; transition: transform 0.2s; flex-shrink: 0; }
+    .theme-toggle:hover { transform: rotate(-12deg) scale(1.06); }
     .container { max-width: 880px; margin: 0 auto; padding: 64px 32px 80px; }
     .lede { font-size: 14px; color: var(--ink-soft); margin-bottom: 40px; max-width: 440px; line-height: 1.7; }
     .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 28px; }
-    .tile {
-      position: relative; background: var(--surface); border: 1px solid var(--line);
-      border-radius: 22px; padding: 30px; cursor: pointer; width: 100%; text-align: left;
-      font-family: inherit; color: var(--ink); box-shadow: var(--shadow);
-      transition: transform 0.3s cubic-bezier(0.2,0.8,0.2,1), box-shadow 0.3s, border-color 0.3s;
-      overflow: hidden; aspect-ratio: 1 / 1; display: flex; flex-direction: column; justify-content: space-between;
-    }
-    .tile::after {
-      content: ""; position: absolute; inset: 0; background: var(--tile-soft);
-      opacity: 0; transition: opacity 0.3s; pointer-events: none;
-    }
+    .tile { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 22px; padding: 30px; cursor: pointer; width: 100%; text-align: left; font-family: inherit; color: var(--ink); box-shadow: var(--shadow); transition: transform 0.3s cubic-bezier(0.2,0.8,0.2,1), box-shadow 0.3s, border-color 0.3s; overflow: hidden; aspect-ratio: 1 / 1; display: flex; flex-direction: column; justify-content: space-between; }
+    .tile::after { content: ""; position: absolute; inset: 0; background: var(--tile-soft); opacity: 0; transition: opacity 0.3s; pointer-events: none; }
     .tile:hover { transform: translateY(-6px); box-shadow: var(--shadow-lift); border-color: var(--tile-accent); }
     .tile:hover::after { opacity: 1; }
     .tile-top { display: flex; align-items: flex-start; justify-content: space-between; position: relative; z-index: 1; }
     .tile-num { font-family: "JetBrains Mono", monospace; font-size: 13px; font-weight: 600; color: var(--tile-accent); }
     .tile-cat { font-family: "JetBrains Mono", monospace; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--ink-soft); text-align: right; }
-    .tile-symbol {
-      font-family: "Space Grotesk", sans-serif; font-size: 52px; font-weight: 700;
-      line-height: 0.9; color: var(--tile-accent); position: relative; z-index: 1; letter-spacing: -0.04em;
-    }
+    .tile-symbol { font-family: "Space Grotesk", sans-serif; font-size: 52px; font-weight: 700; line-height: 0.9; color: var(--tile-accent); position: relative; z-index: 1; letter-spacing: -0.04em; }
     .tile-foot { position: relative; z-index: 1; }
     .tile-name { font-size: 24px; font-weight: 900; letter-spacing: 0.02em; }
     .tile-en { font-family: "Space Grotesk", monospace; font-size: 12px; color: var(--ink-soft); margin-top: 2px; letter-spacing: 0.05em; }
@@ -83,15 +63,28 @@
     .empty { padding: 80px; text-align: center; color: var(--ink-soft); grid-column: 1/-1; }
     .pw-overlay { display: none; position: fixed; inset: 0; background: rgba(8,9,14,0.55); z-index: 300; justify-content: center; align-items: center; backdrop-filter: blur(10px); }
     .pw-overlay.active { display: flex; }
-    .pw-box { background: var(--surface); border: 1px solid var(--line); border-radius: 24px; padding: 38px 34px; max-width: 380px; width: 90%; box-shadow: var(--shadow-lift); }
+    .pw-box { background: var(--surface); border: 1px solid var(--line); border-radius: 24px; padding: 38px 34px; max-width: 380px; width: 90%; text-align: center; box-shadow: var(--shadow-lift); }
     .pw-symbol { font-family: "Space Grotesk", sans-serif; font-size: 44px; font-weight: 700; line-height: 1; color: var(--pw-accent); margin-bottom: 12px; }
     .pw-box h3 { font-size: 18px; font-weight: 700; margin-bottom: 22px; }
+    .faceid-btn { width: 100%; padding: 15px; border-radius: 13px; border: 1.5px solid var(--pw-accent); background: transparent; color: var(--pw-accent); font-size: 16px; font-weight: 700; cursor: pointer; font-family: inherit; margin-bottom: 16px; display: none; align-items: center; justify-content: center; gap: 8px; transition: background 0.2s; }
+    .faceid-btn.show { display: flex; }
+    .faceid-btn:hover { background: var(--pw-accent); color: #fff; }
+    .pw-divider { display: none; align-items: center; gap: 12px; color: var(--ink-soft); font-size: 12px; margin-bottom: 16px; }
+    .pw-divider.show { display: flex; }
+    .pw-divider::before, .pw-divider::after { content: ""; flex: 1; height: 1px; background: var(--line); }
     .pw-box input[type="text"], .pw-box input[type="password"] { width: 100%; padding: 15px 18px; border-radius: 13px; border: 1px solid var(--line); font-size: 16px; outline: none; margin-bottom: 14px; font-family: inherit; background: var(--paper); color: var(--ink); transition: border-color 0.2s; }
     .pw-box input:focus { border-color: var(--pw-accent); }
     .pw-submit { width: 100%; padding: 15px; border-radius: 13px; border: none; background: var(--pw-accent); color: #fff; font-size: 16px; font-weight: 700; cursor: pointer; font-family: inherit; transition: opacity 0.2s; }
     .pw-submit:hover { opacity: 0.9; }
     .pw-error { color: #e0392b; font-size: 13px; margin-bottom: 10px; display: none; }
     .pw-cancel { width: 100%; padding: 12px; border: none; background: transparent; color: var(--ink-soft); margin-top: 6px; font-size: 14px; cursor: pointer; font-family: inherit; }
+    .faceid-offer { margin-top: 14px; padding: 14px; border-radius: 13px; background: var(--pw-accent); background: color-mix(in srgb, var(--pw-accent) 10%, transparent); display: none; }
+    .faceid-offer.show { display: block; }
+    .faceid-offer p { font-size: 13px; color: var(--ink); margin-bottom: 10px; }
+    .faceid-offer-btns { display: flex; gap: 8px; }
+    .faceid-offer-btns button { flex: 1; padding: 10px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; border: none; }
+    .fo-yes { background: var(--pw-accent); color: #fff; }
+    .fo-no { background: transparent; color: var(--ink-soft); border: 1px solid var(--line) !important; }
     .phys-pw { --pw-accent: var(--phys); }
     .chem-pw { --pw-accent: var(--chem); }
     @media (max-width: 600px) {
@@ -121,12 +114,21 @@
     <div class="pw-box">
       <div class="pw-symbol">Phys</div>
       <h3>物理 — パスワード</h3>
+      <button class="faceid-btn" id="faceid-btn-物理" onclick="doFaceID('物理')">🔓 Face IDで開く</button>
+      <div class="pw-divider" id="pw-divider-物理">またはパスワード</div>
       <div class="pw-error" id="pw-error-物理">パスワードが違います</div>
       <form id="pw-form-物理" method="post" action="javascript:void(0)">
         <input type="text" name="username" value="pdf-物理" autocomplete="username" style="position:absolute;opacity:0;height:0;overflow:hidden;pointer-events:none" tabindex="-1">
         <input type="password" id="pw-input-物理" name="password" autocomplete="current-password" placeholder="パスワードを入力">
         <button type="submit" class="pw-submit">開く</button>
       </form>
+      <div class="faceid-offer" id="faceid-offer-物理">
+        <p>次回からこの端末でFace IDで開けます</p>
+        <div class="faceid-offer-btns">
+          <button class="fo-yes" onclick="enableFaceID('物理')">設定する</button>
+          <button class="fo-no" onclick="skipFaceID('物理')">今はしない</button>
+        </div>
+      </div>
       <button class="pw-cancel" onclick="closePw('物理')">キャンセル</button>
     </div>
   </div>
@@ -135,12 +137,21 @@
     <div class="pw-box">
       <div class="pw-symbol">Chem</div>
       <h3>化学 — パスワード</h3>
+      <button class="faceid-btn" id="faceid-btn-化学" onclick="doFaceID('化学')">🔓 Face IDで開く</button>
+      <div class="pw-divider" id="pw-divider-化学">またはパスワード</div>
       <div class="pw-error" id="pw-error-化学">パスワードが違います</div>
       <form id="pw-form-化学" method="post" action="javascript:void(0)">
         <input type="text" name="username" value="pdf-化学" autocomplete="username" style="position:absolute;opacity:0;height:0;overflow:hidden;pointer-events:none" tabindex="-1">
         <input type="password" id="pw-input-化学" name="password" autocomplete="current-password" placeholder="パスワードを入力">
         <button type="submit" class="pw-submit">開く</button>
       </form>
+      <div class="faceid-offer" id="faceid-offer-化学">
+        <p>次回からこの端末でFace IDで開けます</p>
+        <div class="faceid-offer-btns">
+          <button class="fo-yes" onclick="enableFaceID('化学')">設定する</button>
+          <button class="fo-no" onclick="skipFaceID('化学')">今はしない</button>
+        </div>
+      </div>
       <button class="pw-cancel" onclick="closePw('化学')">キャンセル</button>
     </div>
   </div>
@@ -151,8 +162,7 @@
       document.getElementById('theme-toggle').textContent = t === 'dark' ? '☀️' : '🌙';
       localStorage.setItem('pdf-site-theme', t);
     }
-    var saved = localStorage.getItem('pdf-site-theme');
-    applyTheme(saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+    applyTheme(localStorage.getItem('pdf-site-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
     document.getElementById('theme-toggle').addEventListener('click', function() {
       applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
     });
@@ -163,11 +173,60 @@
     };
     var SYMBOLS = { '物理': 'Phys', '化学': 'Chem' };
     var EN = { '物理': 'Physics', '化学': 'Chemistry' };
+
     async function sha256(str) {
       var buf = new TextEncoder().encode(str);
       var hash = await crypto.subtle.digest('SHA-256', buf);
       return Array.from(new Uint8Array(hash)).map(function(b) { return b.toString(16).padStart(2, '0'); }).join('');
     }
+
+    // WebAuthn helpers
+    function b64urlToBuf(s){s=s.replace(/-/g,'+').replace(/_/g,'/');var pad=s.length%4;if(pad)s+='='.repeat(4-pad);var bin=atob(s);var buf=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)buf[i]=bin.charCodeAt(i);return buf.buffer;}
+    function bufToB64url(buf){var bytes=new Uint8Array(buf);var bin='';for(var i=0;i<bytes.length;i++)bin+=String.fromCharCode(bytes[i]);return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');}
+
+    function hasFaceID(subject){ return !!localStorage.getItem('faceid-' + subject); }
+
+    async function enableFaceID(subject){
+      if(!window.PublicKeyCredential){ proceed(subject); return; }
+      try{
+        var challenge = crypto.getRandomValues(new Uint8Array(32));
+        var userId = crypto.getRandomValues(new Uint8Array(16));
+        var cred = await navigator.credentials.create({ publicKey: {
+          challenge: challenge,
+          rp: { name: 'PDF Library', id: location.hostname },
+          user: { id: userId, name: 'pdf-' + subject, displayName: subject },
+          pubKeyCredParams: [{ type:'public-key', alg:-7 }, { type:'public-key', alg:-257 }],
+          authenticatorSelection: { authenticatorAttachment:'platform', userVerification:'required' },
+          timeout: 60000
+        }});
+        localStorage.setItem('faceid-' + subject, bufToB64url(cred.rawId));
+      }catch(e){ /* ユーザーがキャンセル等 */ }
+      proceed(subject);
+    }
+
+    function skipFaceID(subject){ proceed(subject); }
+
+    async function doFaceID(subject){
+      var idB64 = localStorage.getItem('faceid-' + subject);
+      if(!idB64) return;
+      try{
+        var challenge = crypto.getRandomValues(new Uint8Array(32));
+        await navigator.credentials.get({ publicKey: {
+          challenge: challenge,
+          allowCredentials: [{ type:'public-key', id: b64urlToBuf(idB64) }],
+          userVerification: 'required',
+          timeout: 60000
+        }});
+        sessionStorage.setItem('pw_' + subject, 'ok');
+        proceed(subject);
+      }catch(e){
+        document.getElementById('pw-error-' + subject).textContent = 'Face IDに失敗しました。パスワードで開いてください';
+        document.getElementById('pw-error-' + subject).style.display = 'block';
+      }
+    }
+
+    function proceed(subject){ location.href = encodeURIComponent(subject) + '/'; }
+
     async function load() {
       try {
         var res = await fetch('filelist.json?' + Date.now());
@@ -188,16 +247,27 @@
         }).join('');
       } catch(e) { document.getElementById('folders').innerHTML = '<div class="empty">読み込みに失敗しました</div>'; }
     }
+
     function tryOpen(subject) {
-      if (sessionStorage.getItem('pw_' + subject) === 'ok') { location.href = encodeURIComponent(subject) + '/'; return; }
+      if (sessionStorage.getItem('pw_' + subject) === 'ok') { proceed(subject); return; }
       var overlay = document.getElementById('pw-overlay-' + subject);
       var input = document.getElementById('pw-input-' + subject);
       document.getElementById('pw-error-' + subject).style.display = 'none';
+      document.getElementById('faceid-offer-' + subject).classList.remove('show');
       input.value = '';
+      // Face IDが登録済みならボタンを表示
+      var fbtn = document.getElementById('faceid-btn-' + subject);
+      var fdiv = document.getElementById('pw-divider-' + subject);
+      if (hasFaceID(subject)) { fbtn.classList.add('show'); fdiv.classList.add('show'); }
+      else { fbtn.classList.remove('show'); fdiv.classList.remove('show'); }
       overlay.classList.add('active');
-      setTimeout(function() { input.focus(); }, 100);
+      // 登録済みなら自動でFace IDを起動
+      if (hasFaceID(subject)) { setTimeout(function(){ doFaceID(subject); }, 300); }
+      else { setTimeout(function() { input.focus(); }, 100); }
     }
+
     function closePw(subject) { document.getElementById('pw-overlay-' + subject).classList.remove('active'); }
+
     ['物理', '化学'].forEach(function(subject) {
       var form = document.getElementById('pw-form-' + subject);
       form.addEventListener('submit', async function(e) {
@@ -207,14 +277,24 @@
         if (hash === HASHES[subject]) {
           sessionStorage.setItem('pw_' + subject, 'ok');
           form.action = location.href;
-          setTimeout(function() { form.action = 'javascript:void(0)'; location.href = encodeURIComponent(subject) + '/'; }, 100);
+          // Face ID未登録 & 対応端末なら設定を提案、そうでなければ即移動
+          if (window.PublicKeyCredential && !hasFaceID(subject)) {
+            setTimeout(function() {
+              form.action = 'javascript:void(0)';
+              document.getElementById('faceid-offer-' + subject).classList.add('show');
+            }, 100);
+          } else {
+            setTimeout(function() { form.action = 'javascript:void(0)'; proceed(subject); }, 100);
+          }
         } else {
+          document.getElementById('pw-error-' + subject).textContent = 'パスワードが違います';
           document.getElementById('pw-error-' + subject).style.display = 'block';
           input.value = ''; input.focus();
         }
       });
       document.getElementById('pw-overlay-' + subject).addEventListener('click', function(e) { if (e.target === this) closePw(subject); });
     });
+
     load();
   </script>
 </body>
