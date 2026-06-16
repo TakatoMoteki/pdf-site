@@ -75,6 +75,11 @@ for subject_dir in "$PDFS_DIR"/*/; do
   else
     BG_CSS=""
   fi
+  if [ "$subject" = "物理" ]; then
+    BG_CSS="body{background-image:none !important;background-color:#07080f !important;}body::before{content:'';position:fixed;inset:0;z-index:-2;background:url('${SITE_URL}/assets/phys-bg.jpg') center center/cover no-repeat;}body::after{content:'';position:fixed;inset:0;z-index:-1;background:rgba(7,8,18,0.82);}:root,[data-theme=\"dark\"]{--ink:#f0f1f8;--ink-soft:#a9adca;--surface:rgba(22,24,42,0.66);--line:rgba(255,255,255,0.14);}header{background:rgba(7,8,18,0.45) !important;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);}.pdf-item,.cat-card{-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);}"
+  else
+    BG_CSS=""
+  fi
 
   PW_CHECK='var PW_KEY="pw_'"$subject"'";function checkAuth(){if(sessionStorage.getItem(PW_KEY)!=="ok"){location.href="../";return false;}return true;}'
 
@@ -104,6 +109,7 @@ for subject_dir in "$PDFS_DIR"/*/; do
 <style>
 ${COMMON_CSS}
 ${ACCENT_CSS}
+${BG_CSS}
 ${BG_CSS}
 .pdf-list{display:flex;flex-direction:column;gap:12px}
 .pdf-item{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px 22px;display:flex;align-items:center;justify-content:space-between;gap:16px;box-shadow:var(--shadow);transition:transform 0.2s,box-shadow 0.2s,border-color 0.2s}
@@ -173,6 +179,7 @@ SUBEOF
 <style>
 ${COMMON_CSS}
 ${ACCENT_CSS}
+${BG_CSS}
 ${BG_CSS}
 .cat-list{display:flex;flex-direction:column;gap:14px}
 .cat-card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:24px 26px;text-decoration:none;color:var(--ink);display:flex;align-items:center;gap:20px;box-shadow:var(--shadow);transition:transform 0.25s cubic-bezier(0.2,0.8,0.2,1),box-shadow 0.25s,border-color 0.25s;position:relative;overflow:hidden}

@@ -46,6 +46,7 @@ header .meta { font-family: "JetBrains Mono", monospace; font-size: 11px; color:
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 :root{--accent:#d6452f;--accent-soft:rgba(214,69,47,0.08);}[data-theme="dark"]{--accent:#ff7a64;--accent-soft:rgba(255,122,100,0.12);}
 
+
 .cat-list{display:flex;flex-direction:column;gap:14px}
 .cat-card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:24px 26px;text-decoration:none;color:var(--ink);display:flex;align-items:center;gap:20px;box-shadow:var(--shadow);transition:transform 0.25s cubic-bezier(0.2,0.8,0.2,1),box-shadow 0.25s,border-color 0.25s;position:relative;overflow:hidden}
 .cat-card::after{content:"";position:absolute;inset:0;background:var(--accent-soft);opacity:0;transition:opacity 0.25s;pointer-events:none}
