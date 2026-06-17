@@ -144,7 +144,7 @@ ${BG_CSS}
 .viewer-close{padding:8px 18px;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--ink);font-size:14px;cursor:pointer;font-family:inherit}
 .viewer-body{flex:1;overflow:hidden;background:#525659}
 .viewer-body iframe{width:100%;height:100%;border:none}
-@media(max-width:600px){header{padding:18px 24px}.container{padding:32px 24px 60px}.pdf-item{flex-direction:column;align-items:flex-start}.pdf-actions{width:100%}.btn{flex:1}.viewer{width:100vw;height:100vh;border-radius:0}.pdf-name{white-space:normal;overflow:visible;text-overflow:clip;font-size:14px;line-height:1.4;word-break:break-word}.pdf-info{width:100%}body::before,body::after{position:absolute;height:100%}}
+@media(max-width:600px){header{padding:18px 24px}.container{padding:32px 24px 60px}.pdf-item{flex-direction:column;align-items:flex-start}.pdf-actions{width:100%}.btn{flex:1}.viewer{width:100vw;height:100vh;border-radius:0}.pdf-name{white-space:normal;overflow:visible;text-overflow:clip;font-size:14px;line-height:1.4;word-break:break-word}.pdf-info{width:100%}body::before{height:100lvh;top:0}}
 </style>
 </head>
 <body>
