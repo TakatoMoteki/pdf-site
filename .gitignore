@@ -1,2 +1,3 @@
 gdrive-raw/
 *.log
+.DS_Store
