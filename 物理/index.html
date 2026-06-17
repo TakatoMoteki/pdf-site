@@ -44,6 +44,26 @@ header .meta { font-family: "JetBrains Mono", monospace; font-size: 11px; color:
 .container { max-width: 860px; margin: 0 auto; padding: 48px 32px 80px; }
 .empty { padding: 80px; text-align: center; color: var(--ink-soft); }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+/* ── effects ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeDown{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes symPulse{0%,100%{opacity:1}50%{opacity:.78}}
+@keyframes spin{to{transform:rotate(360deg)}}
+header{animation:fadeDown .55s cubic-bezier(.2,.8,.2,1) both}
+.cat-card,.pdf-item{animation:fadeUp .55s cubic-bezier(.2,.8,.2,1) both}
+.cat-card:nth-child(1),.pdf-item:nth-child(1){animation-delay:.05s}
+.cat-card:nth-child(2),.pdf-item:nth-child(2){animation-delay:.1s}
+.cat-card:nth-child(3),.pdf-item:nth-child(3){animation-delay:.15s}
+.cat-card:nth-child(4),.pdf-item:nth-child(4){animation-delay:.2s}
+.cat-card:nth-child(5),.pdf-item:nth-child(5){animation-delay:.25s}
+.cat-card:nth-child(6),.pdf-item:nth-child(6){animation-delay:.3s}
+.cat-card:nth-child(7),.pdf-item:nth-child(7){animation-delay:.35s}
+.cat-card:nth-child(n+8),.pdf-item:nth-child(n+8){animation-delay:.4s}
+.cat-card:hover,.pdf-item:hover{box-shadow:var(--shadow-lift),0 0 0 1px var(--accent),0 0 30px -6px var(--accent)}
+.title-symbol{text-shadow:0 0 22px var(--accent),0 0 3px var(--accent);animation:symPulse 4.5s ease-in-out infinite}
+body::before{transition:transform .14s ease-out;transform:translate(var(--px,0px),var(--py,0px)) scale(1.06)}
+.spinner{display:inline-block;width:32px;height:32px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+@media (prefers-reduced-motion: reduce){header,.cat-card,.pdf-item,.title-symbol,.spinner{animation:none!important}body::before{transform:scale(1.06)!important}}
 :root{--accent:#2d5fd6;--accent-soft:rgba(45,95,214,0.08);}[data-theme="dark"]{--accent:#6f9bff;--accent-soft:rgba(111,155,255,0.12);}
 body{background:transparent !important;}body::before{content:'';position:fixed;inset:0;z-index:-2;background-position:center;background-size:cover;background-repeat:no-repeat;}html[data-theme="light"] body::before{background-image:url('https://takatomoteki.github.io/pdf-site/assets/phys-bg-l.jpg');}html[data-theme="dark"] body::before{background-image:url('https://takatomoteki.github.io/pdf-site/assets/phys-bg-d.jpg');}body::after{content:'';position:fixed;inset:0;z-index:-1;}html[data-theme="light"] body::after{background:rgba(255,255,255,0.38);}html[data-theme="dark"] body::after{background:rgba(7,8,18,0.74);}html[data-theme="light"]{--surface:rgba(255,255,255,0.12);}html[data-theme="dark"]{--surface:rgba(22,24,42,0.10);--line:rgba(255,255,255,0.14);}header{-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);}.pdf-item,.cat-card{-webkit-backdrop-filter:blur(30px);backdrop-filter:blur(30px);}
 body{background:transparent !important;}body::before{content:'';position:fixed;inset:0;z-index:-2;background-position:center;background-size:cover;background-repeat:no-repeat;}html[data-theme="light"] body::before{background-image:url('https://takatomoteki.github.io/pdf-site/assets/phys-bg-l.jpg');}html[data-theme="dark"] body::before{background-image:url('https://takatomoteki.github.io/pdf-site/assets/phys-bg-d.jpg');}body::after{content:'';position:fixed;inset:0;z-index:-1;}html[data-theme="light"] body::after{background:rgba(255,255,255,0.38);}html[data-theme="dark"] body::after{background:rgba(7,8,18,0.74);}html[data-theme="light"]{--surface:rgba(255,255,255,0.12);}html[data-theme="dark"]{--surface:rgba(22,24,42,0.10);--line:rgba(255,255,255,0.14);}header{-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);}.pdf-item,.cat-card{-webkit-backdrop-filter:blur(30px);backdrop-filter:blur(30px);}
@@ -69,11 +89,12 @@ body{background:transparent !important;}body::before{content:'';position:fixed;i
 </div>
 <button class="theme-toggle" id="theme-toggle">🌙</button>
 </header>
-<div class="container"><div class="cat-list" id="cats"><div class="empty">読み込み中...</div></div></div>
+<div class="container"><div class="cat-list" id="cats"><div class="empty"><span class="spinner"></span></div></div></div>
 <script>
 function applyTheme(t){document.documentElement.setAttribute('data-theme',t);var b=document.getElementById('theme-toggle');if(b)b.textContent=t==='dark'?'☀️':'🌙';localStorage.setItem('pdf-site-theme',t);}
 applyTheme(localStorage.getItem('pdf-site-theme')||(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'));
 var _tt=document.getElementById('theme-toggle');if(_tt)_tt.addEventListener('click',function(){applyTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark');});
+(function(){if(!(window.matchMedia&&window.matchMedia('(pointer:fine)').matches))return;window.addEventListener('mousemove',function(e){var x=(e.clientX/window.innerWidth-0.5)*-18;var y=(e.clientY/window.innerHeight-0.5)*-18;document.documentElement.style.setProperty('--px',x.toFixed(1)+'px');document.documentElement.style.setProperty('--py',y.toFixed(1)+'px');});})();
 var PW_KEY="pw_物理";function checkAuth(){if(sessionStorage.getItem(PW_KEY)!=="ok"){location.href="../";return false;}return true;}
 if(!checkAuth())throw new Error('auth');
 async function load(){try{var res=await fetch('../filelist.json?'+Date.now());var data=await res.json();var folder=data.folders.find(function(f){return f.name==='物理';});var el=document.getElementById('cats');if(!folder||!folder.subs||folder.subs.length===0){el.innerHTML='<div class="empty">カテゴリがありません</div>';return;}el.innerHTML=folder.subs.map(function(s,i){var num=String(i+1).padStart(2,'0');return'<a class="cat-card" href="'+encodeURIComponent(s.name)+'/"><div class="cat-idx">'+num+'</div><div class="cat-info"><div class="cat-name">'+s.name+'</div><div class="cat-count">'+s.files.length+' files</div></div><div class="cat-arrow">→</div></a>';}).join('');}catch(e){document.getElementById('cats').innerHTML='<div class="empty">読み込み失敗</div>';}}

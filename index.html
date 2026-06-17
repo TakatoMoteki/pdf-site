@@ -94,7 +94,24 @@
       .tile-symbol { font-size: 44px; }
     }
     @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
-  </style>
+  
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeDown{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes symPulse{0%,100%{opacity:1}50%{opacity:.8}}
+@keyframes spin{to{transform:rotate(360deg)}}
+header{animation:fadeDown .55s cubic-bezier(.2,.8,.2,1) both}
+.lede{animation:fadeUp .55s cubic-bezier(.2,.8,.2,1) .1s both}
+.tile{animation:fadeUp .6s cubic-bezier(.2,.8,.2,1) both}
+.tile:nth-child(1){animation-delay:.15s}
+.tile:nth-child(2){animation-delay:.26s}
+.tile:nth-child(3){animation-delay:.37s}
+.tile:nth-child(4){animation-delay:.48s}
+.tile:hover{box-shadow:var(--shadow-lift),0 0 0 1px var(--tile-accent),0 0 34px -6px var(--tile-accent)}
+.tile-symbol{text-shadow:0 0 26px var(--tile-accent),0 0 3px var(--tile-accent)}
+.tile:hover .tile-symbol{animation:symPulse 2.4s ease-in-out infinite}
+.spinner{display:inline-block;width:32px;height:32px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+@media (prefers-reduced-motion: reduce){header,.lede,.tile,.spinner{animation:none!important}}
+</style>
 </head>
 <body>
   <header>
@@ -107,7 +124,7 @@
   </header>
   <div class="container">
     <p class="lede">授業プリント・確認テストのアーカイブ。科目を選んでパスワードを入力してください。</p>
-    <div class="grid" id="folders"></div>
+    <div class="grid" id="folders"><div class="empty"><span class="spinner"></span></div></div>
   </div>
 
   <div class="pw-overlay phys-pw" id="pw-overlay-物理">
@@ -300,6 +317,8 @@
     });
 
     load();
+
+if(window.matchMedia&&window.matchMedia('(pointer:fine)').matches){window.addEventListener('mousemove',function(e){var x=(e.clientX/window.innerWidth-0.5)*-12;var y=(e.clientY/window.innerHeight-0.5)*-12;document.body.style.backgroundPosition=x.toFixed(1)+'px '+y.toFixed(1)+'px';});}
   </script>
 </body>
 </html>

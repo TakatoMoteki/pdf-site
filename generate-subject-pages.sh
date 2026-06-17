@@ -47,6 +47,26 @@ header .meta { font-family: "JetBrains Mono", monospace; font-size: 11px; color:
 .container { max-width: 860px; margin: 0 auto; padding: 48px 32px 80px; }
 .empty { padding: 80px; text-align: center; color: var(--ink-soft); }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+/* ── effects ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeDown{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes symPulse{0%,100%{opacity:1}50%{opacity:.78}}
+@keyframes spin{to{transform:rotate(360deg)}}
+header{animation:fadeDown .55s cubic-bezier(.2,.8,.2,1) both}
+.cat-card,.pdf-item{animation:fadeUp .55s cubic-bezier(.2,.8,.2,1) both}
+.cat-card:nth-child(1),.pdf-item:nth-child(1){animation-delay:.05s}
+.cat-card:nth-child(2),.pdf-item:nth-child(2){animation-delay:.1s}
+.cat-card:nth-child(3),.pdf-item:nth-child(3){animation-delay:.15s}
+.cat-card:nth-child(4),.pdf-item:nth-child(4){animation-delay:.2s}
+.cat-card:nth-child(5),.pdf-item:nth-child(5){animation-delay:.25s}
+.cat-card:nth-child(6),.pdf-item:nth-child(6){animation-delay:.3s}
+.cat-card:nth-child(7),.pdf-item:nth-child(7){animation-delay:.35s}
+.cat-card:nth-child(n+8),.pdf-item:nth-child(n+8){animation-delay:.4s}
+.cat-card:hover,.pdf-item:hover{box-shadow:var(--shadow-lift),0 0 0 1px var(--accent),0 0 30px -6px var(--accent)}
+.title-symbol{text-shadow:0 0 22px var(--accent),0 0 3px var(--accent);animation:symPulse 4.5s ease-in-out infinite}
+body::before{transition:transform .14s ease-out;transform:translate(var(--px,0px),var(--py,0px)) scale(1.06)}
+.spinner{display:inline-block;width:32px;height:32px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+@media (prefers-reduced-motion: reduce){header,.cat-card,.pdf-item,.title-symbol,.spinner{animation:none!important}body::before{transform:scale(1.06)!important}}
 CSS_END
 
 # 共通テーマJS
@@ -54,6 +74,7 @@ read -r -d '' THEME_JS << 'JS_END'
 function applyTheme(t){document.documentElement.setAttribute('data-theme',t);var b=document.getElementById('theme-toggle');if(b)b.textContent=t==='dark'?'☀️':'🌙';localStorage.setItem('pdf-site-theme',t);}
 applyTheme(localStorage.getItem('pdf-site-theme')||(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'));
 var _tt=document.getElementById('theme-toggle');if(_tt)_tt.addEventListener('click',function(){applyTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark');});
+(function(){if(!(window.matchMedia&&window.matchMedia('(pointer:fine)').matches))return;window.addEventListener('mousemove',function(e){var x=(e.clientX/window.innerWidth-0.5)*-18;var y=(e.clientY/window.innerHeight-0.5)*-18;document.documentElement.style.setProperty('--px',x.toFixed(1)+'px');document.documentElement.style.setProperty('--py',y.toFixed(1)+'px');});})();
 JS_END
 
 for subject_dir in "$PDFS_DIR"/*/; do
@@ -136,7 +157,7 @@ ${BG_CSS}
 </div>
 <button class="theme-toggle" id="theme-toggle">🌙</button>
 </header>
-<div class="container"><div class="pdf-list" id="pdf-list"><div class="empty">読み込み中...</div></div></div>
+<div class="container"><div class="pdf-list" id="pdf-list"><div class="empty"><span class="spinner"></span></div></div></div>
 <div class="viewer-overlay" id="viewer"><div class="viewer"><div class="viewer-header"><h2 id="viewer-title">PDF</h2><button class="viewer-close" onclick="closeViewer()">閉じる</button></div><div class="viewer-body" id="viewer-body"></div></div></div>
 <script>
 ${THEME_JS}
@@ -195,7 +216,7 @@ ${BG_CSS}
 </div>
 <button class="theme-toggle" id="theme-toggle">🌙</button>
 </header>
-<div class="container"><div class="cat-list" id="cats"><div class="empty">読み込み中...</div></div></div>
+<div class="container"><div class="cat-list" id="cats"><div class="empty"><span class="spinner"></span></div></div></div>
 <script>
 ${THEME_JS}
 ${PW_CHECK}
