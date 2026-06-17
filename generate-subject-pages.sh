@@ -64,9 +64,8 @@ header{animation:fadeDown .55s cubic-bezier(.2,.8,.2,1) both}
 .cat-card:nth-child(n+8),.pdf-item:nth-child(n+8){animation-delay:.4s}
 .cat-card:hover,.pdf-item:hover{box-shadow:var(--shadow-lift),0 0 0 1px var(--accent),0 0 30px -6px var(--accent)}
 .title-symbol{text-shadow:0 0 22px var(--accent),0 0 3px var(--accent);animation:symPulse 4.5s ease-in-out infinite}
-body::before{transform:translateY(var(--sy,0px)) scale(1.12)}
 .spinner{display:inline-block;width:32px;height:32px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
-@media (prefers-reduced-motion: reduce){header,.cat-card,.pdf-item,.title-symbol,.spinner{animation:none!important}body::before{transform:scale(1.12)!important}}
+@media (prefers-reduced-motion: reduce){header,.cat-card,.pdf-item,.title-symbol,.spinner{animation:none!important}}
 CSS_END
 
 # 共通テーマJS
@@ -74,7 +73,6 @@ read -r -d '' THEME_JS << 'JS_END'
 function applyTheme(t){document.documentElement.setAttribute('data-theme',t);var b=document.getElementById('theme-toggle');if(b)b.textContent=t==='dark'?'☀️':'🌙';localStorage.setItem('pdf-site-theme',t);}
 applyTheme(localStorage.getItem('pdf-site-theme')||(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'));
 var _tt=document.getElementById('theme-toggle');if(_tt)_tt.addEventListener('click',function(){applyTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark');});
-(function(){var ticking=false;function upd(){var sc=window.pageYOffset||document.documentElement.scrollTop;document.documentElement.style.setProperty('--sy',(sc*0.18).toFixed(1)+'px');ticking=false;}window.addEventListener('scroll',function(){if(!ticking){requestAnimationFrame(upd);ticking=true;}},{passive:true});upd();})();
 JS_END
 
 for subject_dir in "$PDFS_DIR"/*/; do
