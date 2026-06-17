@@ -49,16 +49,16 @@ header .meta { font-family: "JetBrains Mono", monospace; font-size: 11px; color:
 @keyframes fadeDown{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:translateY(0)}}
 @keyframes symPulse{0%,100%{opacity:1}50%{opacity:.78}}
 @keyframes spin{to{transform:rotate(360deg)}}
-header{animation:fadeDown .55s cubic-bezier(.2,.8,.2,1) both}
-.cat-card,.pdf-item{animation:fadeUp .55s cubic-bezier(.2,.8,.2,1) both}
-.cat-card:nth-child(1),.pdf-item:nth-child(1){animation-delay:.05s}
-.cat-card:nth-child(2),.pdf-item:nth-child(2){animation-delay:.1s}
-.cat-card:nth-child(3),.pdf-item:nth-child(3){animation-delay:.15s}
-.cat-card:nth-child(4),.pdf-item:nth-child(4){animation-delay:.2s}
-.cat-card:nth-child(5),.pdf-item:nth-child(5){animation-delay:.25s}
-.cat-card:nth-child(6),.pdf-item:nth-child(6){animation-delay:.3s}
-.cat-card:nth-child(7),.pdf-item:nth-child(7){animation-delay:.35s}
-.cat-card:nth-child(n+8),.pdf-item:nth-child(n+8){animation-delay:.4s}
+header{animation:fadeDown .9s cubic-bezier(.2,.8,.2,1) both}
+.cat-card,.pdf-item{animation:fadeUp .9s cubic-bezier(.2,.8,.2,1) both}
+.cat-card:nth-child(1),.pdf-item:nth-child(1){animation-delay:.12s}
+.cat-card:nth-child(2),.pdf-item:nth-child(2){animation-delay:.24s}
+.cat-card:nth-child(3),.pdf-item:nth-child(3){animation-delay:.36s}
+.cat-card:nth-child(4),.pdf-item:nth-child(4){animation-delay:.48s}
+.cat-card:nth-child(5),.pdf-item:nth-child(5){animation-delay:.6s}
+.cat-card:nth-child(6),.pdf-item:nth-child(6){animation-delay:.72s}
+.cat-card:nth-child(7),.pdf-item:nth-child(7){animation-delay:.84s}
+.cat-card:nth-child(n+8),.pdf-item:nth-child(n+8){animation-delay:.96s}
 .cat-card:hover,.pdf-item:hover{box-shadow:var(--shadow-lift),0 0 0 1px var(--accent),0 0 30px -6px var(--accent)}
 .title-symbol{text-shadow:0 0 22px var(--accent),0 0 3px var(--accent);animation:symPulse 4.5s ease-in-out infinite}
 .spinner{display:inline-block;width:32px;height:32px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
