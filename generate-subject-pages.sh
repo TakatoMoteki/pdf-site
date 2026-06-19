@@ -88,6 +88,13 @@ for subject_dir in "$PDFS_DIR"/*/; do
     accent_l="#d6452f"; accent_d="#ff7a64"; soft_l="rgba(214,69,47,0.08)"; soft_d="rgba(255,122,100,0.12)"; symbol="Chem"
   fi
 
+  # 科目別の外部リンク（カテゴリ一覧の先頭にカードとして表示）
+  if [ "$subject" = "化学" ]; then
+    EXTRA_LINKS_JS='[{name:"お試しむき",desc:"アプリ体験版",url:"http://172.16.111.51:8081"},{name:"お試しゆーき",desc:"アプリ体験版",url:"http://172.16.111.51:8082"}]'
+  else
+    EXTRA_LINKS_JS='[]'
+  fi
+
   ACCENT_CSS=":root{--accent:${accent_l};--accent-soft:${soft_l};}[data-theme=\"dark\"]{--accent:${accent_d};--accent-soft:${soft_d};}"
   if [ "$subject" = "物理" ]; then slug="phys"; else slug="chem"; fi
   BG_CSS="body{background:transparent !important;}body::before{content:'';position:fixed;inset:0;z-index:-2;background-position:center;background-size:cover;background-repeat:no-repeat;}html[data-theme=\"light\"] body::before{background-image:url('${SITE_URL}/assets/${slug}-bg-l.jpg');}html[data-theme=\"dark\"] body::before{background-image:url('${SITE_URL}/assets/${slug}-bg-d.jpg');}body::after{content:'';position:fixed;inset:0;z-index:-1;}html[data-theme=\"light\"] body::after{background:rgba(255,255,255,0.38);}html[data-theme=\"dark\"] body::after{background:rgba(7,8,18,0.74);}html[data-theme=\"light\"]{--surface:rgba(255,255,255,0.78);}html[data-theme=\"dark\"]{--surface:rgba(22,24,42,0.10);--line:rgba(255,255,255,0.14);}header{-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);}.pdf-item,.cat-card{-webkit-backdrop-filter:blur(30px);backdrop-filter:blur(30px);}html[data-theme=\"light\"] .pdf-item,html[data-theme=\"light\"] .cat-card{border:1px solid rgba(20,22,40,0.18);box-shadow:0 4px 16px rgba(20,22,40,0.14);}html[data-theme=\"dark\"] .pdf-item,html[data-theme=\"dark\"] .cat-card{border:1px solid rgba(255,255,255,0.16);box-shadow:0 6px 20px rgba(0,0,0,0.45);}"
@@ -219,7 +226,9 @@ ${BG_CSS}
 ${THEME_JS}
 ${PW_CHECK}
 if(!checkAuth())throw new Error('auth');
-async function load(){try{var res=await fetch('../filelist.json?'+Date.now());var data=await res.json();var folder=data.folders.find(function(f){return f.name==='${subject}';});var el=document.getElementById('cats');if(!folder||!folder.subs||folder.subs.length===0){el.innerHTML='<div class="empty">カテゴリがありません</div>';return;}el.innerHTML=folder.subs.map(function(s,i){var num=String(i+1).padStart(2,'0');return'<a class="cat-card" href="'+encodeURIComponent(s.name)+'/"><div class="cat-idx">'+num+'</div><div class="cat-info"><div class="cat-name">'+s.name+'</div><div class="cat-count">'+s.files.length+' files</div></div><div class="cat-arrow">→</div></a>';}).join('');}catch(e){document.getElementById('cats').innerHTML='<div class="empty">読み込み失敗</div>';}}
+var EXTRA_LINKS=${EXTRA_LINKS_JS};
+function extraCards(){return EXTRA_LINKS.map(function(l){return'<a class="cat-card" href="'+l.url+'" target="_blank" rel="noopener"><div class="cat-idx">★</div><div class="cat-info"><div class="cat-name">'+l.name+'</div><div class="cat-count">'+l.desc+'</div></div><div class="cat-arrow">↗</div></a>';}).join('');}
+async function load(){var el=document.getElementById('cats');var extra=extraCards();try{var res=await fetch('../filelist.json?'+Date.now());var data=await res.json();var folder=data.folders.find(function(f){return f.name==='${subject}';});if(!folder||!folder.subs||folder.subs.length===0){el.innerHTML=extra||'<div class="empty">カテゴリがありません</div>';return;}el.innerHTML=extra+folder.subs.map(function(s,i){var num=String(i+1).padStart(2,'0');return'<a class="cat-card" href="'+encodeURIComponent(s.name)+'/"><div class="cat-idx">'+num+'</div><div class="cat-info"><div class="cat-name">'+s.name+'</div><div class="cat-count">'+s.files.length+' files</div></div><div class="cat-arrow">→</div></a>';}).join('');}catch(e){el.innerHTML=extra+'<div class="empty">読み込み失敗</div>';}}
 load();
 </script>
 </body>
