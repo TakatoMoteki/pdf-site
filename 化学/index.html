@@ -96,7 +96,7 @@ var _tt=document.getElementById('theme-toggle');if(_tt)_tt.addEventListener('cli
 var PW_KEY="pw_化学";function checkAuth(){if(sessionStorage.getItem(PW_KEY)!=="ok"){location.href="../";return false;}return true;}
 if(!checkAuth())throw new Error('auth');
 var EXTRA_LINKS=[{name:"お試しむき",desc:"アプリ体験版",url:"../apps/muki/"},{name:"お試しゆーき",desc:"アプリ体験版",url:"../apps/yuuki/"}];
-function extraCards(){return EXTRA_LINKS.map(function(l){return'<a class="cat-card" href="'+l.url+'" target="_blank" rel="noopener"><div class="cat-idx">★</div><div class="cat-info"><div class="cat-name">'+l.name+'</div><div class="cat-count">'+l.desc+'</div></div><div class="cat-arrow">↗</div></a>';}).join('');}
+function extraCards(){return EXTRA_LINKS.map(function(l){return'<a class="cat-card" href="'+l.url+'"><div class="cat-idx">★</div><div class="cat-info"><div class="cat-name">'+l.name+'</div><div class="cat-count">'+l.desc+'</div></div><div class="cat-arrow">→</div></a>';}).join('');}
 async function load(){var el=document.getElementById('cats');var extra=extraCards();try{var res=await fetch('../filelist.json?'+Date.now());var data=await res.json();var folder=data.folders.find(function(f){return f.name==='化学';});if(!folder||!folder.subs||folder.subs.length===0){el.innerHTML=extra||'<div class="empty">カテゴリがありません</div>';return;}el.innerHTML=extra+folder.subs.map(function(s,i){var num=String(i+1).padStart(2,'0');return'<a class="cat-card" href="'+encodeURIComponent(s.name)+'/"><div class="cat-idx">'+num+'</div><div class="cat-info"><div class="cat-name">'+s.name+'</div><div class="cat-count">'+s.files.length+' files</div></div><div class="cat-arrow">→</div></a>';}).join('');}catch(e){el.innerHTML=extra+'<div class="empty">読み込み失敗</div>';}}
 load();
 </script>
