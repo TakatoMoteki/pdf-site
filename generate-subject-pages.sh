@@ -89,9 +89,12 @@ for subject_dir in "$PDFS_DIR"/*/; do
   fi
 
   # 科目別の外部リンク（カテゴリ一覧の先頭にカードとして表示）
-  # ※ 化学のお試しリンクは一旦非表示。再表示する場合は下のコメントを EXTRA_LINKS_JS に戻す。
-  # 化学: [{name:"お試しむき",desc:"アプリ体験版",url:"http://172.16.111.51:8081"},{name:"お試しゆーき",desc:"アプリ体験版",url:"http://172.16.111.51:8082"}]
-  EXTRA_LINKS_JS='[]'
+  # 化学のお試しアプリ（静的Webエクスポート）。同一オリジン /pdf-site/apps/<id>/ に配置。
+  if [ "$subject" = "化学" ]; then
+    EXTRA_LINKS_JS='[{name:"お試しむき",desc:"アプリ体験版",url:"../apps/muki/"},{name:"お試しゆーき",desc:"アプリ体験版",url:"../apps/yuuki/"}]'
+  else
+    EXTRA_LINKS_JS='[]'
+  fi
 
   ACCENT_CSS=":root{--accent:${accent_l};--accent-soft:${soft_l};}[data-theme=\"dark\"]{--accent:${accent_d};--accent-soft:${soft_d};}"
   if [ "$subject" = "物理" ]; then slug="phys"; else slug="chem"; fi
