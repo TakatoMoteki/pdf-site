@@ -97,26 +97,11 @@ sync_and_deploy() {
     log "変更なし（スキップ）"
     return
   fi
-  # 5分以上前から残る古いロックだけ掃除（実行中プロセスのロックは触らない）
-  if [ -f .git/index.lock ] && [ -z "$(find .git/index.lock -mmin -5 2>/dev/null)" ]; then
-    log "古い index.lock を削除"
-    rm -f .git/index.lock
-  fi
   git commit -m "auto-update: $(date '+%Y-%m-%d %H:%M:%S')"
-  # push を最大3回リトライ（一時的なネット切断やロック競合を吸収）
-  push_ok=0
-  for attempt in 1 2 3; do
-    if git push origin main; then
-      log "✅ デプロイ成功"
-      push_ok=1
-      break
-    else
-      log "push 失敗（試行 $attempt/3）、10秒後に再試行"
-      sleep 10
-    fi
-  done
-  if [ "$push_ok" -ne 1 ]; then
-    log "❌ デプロイ失敗（3回試行）"
+  if git push origin main; then
+    log "✅ デプロイ成功"
+  else
+    log "❌ デプロイ失敗"
   fi
 }
 
