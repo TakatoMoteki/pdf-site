@@ -15,19 +15,6 @@ log() {
   echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$LOG_FILE"
 }
 
-# ネット接続を最大10回（5秒間隔）待つ。繋がらなければ1を返す
-wait_for_network() {
-  for i in $(seq 1 10); do
-    if ping -c 1 -t 3 8.8.8.8 >/dev/null 2>&1; then
-      return 0
-    fi
-    log "ネット未接続、待機中... ($i/10)"
-    sleep 5
-  done
-  log "ネット接続できず、今回はスキップ"
-  return 1
-}
-
 compress_pdf() {
   local src="$1"
   local dst="$2"
@@ -74,28 +61,10 @@ log "=== Google Drive 同期開始 ==="
 # Step 1: rclone sync
 log "rclone sync 開始..."
 mkdir -p "$SYNC_DIR"
-
-# ネット接続を待つ。繋がらなければ同期を中止（次回60秒後に再挑戦）
-if ! wait_for_network; then
-  exit 0
-fi
-
-# rcloneを最大3回リトライ（一時的な失敗を吸収）
-rclone_ok=0
-for attempt in 1 2 3; do
-  if rclone sync "$GDRIVE_PATH" "$SYNC_DIR" \
-    --include "*.pdf" --include "*.PDF" \
-    --create-empty-src-dirs \
-    -v 2>&1 | tail -5 | while read line; do log "  rclone: $line"; done
-  then
-    # パイプ先のwhileの終了コードになるため、別途疎通確認
-    rclone_ok=1
-    break
-  fi
-done
-if [ "$rclone_ok" -ne 1 ]; then
-  log "rclone 試行後も継続（ミラーリングへ進む）"
-fi
+rclone sync "$GDRIVE_PATH" "$SYNC_DIR" \
+  --include "*.pdf" --include "*.PDF" \
+  --create-empty-src-dirs \
+  -v 2>&1 | tail -5 | while read line; do log "  rclone: $line"; done
 
 # Step 2: Google Drive由来のフォルダを記録
 > "$TRACK_FILE"
