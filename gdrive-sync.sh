@@ -100,15 +100,21 @@ fi
 
 rclone_ok=0
 for attempt in 1 2 3; do
-  if rclone sync "$GDRIVE_PATH" "$SYNC_DIR" \
+  rclone sync "$GDRIVE_PATH" "$SYNC_DIR" \
     --include "*.pdf" --include "*.PDF" \
     --create-empty-src-dirs \
-    -v 2>&1 | tail -5 | while read line; do log "  rclone: $line"; done
-  then
+    -v > .rclone.log 2>&1
+  
+  if [ $? -eq 0 ]; then
+    tail -5 .rclone.log | while read line; do log "  rclone: $line"; done
     rclone_ok=1
     break
+  else
+    log "rclone attempt $attempt failed:"
+    tail -5 .rclone.log | while read line; do log "  $line"; done
   fi
 done
+rm -f .rclone.log
 
 if [ "$rclone_ok" -ne 1 ]; then
   log "rclone 同期に失敗しました。"
