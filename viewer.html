@@ -61,7 +61,11 @@
       var maxWidth = Math.min(window.innerWidth - 24, 1200);
       var scale = window.devicePixelRatio || 1;
 
-      pdfjsLib.getDocument(pdfUrl).promise.then(function(pdf) {
+      pdfjsLib.getDocument({
+        url: pdfUrl,
+        cMapUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/cmaps/',
+        cMapPacked: true
+      }).promise.then(function(pdf) {
         statusEl.style.display = 'none';
         pageInfo.textContent = pdf.numPages + 'ページ';
         var rendered = 0;
