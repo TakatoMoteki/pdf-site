@@ -88,7 +88,11 @@ body{background:transparent !important;}body::before{content:'';position:fixed;i
 </div>
 <button class="theme-toggle" id="theme-toggle">🌙</button>
 </header>
-<div class="container"><div class="cat-list" id="cats"><div class="empty"><span class="spinner"></span></div></div></div>
+<div class="container">
+<div style="margin-bottom:24px;">
+  <input type="text" id="cat-search-input" placeholder="カテゴリを検索..." style="width:100%; padding:14px 20px; border-radius:14px; border:1px solid var(--line); background:var(--surface); color:var(--ink); font-size:15px; outline:none; transition: border-color 0.2s;">
+</div>
+<div class="cat-list" id="cats"><div class="empty"><span class="spinner"></span></div></div></div>
 <script>
 function applyTheme(t){document.documentElement.setAttribute('data-theme',t);var b=document.getElementById('theme-toggle');if(b)b.textContent=t==='dark'?'☀️':'🌙';localStorage.setItem('pdf-site-theme',t);}
 applyTheme(localStorage.getItem('pdf-site-theme')||(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'));
@@ -97,7 +101,24 @@ var PW_KEY="pw_化学";function checkAuth(){if(sessionStorage.getItem(PW_KEY)!==
 if(!checkAuth())throw new Error('auth');
 var EXTRA_LINKS=[{name:"お試しむき",desc:"アプリ体験版",url:"../apps/muki/"},{name:"お試しゆーき",desc:"アプリ体験版",url:"../apps/yuuki/"}];
 function extraCards(){return EXTRA_LINKS.map(function(l){return'<a class="cat-card" href="'+l.url+'"><div class="cat-idx">★</div><div class="cat-info"><div class="cat-name">'+l.name+'</div><div class="cat-count">'+l.desc+'</div></div><div class="cat-arrow">→</div></a>';}).join('');}
-async function load(){var el=document.getElementById('cats');var extra=extraCards();try{var res=await fetch('../filelist.json?'+Date.now());var data=await res.json();var folder=data.folders.find(function(f){return f.name==='化学';});if(!folder||!folder.subs||folder.subs.length===0){el.innerHTML=extra||'<div class="empty">カテゴリがありません</div>';return;}el.innerHTML=extra+folder.subs.map(function(s,i){var num=String(i+1).padStart(2,'0');return'<a class="cat-card" href="'+encodeURIComponent(s.name)+'/"><div class="cat-idx">'+num+'</div><div class="cat-info"><div class="cat-name">'+s.name+'</div><div class="cat-count">'+s.files.length+' files</div></div><div class="cat-arrow">→</div></a>';}).join('');}catch(e){el.innerHTML=extra+'<div class="empty">読み込み失敗</div>';}}
+var allSubs = [];
+async function load(){var el=document.getElementById('cats');var extra=extraCards();try{var res=await fetch('../filelist.json?'+Date.now());var data=await res.json();var folder=data.folders.find(function(f){return f.name==='化学';});if(!folder||!folder.subs||folder.subs.length===0){el.innerHTML=extra||'<div class="empty">カテゴリがありません</div>';return;}allSubs=folder.subs;renderCats(allSubs, extra);}catch(e){el.innerHTML=extra+'<div class="empty">読み込み失敗</div>';}}
+function renderCats(subs, extra) {
+  var el = document.getElementById('cats');
+  var html = extra || '';
+  if(subs.length===0){
+    el.innerHTML = html + '<div class="empty">見つかりませんでした</div>';
+    return;
+  }
+  html += subs.map(function(s,i){var num=String(i+1).padStart(2,'0');return'<a class="cat-card" href="'+encodeURIComponent(s.name)+'/"><div class="cat-idx">'+num+'</div><div class="cat-info"><div class="cat-name">'+s.name+'</div><div class="cat-count">'+s.files.length+' files</div></div><div class="cat-arrow">→</div></a>';}).join('');
+  el.innerHTML = html;
+}
+document.getElementById('cat-search-input').addEventListener('input', function(e){
+  var q=e.target.value.toLowerCase();
+  if(!q) { renderCats(allSubs, extraCards()); return; }
+  var filtered = allSubs.filter(function(s){ return s.name.toLowerCase().includes(q); });
+  renderCats(filtered, ""); // exclude extra apps during search
+});
 load();
 </script>
 </body>

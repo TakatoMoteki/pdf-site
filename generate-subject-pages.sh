@@ -1,5 +1,5 @@
 #!/bin/bash
-SITE_DIR="$HOME/pdf-site"
+SITE_DIR="$(cd "$(dirname "$0")" && pwd)"
 PDFS_DIR="$SITE_DIR/pdfs"
 SITE_URL="https://takatomoteki.github.io/pdf-site"
 
@@ -10,6 +10,70 @@ get_hash() {
     *) echo "" ;;
   esac
 }
+
+human_size() {
+  local bytes=$1
+  if [ "$bytes" -ge 1048576 ]; then echo "$(echo "scale=1; $bytes/1048576" | bc) MB"
+  elif [ "$bytes" -ge 1024 ]; then echo "$(echo "scale=0; $bytes/1024" | bc) KB"
+  else echo "${bytes} B"; fi
+}
+file_date() {
+  if stat --version 2>/dev/null | grep -q 'GNU'; then date -d "@$(stat -c %Y "$1")" "+%Y/%m/%d %H:%M"
+  else stat -f "%Sm" -t "%Y/%m/%d %H:%M" "$1" 2>/dev/null; fi
+}
+get_bytes() {
+  if stat --version 2>/dev/null | grep -q 'GNU'; then stat -c%s "$1" 2>/dev/null
+  else stat -f%z "$1" 2>/dev/null; fi
+}
+
+generate_filelist() {
+  local json='{"updated":"'"$(date '+%Y/%m/%d %H:%M')"'","folders":['
+  local first_folder=true
+  for subject_dir in "$PDFS_DIR"/*/; do
+    [ -d "$subject_dir" ] || continue
+    local subject=$(basename "$subject_dir")
+    local total_files=0
+    local subs_json=""
+    local first_sub=true
+    for sub_dir in "$subject_dir"*/; do
+      [ -d "$sub_dir" ] || continue
+      local subname=$(basename "$sub_dir")
+      local files_json=""
+      local first_file=true
+      local sub_count=0
+      for f in "$sub_dir"*.pdf "$sub_dir"*.PDF; do
+        [ -f "$f" ] || continue
+        local name=$(basename "$f")
+        local size=$(human_size "$(get_bytes "$f")")
+        local mdate=$(file_date "$f")
+        [ "$first_file" = true ] && first_file=false || files_json+=","
+        files_json+='{"name":"'"$name"'","size":"'"$size"'","date":"'"$mdate"'"}'
+        sub_count=$((sub_count + 1))
+      done
+      [ "$sub_count" -eq 0 ] && continue
+      total_files=$((total_files + sub_count))
+      [ "$first_sub" = true ] && first_sub=false || subs_json+=","
+      subs_json+='{"name":"'"$subname"'","files":['"$files_json"']}'
+    done
+    local root_files=""
+    local first_rf=true
+    for f in "$subject_dir"*.pdf "$subject_dir"*.PDF; do
+      [ -f "$f" ] || continue
+      local name=$(basename "$f")
+      local size=$(human_size "$(get_bytes "$f")")
+      local mdate=$(file_date "$f")
+      [ "$first_rf" = true ] && first_rf=false || root_files+=","
+      root_files+='{"name":"'"$name"'","size":"'"$size"'","date":"'"$mdate"'"}'
+      total_files=$((total_files + 1))
+    done
+    [ "$first_folder" = true ] && first_folder=false || json+=","
+    json+='{"name":"'"$subject"'","totalFiles":'"$total_files"',"subs":['"$subs_json"'],"rootFiles":['"$root_files"']}'
+  done
+  json+=']}'
+  echo "$json" > "$SITE_DIR/filelist.json"
+}
+
+generate_filelist
 
 # 共通CSS（テーマ変数＋方眼背景＋元素カラー）
 read -r -d '' COMMON_CSS << 'CSS_END'
@@ -163,18 +227,20 @@ ${BG_CSS}
 </div>
 <button class="theme-toggle" id="theme-toggle">🌙</button>
 </header>
-<div class="container"><div class="pdf-list" id="pdf-list"><div class="empty"><span class="spinner"></span></div></div></div>
-<div class="viewer-overlay" id="viewer"><div class="viewer"><div class="viewer-header"><h2 id="viewer-title">PDF</h2><button class="viewer-close" onclick="closeViewer()">閉じる</button></div><div class="viewer-body" id="viewer-body"></div></div></div>
+<div class="container">
+<div style="margin-bottom:24px;">
+  <input type="text" id="search-input" placeholder="プリントを検索..." style="width:100%; padding:14px 20px; border-radius:14px; border:1px solid var(--line); background:var(--surface); color:var(--ink); font-size:15px; outline:none; transition: border-color 0.2s;">
+</div>
+<div class="pdf-list" id="pdf-list"><div class="empty"><span class="spinner"></span></div></div></div>
 <script>
 ${THEME_JS}
 var SITE_URL='${SITE_URL}';
 ${PW_CHECK}
 if(!checkAuth())throw new Error('auth');
-async function load(){try{var res=await fetch('../../filelist.json?'+Date.now());var data=await res.json();document.getElementById('update-time').textContent='updated '+data.updated;var folder=data.folders.find(function(f){return f.name==='${subject}';});if(!folder)return;var sub=folder.subs.find(function(s){return s.name==='${subname}';});var el=document.getElementById('pdf-list');if(!sub||sub.files.length===0){el.innerHTML='<div class="empty">PDFがありません</div>';return;}el.innerHTML=sub.files.map(function(f){var relPath='pdfs/${subject}/${subname}/'+encodeURIComponent(f.name);var directPath='../../'+relPath;var gview='https://docs.google.com/gview?url='+encodeURIComponent(SITE_URL+'/'+relPath)+'&embedded=true';var dateText=f.date?f.size+' · '+f.date:f.size;return'<div class="pdf-item"><div class="pdf-info"><div class="pdf-mark">PDF</div><div style="min-width:0"><div class="pdf-name">'+f.name+'</div><div class="pdf-meta">'+dateText+'</div></div></div><div class="pdf-actions"><button class="btn btn-view" data-gview="'+gview+'" data-name="'+f.name.replace(/"/g,'&quot;')+'">閲覧</button><a class="btn btn-dl" href="'+directPath+'" download>DL</a></div></div>';}).join('');document.querySelectorAll('.btn-view').forEach(function(btn){btn.addEventListener('click',function(){openViewer(this.dataset.name,this.dataset.gview);});});}catch(e){document.getElementById('pdf-list').innerHTML='<div class="empty">読み込み失敗</div>';}}
-function openViewer(n,url){document.getElementById('viewer-title').textContent=n;document.getElementById('viewer').classList.add('active');document.getElementById('viewer-body').innerHTML='<iframe src="'+url+'"></iframe>';}
-function closeViewer(){document.getElementById('viewer').classList.remove('active');document.getElementById('viewer-body').innerHTML='';}
-document.getElementById('viewer').addEventListener('click',function(e){if(e.target===this)closeViewer();});
-document.addEventListener('keydown',function(e){if(e.key==='Escape')closeViewer();});
+var allFiles = [];
+async function load(){try{var res=await fetch('../../filelist.json?'+Date.now());var data=await res.json();document.getElementById('update-time').textContent='updated '+data.updated;var folder=data.folders.find(function(f){return f.name==='${subject}';});if(!folder)return;var sub=folder.subs.find(function(s){return s.name==='${subname}';});var el=document.getElementById('pdf-list');if(!sub||sub.files.length===0){el.innerHTML='<div class="empty">PDFがありません</div>';return;}allFiles=sub.files;renderList(allFiles);}catch(e){document.getElementById('pdf-list').innerHTML='<div class="empty">読み込み失敗</div>';}}
+function renderList(files){var el=document.getElementById('pdf-list');if(files.length===0){el.innerHTML='<div class="empty">見つかりませんでした</div>';return;}el.innerHTML=files.map(function(f){var relPath='pdfs/${subject}/${subname}/'+encodeURIComponent(f.name);var directPath='../../'+relPath;var viewerPath='../../viewer.html?file='+encodeURIComponent(directPath)+'&name='+encodeURIComponent(f.name);var dateText=f.date?f.size+' · '+f.date:f.size;return'<div class="pdf-item"><div class="pdf-info"><div class="pdf-mark">PDF</div><div style="min-width:0"><div class="pdf-name">'+f.name+'</div><div class="pdf-meta">'+dateText+'</div></div></div><div class="pdf-actions"><a class="btn btn-view" href="'+viewerPath+'">閲覧</a><a class="btn btn-dl" href="'+directPath+'" download>DL</a></div></div>';}).join('');}
+document.getElementById('search-input').addEventListener('input',function(e){var q=e.target.value.toLowerCase();if(!q){renderList(allFiles);return;}var filtered=allFiles.filter(function(f){return f.name.toLowerCase().includes(q);});renderList(filtered);});
 load();
 </script>
 </body>
@@ -222,14 +288,35 @@ ${BG_CSS}
 </div>
 <button class="theme-toggle" id="theme-toggle">🌙</button>
 </header>
-<div class="container"><div class="cat-list" id="cats"><div class="empty"><span class="spinner"></span></div></div></div>
+<div class="container">
+<div style="margin-bottom:24px;">
+  <input type="text" id="cat-search-input" placeholder="カテゴリを検索..." style="width:100%; padding:14px 20px; border-radius:14px; border:1px solid var(--line); background:var(--surface); color:var(--ink); font-size:15px; outline:none; transition: border-color 0.2s;">
+</div>
+<div class="cat-list" id="cats"><div class="empty"><span class="spinner"></span></div></div></div>
 <script>
 ${THEME_JS}
 ${PW_CHECK}
 if(!checkAuth())throw new Error('auth');
 var EXTRA_LINKS=${EXTRA_LINKS_JS};
 function extraCards(){return EXTRA_LINKS.map(function(l){return'<a class="cat-card" href="'+l.url+'"><div class="cat-idx">★</div><div class="cat-info"><div class="cat-name">'+l.name+'</div><div class="cat-count">'+l.desc+'</div></div><div class="cat-arrow">→</div></a>';}).join('');}
-async function load(){var el=document.getElementById('cats');var extra=extraCards();try{var res=await fetch('../filelist.json?'+Date.now());var data=await res.json();var folder=data.folders.find(function(f){return f.name==='${subject}';});if(!folder||!folder.subs||folder.subs.length===0){el.innerHTML=extra||'<div class="empty">カテゴリがありません</div>';return;}el.innerHTML=extra+folder.subs.map(function(s,i){var num=String(i+1).padStart(2,'0');return'<a class="cat-card" href="'+encodeURIComponent(s.name)+'/"><div class="cat-idx">'+num+'</div><div class="cat-info"><div class="cat-name">'+s.name+'</div><div class="cat-count">'+s.files.length+' files</div></div><div class="cat-arrow">→</div></a>';}).join('');}catch(e){el.innerHTML=extra+'<div class="empty">読み込み失敗</div>';}}
+var allSubs = [];
+async function load(){var el=document.getElementById('cats');var extra=extraCards();try{var res=await fetch('../filelist.json?'+Date.now());var data=await res.json();var folder=data.folders.find(function(f){return f.name==='${subject}';});if(!folder||!folder.subs||folder.subs.length===0){el.innerHTML=extra||'<div class="empty">カテゴリがありません</div>';return;}allSubs=folder.subs;renderCats(allSubs, extra);}catch(e){el.innerHTML=extra+'<div class="empty">読み込み失敗</div>';}}
+function renderCats(subs, extra) {
+  var el = document.getElementById('cats');
+  var html = extra || '';
+  if(subs.length===0){
+    el.innerHTML = html + '<div class="empty">見つかりませんでした</div>';
+    return;
+  }
+  html += subs.map(function(s,i){var num=String(i+1).padStart(2,'0');return'<a class="cat-card" href="'+encodeURIComponent(s.name)+'/"><div class="cat-idx">'+num+'</div><div class="cat-info"><div class="cat-name">'+s.name+'</div><div class="cat-count">'+s.files.length+' files</div></div><div class="cat-arrow">→</div></a>';}).join('');
+  el.innerHTML = html;
+}
+document.getElementById('cat-search-input').addEventListener('input', function(e){
+  var q=e.target.value.toLowerCase();
+  if(!q) { renderCats(allSubs, extraCards()); return; }
+  var filtered = allSubs.filter(function(s){ return s.name.toLowerCase().includes(q); });
+  renderCats(filtered, ""); // exclude extra apps during search
+});
 load();
 </script>
 </body>

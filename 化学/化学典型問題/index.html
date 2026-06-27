@@ -99,8 +99,11 @@ body{background:transparent !important;}body::before{content:'';position:fixed;i
 </div>
 <button class="theme-toggle" id="theme-toggle">🌙</button>
 </header>
-<div class="container"><div class="pdf-list" id="pdf-list"><div class="empty"><span class="spinner"></span></div></div></div>
-<div class="viewer-overlay" id="viewer"><div class="viewer"><div class="viewer-header"><h2 id="viewer-title">PDF</h2><button class="viewer-close" onclick="closeViewer()">閉じる</button></div><div class="viewer-body" id="viewer-body"></div></div></div>
+<div class="container">
+<div style="margin-bottom:24px;">
+  <input type="text" id="search-input" placeholder="プリントを検索..." style="width:100%; padding:14px 20px; border-radius:14px; border:1px solid var(--line); background:var(--surface); color:var(--ink); font-size:15px; outline:none; transition: border-color 0.2s;">
+</div>
+<div class="pdf-list" id="pdf-list"><div class="empty"><span class="spinner"></span></div></div></div>
 <script>
 function applyTheme(t){document.documentElement.setAttribute('data-theme',t);var b=document.getElementById('theme-toggle');if(b)b.textContent=t==='dark'?'☀️':'🌙';localStorage.setItem('pdf-site-theme',t);}
 applyTheme(localStorage.getItem('pdf-site-theme')||(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'));
@@ -108,11 +111,10 @@ var _tt=document.getElementById('theme-toggle');if(_tt)_tt.addEventListener('cli
 var SITE_URL='https://takatomoteki.github.io/pdf-site';
 var PW_KEY="pw_化学";function checkAuth(){if(sessionStorage.getItem(PW_KEY)!=="ok"){location.href="../";return false;}return true;}
 if(!checkAuth())throw new Error('auth');
-async function load(){try{var res=await fetch('../../filelist.json?'+Date.now());var data=await res.json();document.getElementById('update-time').textContent='updated '+data.updated;var folder=data.folders.find(function(f){return f.name==='化学';});if(!folder)return;var sub=folder.subs.find(function(s){return s.name==='化学典型問題';});var el=document.getElementById('pdf-list');if(!sub||sub.files.length===0){el.innerHTML='<div class="empty">PDFがありません</div>';return;}el.innerHTML=sub.files.map(function(f){var relPath='pdfs/化学/化学典型問題/'+encodeURIComponent(f.name);var directPath='../../'+relPath;var gview='https://docs.google.com/gview?url='+encodeURIComponent(SITE_URL+'/'+relPath)+'&embedded=true';var dateText=f.date?f.size+' · '+f.date:f.size;return'<div class="pdf-item"><div class="pdf-info"><div class="pdf-mark">PDF</div><div style="min-width:0"><div class="pdf-name">'+f.name+'</div><div class="pdf-meta">'+dateText+'</div></div></div><div class="pdf-actions"><button class="btn btn-view" data-gview="'+gview+'" data-name="'+f.name.replace(/"/g,'&quot;')+'">閲覧</button><a class="btn btn-dl" href="'+directPath+'" download>DL</a></div></div>';}).join('');document.querySelectorAll('.btn-view').forEach(function(btn){btn.addEventListener('click',function(){openViewer(this.dataset.name,this.dataset.gview);});});}catch(e){document.getElementById('pdf-list').innerHTML='<div class="empty">読み込み失敗</div>';}}
-function openViewer(n,url){document.getElementById('viewer-title').textContent=n;document.getElementById('viewer').classList.add('active');document.getElementById('viewer-body').innerHTML='<iframe src="'+url+'"></iframe>';}
-function closeViewer(){document.getElementById('viewer').classList.remove('active');document.getElementById('viewer-body').innerHTML='';}
-document.getElementById('viewer').addEventListener('click',function(e){if(e.target===this)closeViewer();});
-document.addEventListener('keydown',function(e){if(e.key==='Escape')closeViewer();});
+var allFiles = [];
+async function load(){try{var res=await fetch('../../filelist.json?'+Date.now());var data=await res.json();document.getElementById('update-time').textContent='updated '+data.updated;var folder=data.folders.find(function(f){return f.name==='化学';});if(!folder)return;var sub=folder.subs.find(function(s){return s.name==='化学典型問題';});var el=document.getElementById('pdf-list');if(!sub||sub.files.length===0){el.innerHTML='<div class="empty">PDFがありません</div>';return;}allFiles=sub.files;renderList(allFiles);}catch(e){document.getElementById('pdf-list').innerHTML='<div class="empty">読み込み失敗</div>';}}
+function renderList(files){var el=document.getElementById('pdf-list');if(files.length===0){el.innerHTML='<div class="empty">見つかりませんでした</div>';return;}el.innerHTML=files.map(function(f){var relPath='pdfs/化学/化学典型問題/'+encodeURIComponent(f.name);var directPath='../../'+relPath;var viewerPath='../../viewer.html?file='+encodeURIComponent(directPath)+'&name='+encodeURIComponent(f.name);var dateText=f.date?f.size+' · '+f.date:f.size;return'<div class="pdf-item"><div class="pdf-info"><div class="pdf-mark">PDF</div><div style="min-width:0"><div class="pdf-name">'+f.name+'</div><div class="pdf-meta">'+dateText+'</div></div></div><div class="pdf-actions"><a class="btn btn-view" href="'+viewerPath+'">閲覧</a><a class="btn btn-dl" href="'+directPath+'" download>DL</a></div></div>';}).join('');}
+document.getElementById('search-input').addEventListener('input',function(e){var q=e.target.value.toLowerCase();if(!q){renderList(allFiles);return;}var filtered=allFiles.filter(function(f){return f.name.toLowerCase().includes(q);});renderList(filtered);});
 load();
 </script>
 </body>

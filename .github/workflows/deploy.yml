@@ -1,0 +1,59 @@
+name: Deploy PDF Site
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'  # Every 10 minutes
+  workflow_dispatch:        # Manual trigger
+
+jobs:
+  sync_and_deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y rclone ghostscript
+
+      - name: Setup rclone config
+        run: |
+          mkdir -p ~/.config/rclone
+          echo "${{ secrets.RCLONE_CONF }}" > ~/.config/rclone/rclone.conf
+
+      - name: Run Sync and Build
+        run: |
+          export GITHUB_ACTIONS="true"
+          bash gdrive-sync.sh
+          bash generate-subject-pages.sh
+
+      - name: Commit and Push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            echo "CHANGED=false" >> $GITHUB_ENV
+          else
+            git commit -m "auto-deploy: $(date '+%Y-%m-%d %H:%M:%S')"
+            git push origin main
+            echo "CHANGED=true" >> $GITHUB_ENV
+          fi
+
+      - name: Notify LINE (Success)
+        if: env.CHANGED == 'true'
+        run: |
+          curl -X POST -H "Authorization: Bearer ${{ secrets.LINE_NOTIFY_TOKEN }}" \
+               -F "message=✅ プリントが更新されました！ https://takatomoteki.github.io/pdf-site/" \
+               https://notify-api.line.me/api/notify || true
+
+      - name: Notify LINE (Failure)
+        if: failure()
+        run: |
+          curl -X POST -H "Authorization: Bearer ${{ secrets.LINE_NOTIFY_TOKEN }}" \
+               -F "message=❌ PDF同期でエラーが発生しました。GitHub Actionsを確認してください。" \
+               https://notify-api.line.me/api/notify || true
