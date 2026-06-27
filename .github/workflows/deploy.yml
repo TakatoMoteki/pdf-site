@@ -44,16 +44,16 @@ jobs:
             echo "CHANGED=true" >> $GITHUB_ENV
           fi
 
-      - name: Notify LINE (Success)
+      - name: Notify Discord (Success)
         if: env.CHANGED == 'true'
         run: |
-          curl -X POST -H "Authorization: Bearer ${{ secrets.LINE_NOTIFY_TOKEN }}" \
-               -F "message=✅ プリントが更新されました！ https://takatomoteki.github.io/pdf-site/" \
-               https://notify-api.line.me/api/notify || true
+          curl -H "Content-Type: application/json" \
+               -d '{"content": "✅ **プリントが更新されました！**\nhttps://takatomoteki.github.io/pdf-site/"}' \
+               ${{ secrets.DISCORD_WEBHOOK_URL }} || true
 
-      - name: Notify LINE (Failure)
+      - name: Notify Discord (Failure)
         if: failure()
         run: |
-          curl -X POST -H "Authorization: Bearer ${{ secrets.LINE_NOTIFY_TOKEN }}" \
-               -F "message=❌ PDF同期でエラーが発生しました。GitHub Actionsを確認してください。" \
-               https://notify-api.line.me/api/notify || true
+          curl -H "Content-Type: application/json" \
+               -d '{"content": "❌ **PDF同期でエラーが発生しました**\nGitHub Actionsを確認してください。"}' \
+               ${{ secrets.DISCORD_WEBHOOK_URL }} || true
