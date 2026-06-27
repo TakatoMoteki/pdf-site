@@ -228,9 +228,7 @@ ${BG_CSS}
 <button class="theme-toggle" id="theme-toggle">🌙</button>
 </header>
 <div class="container">
-<div style="margin-bottom:24px;">
-  <input type="text" id="search-input" placeholder="プリントを検索..." style="width:100%; padding:14px 20px; border-radius:14px; border:1px solid var(--line); background:var(--surface); color:var(--ink); font-size:15px; outline:none; transition: border-color 0.2s;">
-</div>
+
 <div class="pdf-list" id="pdf-list"><div class="empty"><span class="spinner"></span></div></div></div>
 <script>
 ${THEME_JS}
@@ -240,7 +238,7 @@ if(!checkAuth())throw new Error('auth');
 var allFiles = [];
 async function load(){try{var res=await fetch('../../filelist.json?'+Date.now());var data=await res.json();document.getElementById('update-time').textContent='updated '+data.updated;var folder=data.folders.find(function(f){return f.name==='${subject}';});if(!folder)return;var sub=folder.subs.find(function(s){return s.name==='${subname}';});var el=document.getElementById('pdf-list');if(!sub||sub.files.length===0){el.innerHTML='<div class="empty">PDFがありません</div>';return;}allFiles=sub.files;renderList(allFiles);}catch(e){document.getElementById('pdf-list').innerHTML='<div class="empty">読み込み失敗</div>';}}
 function renderList(files){var el=document.getElementById('pdf-list');if(files.length===0){el.innerHTML='<div class="empty">見つかりませんでした</div>';return;}el.innerHTML=files.map(function(f){var relPath='pdfs/${subject}/${subname}/'+encodeURIComponent(f.name);var directPath='../../'+relPath;var viewerPath='../../viewer.html?file='+encodeURIComponent(directPath)+'&name='+encodeURIComponent(f.name);var dateText=f.date?f.size+' · '+f.date:f.size;return'<div class="pdf-item"><div class="pdf-info"><div class="pdf-mark">PDF</div><div style="min-width:0"><div class="pdf-name">'+f.name+'</div><div class="pdf-meta">'+dateText+'</div></div></div><div class="pdf-actions"><a class="btn btn-view" href="'+viewerPath+'">閲覧</a><a class="btn btn-dl" href="'+directPath+'" download>DL</a></div></div>';}).join('');}
-document.getElementById('search-input').addEventListener('input',function(e){var q=e.target.value.toLowerCase();if(!q){renderList(allFiles);return;}var filtered=allFiles.filter(function(f){return f.name.toLowerCase().includes(q);});renderList(filtered);});
+
 load();
 </script>
 </body>
@@ -289,9 +287,7 @@ ${BG_CSS}
 <button class="theme-toggle" id="theme-toggle">🌙</button>
 </header>
 <div class="container">
-<div style="margin-bottom:24px;">
-  <input type="text" id="cat-search-input" placeholder="カテゴリを検索..." style="width:100%; padding:14px 20px; border-radius:14px; border:1px solid var(--line); background:var(--surface); color:var(--ink); font-size:15px; outline:none; transition: border-color 0.2s;">
-</div>
+
 <div class="cat-list" id="cats"><div class="empty"><span class="spinner"></span></div></div></div>
 <script>
 ${THEME_JS}
@@ -311,12 +307,7 @@ function renderCats(subs, extra) {
   html += subs.map(function(s,i){var num=String(i+1).padStart(2,'0');return'<a class="cat-card" href="'+encodeURIComponent(s.name)+'/"><div class="cat-idx">'+num+'</div><div class="cat-info"><div class="cat-name">'+s.name+'</div><div class="cat-count">'+s.files.length+' files</div></div><div class="cat-arrow">→</div></a>';}).join('');
   el.innerHTML = html;
 }
-document.getElementById('cat-search-input').addEventListener('input', function(e){
-  var q=e.target.value.toLowerCase();
-  if(!q) { renderCats(allSubs, extraCards()); return; }
-  var filtered = allSubs.filter(function(s){ return s.name.toLowerCase().includes(q); });
-  renderCats(filtered, ""); // exclude extra apps during search
-});
+
 load();
 </script>
 </body>

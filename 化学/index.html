@@ -89,9 +89,7 @@ body{background:transparent !important;}body::before{content:'';position:fixed;i
 <button class="theme-toggle" id="theme-toggle">🌙</button>
 </header>
 <div class="container">
-<div style="margin-bottom:24px;">
-  <input type="text" id="cat-search-input" placeholder="カテゴリを検索..." style="width:100%; padding:14px 20px; border-radius:14px; border:1px solid var(--line); background:var(--surface); color:var(--ink); font-size:15px; outline:none; transition: border-color 0.2s;">
-</div>
+
 <div class="cat-list" id="cats"><div class="empty"><span class="spinner"></span></div></div></div>
 <script>
 function applyTheme(t){document.documentElement.setAttribute('data-theme',t);var b=document.getElementById('theme-toggle');if(b)b.textContent=t==='dark'?'☀️':'🌙';localStorage.setItem('pdf-site-theme',t);}
@@ -113,12 +111,7 @@ function renderCats(subs, extra) {
   html += subs.map(function(s,i){var num=String(i+1).padStart(2,'0');return'<a class="cat-card" href="'+encodeURIComponent(s.name)+'/"><div class="cat-idx">'+num+'</div><div class="cat-info"><div class="cat-name">'+s.name+'</div><div class="cat-count">'+s.files.length+' files</div></div><div class="cat-arrow">→</div></a>';}).join('');
   el.innerHTML = html;
 }
-document.getElementById('cat-search-input').addEventListener('input', function(e){
-  var q=e.target.value.toLowerCase();
-  if(!q) { renderCats(allSubs, extraCards()); return; }
-  var filtered = allSubs.filter(function(s){ return s.name.toLowerCase().includes(q); });
-  renderCats(filtered, ""); // exclude extra apps during search
-});
+
 load();
 </script>
 </body>
