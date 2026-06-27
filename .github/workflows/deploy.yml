@@ -20,9 +20,11 @@ jobs:
           sudo apt-get install -y rclone ghostscript
 
       - name: Setup rclone config
+        env:
+          SECRET_RCLONE_CONF: ${{ secrets.RCLONE_CONF }}
         run: |
           mkdir -p ~/.config/rclone
-          echo "${{ secrets.RCLONE_CONF }}" > ~/.config/rclone/rclone.conf
+          echo "$SECRET_RCLONE_CONF" > ~/.config/rclone/rclone.conf
 
       - name: Run Sync and Build
         run: |
