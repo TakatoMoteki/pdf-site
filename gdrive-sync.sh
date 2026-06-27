@@ -156,19 +156,20 @@ while read rel_folder; do
   # Google Driveから削除されたファイルをローカルからも削除
   find "$dst_sub" -maxdepth 1 \( -name "*.pdf" -o -name "*.PDF" \) | while read dst_pdf; do
     dst_filename=$(basename "$dst_pdf")
-    found=0
+    > .found_check
     find "$src_sub" -maxdepth 1 \( -name "*.pdf" -o -name "*.PDF" \) | while read src_pdf; do
       raw_src=$(basename "$src_pdf")
       clean_src=$(echo "$raw_src" | sed 's/\.pdf\.pdf$/.pdf/i' | perl -CS -pe 's/[\x{10000}-\x{10FFFF}\x{25FB}\x{FE0F}]//g')
       if [ "$clean_src" = "$dst_filename" ]; then
-        found=1
+        echo "1" > .found_check
         break
       fi
     done
-    if [ "$found" -eq 0 ]; then
+    if [ ! -s .found_check ]; then
       log "削除: $rel_folder/$dst_filename"
       rm "$dst_pdf"
     fi
+    rm -f .found_check
   done
 done < "$TRACK_FILE"
 
