@@ -110,6 +110,16 @@ for attempt in 1 2 3; do
   fi
 done
 
+if [ "$rclone_ok" -ne 1 ]; then
+  log "rclone 同期に失敗しました。"
+  if [ -n "$CI" ] || [ -n "$GITHUB_ACTIONS" ]; then
+    log "CI環境のため、これ以上の処理を中止しエラー終了します。"
+    exit 1
+  else
+    log "ローカル環境のため処理を継続（ミラーリングへ進む）"
+  fi
+fi
+
 # Step 2: Google Drive由来のフォルダを記録
 > "$TRACK_FILE"
 find "$SYNC_DIR" -mindepth 2 -maxdepth 2 -type d | while read sub_dir; do
