@@ -2,7 +2,7 @@ name: Deploy PDF Site
 
 on:
   schedule:
-    - cron: '*/5 * * * *'  # Every 5 minutes
+    - cron: '0 15 * * *'  # Once a day at 0:00 JST (15:00 UTC)
   workflow_dispatch:        # Manual trigger
 
 jobs:
