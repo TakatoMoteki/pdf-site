@@ -53,39 +53,9 @@ compress_pdf() {
   local dst="$2"
   local orig_size=$(get_file_size "$src")
 
-  # 小さいファイルは圧縮しない（文字消え防止）
-  if [ "$orig_size" -lt "$COMPRESS_THRESHOLD" ]; then
-    cp "$src" "$dst"
-    log "  コピー（圧縮スキップ）: $(basename "$dst") ${orig_size} bytes"
-    return
-  fi
-
-  # /printer品質で圧縮
-  gs -sDEVICE=pdfwrite \
-     -dCompatibilityLevel=1.4 \
-     -dPDFSETTINGS=/printer \
-     -dAutoRotatePages=/None \
-     -dColorImageResolution=150 \
-     -dGrayImageResolution=150 \
-     -dEmbedAllFonts=true \
-     -dSubsetFonts=true \
-     -dNOPAUSE -dBATCH -dQUIET \
-     -sOutputFile="$dst" \
-     "$src" 2>/dev/null
-
-  if [ $? -eq 0 ] && [ -f "$dst" ]; then
-    local new_size=$(get_file_size "$dst")
-    if [ "$new_size" -ge "$orig_size" ]; then
-      cp "$src" "$dst"
-      log "  コピー（圧縮効果なし）: $(basename "$dst")"
-    else
-      local pct=$((new_size * 100 / orig_size))
-      log "  圧縮: $(basename "$dst") ${orig_size} → ${new_size} bytes (${pct}%)"
-    fi
-  else
-    cp "$src" "$dst"
-    log "  圧縮失敗、元ファイルをコピー: $(basename "$dst")"
-  fi
+  # 圧縮処理を完全に停止（文字消え対策）
+  cp "$src" "$dst"
+  log "  コピー（圧縮無効）: $(basename "$dst") ${orig_size} bytes"
 }
 
 log "=== Google Drive 同期開始 ==="
