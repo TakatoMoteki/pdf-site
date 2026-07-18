@@ -5,7 +5,7 @@ SITE_URL="https://takatomoteki.github.io/pdf-site"
 
 get_hash() {
   case "$1" in
-    "物理") echo "41c5c3f063efa1da127be9a88b5fc78ac54fe8c4cf4ce7571769e09b2a17b9dc" ;;
+    "物理") echo "274a1b38a32eef13745aa50845af2f5df301fba363d7e63a5267efbedab306be" ;;
     "化学") echo "94680fd24bf04a3e411f3772c611057d39a3f67999858aa768fb927225542300" ;;
     *) echo "" ;;
   esac
