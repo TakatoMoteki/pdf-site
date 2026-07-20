@@ -54,7 +54,7 @@ compress_pdf() {
   local orig_size=$(get_file_size "$src")
 
   # 圧縮処理を完全に停止（文字消え対策）
-  cp "$src" "$dst"
+  cp -p "$src" "$dst"
   log "  コピー（圧縮無効）: $(basename "$dst") ${orig_size} bytes"
 }
 
@@ -121,7 +121,7 @@ while read rel_folder; do
     if [ -f "$dst_pdf" ]; then
       src_mod=$(get_file_mtime "$src_pdf")
       dst_mod=$(get_file_mtime "$dst_pdf")
-      if [ "$src_mod" -le "$dst_mod" ]; then
+      if [ "$src_mod" -eq "$dst_mod" ]; then
         continue
       fi
     fi
