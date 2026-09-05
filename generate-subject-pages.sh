@@ -166,6 +166,23 @@ for subject_dir in "$PDFS_DIR"/*/; do
 
   PW_CHECK='var PW_KEY="pw_'"$subject"'";function checkAuth(){if(sessionStorage.getItem(PW_KEY)!=="ok"){location.href="../";return false;}return true;}'
 
+  # ── 不要になった旧カテゴリのHTMLを削除 ──
+  for html_sub_dir in "$SITE_DIR/$subject"/*/; do
+    [ -d "$html_sub_dir" ] || continue
+    html_subname="$(basename "$html_sub_dir")"
+    if [ ! -d "$subject_dir/$html_subname" ]; then
+      rm -rf "$html_sub_dir"
+    else
+      pdf_c=0
+      for f in "$subject_dir/$html_subname"/*.pdf "$subject_dir/$html_subname"/*.PDF; do
+        [ -f "$f" ] && pdf_c=$((pdf_c + 1))
+      done
+      if [ "$pdf_c" -eq 0 ]; then
+        rm -rf "$html_sub_dir"
+      fi
+    fi
+  done
+
   # ── サブカテゴリページ（PDF一覧）──
   for sub_dir in "$subject_dir"*/; do
     [ -d "$sub_dir" ] || continue
