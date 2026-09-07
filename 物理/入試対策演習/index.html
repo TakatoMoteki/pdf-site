@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#fafaf7" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0d0e14" media="(prefers-color-scheme: dark)">
-<title>過去問解答 — 物理</title>
+<title>入試対策演習 — 物理</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
@@ -94,8 +94,8 @@ body{background:transparent !important;}body::before{content:'';position:fixed;i
 <body>
 <header>
 <div>
-<div class="nav"><a href="../../">トップ</a><span>/</span><a href="../">物理</a><span>/</span><span>過去問解答</span></div>
-<div class="title-row"><span class="title-symbol">Phys</span><div><h1>過去問解答</h1><div class="meta" id="update-time"></div></div></div>
+<div class="nav"><a href="../../">トップ</a><span>/</span><a href="../">物理</a><span>/</span><span>入試対策演習</span></div>
+<div class="title-row"><span class="title-symbol">Phys</span><div><h1>入試対策演習</h1><div class="meta" id="update-time"></div></div></div>
 </div>
 <button class="theme-toggle" id="theme-toggle">🌙</button>
 </header>
@@ -110,8 +110,8 @@ var SITE_URL='https://takatomoteki.github.io/pdf-site';
 var PW_KEY="pw_物理";function checkAuth(){if(sessionStorage.getItem(PW_KEY)!=="ok"){location.href="../";return false;}return true;}
 if(!checkAuth())throw new Error('auth');
 var allFiles = [];
-async function load(){try{var res=await fetch('../../filelist.json?'+Date.now());var data=await res.json();document.getElementById('update-time').textContent='updated '+data.updated;var folder=data.folders.find(function(f){return f.name==='物理';});if(!folder)return;var sub=folder.subs.find(function(s){return s.name==='過去問解答';});var el=document.getElementById('pdf-list');if(!sub||sub.files.length===0){el.innerHTML='<div class="empty">PDFがありません</div>';return;}allFiles=sub.files;renderList(allFiles);}catch(e){document.getElementById('pdf-list').innerHTML='<div class="empty">読み込み失敗</div>';}}
-function renderList(files){var el=document.getElementById('pdf-list');if(files.length===0){el.innerHTML='<div class="empty">見つかりませんでした</div>';return;}el.innerHTML=files.map(function(f){var relPath='pdfs/物理/過去問解答/'+encodeURIComponent(f.name);var directPath='../../'+relPath;var viewerPath=directPath;var dateText=f.date?f.size+' · '+f.date:f.size;return'<div class="pdf-item"><div class="pdf-info"><div class="pdf-mark">PDF</div><div style="min-width:0"><div class="pdf-name">'+f.name+'</div><div class="pdf-meta">'+dateText+'</div></div></div><div class="pdf-actions"><a class="btn btn-view" href="'+viewerPath+'" target="_blank">閲覧</a><a class="btn btn-dl" href="'+directPath+'" download>DL</a></div></div>';}).join('');}
+async function load(){try{var res=await fetch('../../filelist.json?'+Date.now());var data=await res.json();document.getElementById('update-time').textContent='updated '+data.updated;var folder=data.folders.find(function(f){return f.name==='物理';});if(!folder)return;var sub=folder.subs.find(function(s){return s.name==='入試対策演習';});var el=document.getElementById('pdf-list');if(!sub||sub.files.length===0){el.innerHTML='<div class="empty">PDFがありません</div>';return;}allFiles=sub.files;renderList(allFiles);}catch(e){document.getElementById('pdf-list').innerHTML='<div class="empty">読み込み失敗</div>';}}
+function renderList(files){var el=document.getElementById('pdf-list');if(files.length===0){el.innerHTML='<div class="empty">見つかりませんでした</div>';return;}el.innerHTML=files.map(function(f){var relPath='pdfs/物理/入試対策演習/'+encodeURIComponent(f.name);var directPath='../../'+relPath;var viewerPath=directPath;var dateText=f.date?f.size+' · '+f.date:f.size;return'<div class="pdf-item"><div class="pdf-info"><div class="pdf-mark">PDF</div><div style="min-width:0"><div class="pdf-name">'+f.name+'</div><div class="pdf-meta">'+dateText+'</div></div></div><div class="pdf-actions"><a class="btn btn-view" href="'+viewerPath+'" target="_blank">閲覧</a><a class="btn btn-dl" href="'+directPath+'" download>DL</a></div></div>';}).join('');}
 
 load();
 </script>
