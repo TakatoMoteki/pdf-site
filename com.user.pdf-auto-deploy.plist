@@ -10,9 +10,9 @@
         <string>/Users/takato/pdf-site/pdf-auto-deploy.sh</string>
     </array>
     <key>RunAtLoad</key>
-    <true/>
-    <key>KeepAlive</key>
-    <true/>
+    <integer>600</integer>
+    <key>StartInterval</key>
+    <integer>600</integer>
     <key>StandardOutPath</key>
     <string>/Users/takato/pdf-site/launchd-out.log</string>
     <key>StandardErrorPath</key>
