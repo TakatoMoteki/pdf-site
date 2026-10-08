@@ -100,7 +100,7 @@ if(!checkAuth())throw new Error('auth');
 var EXTRA_LINKS=[{name:"お試しむき",desc:"アプリ体験版",url:"../apps/muki/"},{name:"お試しゆーき",desc:"アプリ体験版",url:"../apps/yuuki/"}];
 function extraCards(){return EXTRA_LINKS.map(function(l){return'<a class="cat-card" href="'+l.url+'"><div class="cat-idx">★</div><div class="cat-info"><div class="cat-name">'+l.name+'</div><div class="cat-count">'+l.desc+'</div></div><div class="cat-arrow">→</div></a>';}).join('');}
 var allSubs = [];
-async function load(){var el=document.getElementById('cats');var extra=extraCards();try{var res=await fetch('../filelist.json?'+Date.now());var data=await res.json();var folder=data.folders.find(function(f){return f.name==='化学';});if(!folder||!folder.subs||folder.subs.length===0){el.innerHTML=extra||'<div class="empty">カテゴリがありません</div>';return;}allSubs=folder.subs;renderCats(allSubs, extra);}catch(e){el.innerHTML=extra+'<div class="empty">読み込み失敗</div>';}}
+async function load(){var el=document.getElementById('cats');var extra=extraCards();try{var res=await fetch('../filelist.json?'+Date.now());var text=await res.text();var data=JSON.parse(text.normalize('NFC'));var folder=data.folders.find(function(f){return f.name==='化学';});if(!folder||!folder.subs||folder.subs.length===0){el.innerHTML=extra||'<div class="empty">カテゴリがありません</div>';return;}allSubs=folder.subs;renderCats(allSubs, extra);}catch(e){el.innerHTML=extra+'<div class="empty">読み込み失敗</div>';}}
 function renderCats(subs, extra) {
   var el = document.getElementById('cats');
   var html = extra || '';
