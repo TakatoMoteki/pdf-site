@@ -1,0 +1,61 @@
+name: Deploy PDF Site
+
+on:
+  schedule:
+    - cron: '0 15 * * *'  # Once a day at 0:00 JST (15:00 UTC)
+  workflow_dispatch:        # Manual trigger
+
+jobs:
+  sync_and_deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y rclone ghostscript
+
+      - name: Setup rclone config
+        env:
+          SECRET_RCLONE_CONF: ${{ secrets.RCLONE_CONF }}
+        run: |
+          mkdir -p ~/.config/rclone
+          echo "$SECRET_RCLONE_CONF" > ~/.config/rclone/rclone.conf
+
+      - name: Run Sync and Build
+        run: |
+          export GITHUB_ACTIONS="true"
+          bash gdrive-sync.sh
+          bash generate-subject-pages.sh
+
+      - name: Commit and Push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            echo "CHANGED=false" >> $GITHUB_ENV
+          else
+            git commit -m "auto-deploy: $(date '+%Y-%m-%d %H:%M:%S')"
+            git push origin main
+            echo "CHANGED=true" >> $GITHUB_ENV
+          fi
+
+      - name: Notify Discord (Success)
+        if: env.CHANGED == 'true'
+        run: |
+          curl -H "Content-Type: application/json" \
+               -d '{"content": "✅ **プリントが更新されました！**\nhttps://takatomoteki.github.io/pdf-site/"}' \
+               ${{ secrets.DISCORD_WEBHOOK_URL }} || true
+
+      - name: Notify Discord (Failure)
+        if: failure()
+        run: |
+          curl -H "Content-Type: application/json" \
+               -d '{"content": "❌ **PDF同期でエラーが発生しました**\nGitHub Actionsを確認してください。"}' \
+               ${{ secrets.DISCORD_WEBHOOK_URL }} || true

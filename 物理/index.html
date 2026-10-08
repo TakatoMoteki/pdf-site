@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#fafaf7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0d0e14" media="(prefers-color-scheme: dark)">
+<title>物理 — PDF ライブラリ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper: #fafaf7; --surface: #ffffff; --ink: #16171f; --ink-soft: #6b6d7c;
+  --grid: rgba(20,22,40,0.09); --line: #e8e6df;
+  --shadow: 0 2px 12px rgba(20,22,40,0.05); --shadow-lift: 0 18px 48px rgba(20,22,40,0.14);
+}
+[data-theme="dark"] {
+  --paper: #0d0e14; --surface: #161824; --ink: #ECECF2; --ink-soft: #8b8da3;
+  --grid: rgba(180,190,255,0.085); --line: #262838;
+  --shadow: 0 2px 12px rgba(0,0,0,0.3); --shadow-lift: 0 18px 48px rgba(0,0,0,0.55);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: "Zen Kaku Gothic New", -apple-system, sans-serif;
+  background: var(--paper); color: var(--ink); min-height: 100vh;
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 26px 26px; transition: background-color 0.4s, color 0.4s;
+}
+header {
+  padding: 22px 40px; border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 100;
+  background: color-mix(in srgb, var(--paper) 80%, transparent); backdrop-filter: blur(12px);
+  display: flex; align-items: flex-start; justify-content: space-between;
+}
+.nav { font-family: "JetBrains Mono", monospace; font-size: 12px; color: var(--ink-soft); margin-bottom: 10px; display: flex; gap: 8px; align-items: center; }
+.nav a { color: var(--accent); text-decoration: none; }
+.nav a:hover { text-decoration: underline; }
+.title-row { display: flex; align-items: center; gap: 14px; }
+.title-symbol { font-family: "Space Grotesk", sans-serif; font-size: 34px; font-weight: 700; color: var(--accent); line-height: 1; letter-spacing: -0.03em; }
+header h1 { font-family: "Space Grotesk", "Zen Kaku Gothic New", sans-serif; font-size: 24px; font-weight: 700; letter-spacing: -0.01em; }
+header .meta { font-family: "JetBrains Mono", monospace; font-size: 11px; color: var(--ink-soft); margin-top: 6px; }
+.theme-toggle { width: 44px; height: 44px; border-radius: 13px; border: 1px solid var(--line); background: var(--surface); cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; transition: transform 0.2s; flex-shrink: 0; }
+.theme-toggle:hover { transform: rotate(-12deg) scale(1.06); }
+.container { max-width: 860px; margin: 0 auto; padding: 48px 32px 80px; }
+.empty { padding: 80px; text-align: center; color: var(--ink-soft); }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+/* ── effects ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeDown{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes symPulse{0%,100%{opacity:1}50%{opacity:.78}}
+@keyframes spin{to{transform:rotate(360deg)}}
+header{animation:fadeDown .9s cubic-bezier(.2,.8,.2,1) both}
+.cat-card,.pdf-item{animation:fadeUp .9s cubic-bezier(.2,.8,.2,1) both}
+.cat-card:nth-child(1),.pdf-item:nth-child(1){animation-delay:.12s}
+.cat-card:nth-child(2),.pdf-item:nth-child(2){animation-delay:.24s}
+.cat-card:nth-child(3),.pdf-item:nth-child(3){animation-delay:.36s}
+.cat-card:nth-child(4),.pdf-item:nth-child(4){animation-delay:.48s}
+.cat-card:nth-child(5),.pdf-item:nth-child(5){animation-delay:.6s}
+.cat-card:nth-child(6),.pdf-item:nth-child(6){animation-delay:.72s}
+.cat-card:nth-child(7),.pdf-item:nth-child(7){animation-delay:.84s}
+.cat-card:nth-child(n+8),.pdf-item:nth-child(n+8){animation-delay:.96s}
+.cat-card:hover,.pdf-item:hover{box-shadow:var(--shadow-lift),0 0 0 1px var(--accent),0 0 30px -6px var(--accent)}
+.title-symbol{text-shadow:0 0 22px var(--accent),0 0 3px var(--accent);animation:symPulse 4.5s ease-in-out infinite}
+.spinner{display:inline-block;width:32px;height:32px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+@media (prefers-reduced-motion: reduce){header,.cat-card,.pdf-item,.title-symbol,.spinner{animation:none!important}}
+:root{--accent:#2d5fd6;--accent-soft:rgba(45,95,214,0.08);}[data-theme="dark"]{--accent:#6f9bff;--accent-soft:rgba(111,155,255,0.12);}
+body{background:transparent !important;}body::before{content:'';position:fixed;inset:0;z-index:-2;background-position:center;background-size:cover;background-repeat:no-repeat;}html[data-theme="light"] body::before{background-image:url('https://takatomoteki.github.io/pdf-site/assets/phys-bg-l.jpg');}html[data-theme="dark"] body::before{background-image:url('https://takatomoteki.github.io/pdf-site/assets/phys-bg-d.jpg');}body::after{content:'';position:fixed;inset:0;z-index:-1;}html[data-theme="light"] body::after{background:rgba(255,255,255,0.38);}html[data-theme="dark"] body::after{background:rgba(7,8,18,0.74);}html[data-theme="light"]{--surface:rgba(255,255,255,0.78);}html[data-theme="dark"]{--surface:rgba(22,24,42,0.10);--line:rgba(255,255,255,0.14);}header{-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);}.pdf-item,.cat-card{-webkit-backdrop-filter:blur(30px);backdrop-filter:blur(30px);}html[data-theme="light"] .pdf-item,html[data-theme="light"] .cat-card{border:1px solid rgba(20,22,40,0.18);box-shadow:0 4px 16px rgba(20,22,40,0.14);}html[data-theme="dark"] .pdf-item,html[data-theme="dark"] .cat-card{border:1px solid rgba(255,255,255,0.16);box-shadow:0 6px 20px rgba(0,0,0,0.45);}
+body{background:transparent !important;}body::before{content:'';position:fixed;inset:0;z-index:-2;background-position:center;background-size:cover;background-repeat:no-repeat;}html[data-theme="light"] body::before{background-image:url('https://takatomoteki.github.io/pdf-site/assets/phys-bg-l.jpg');}html[data-theme="dark"] body::before{background-image:url('https://takatomoteki.github.io/pdf-site/assets/phys-bg-d.jpg');}body::after{content:'';position:fixed;inset:0;z-index:-1;}html[data-theme="light"] body::after{background:rgba(255,255,255,0.38);}html[data-theme="dark"] body::after{background:rgba(7,8,18,0.74);}html[data-theme="light"]{--surface:rgba(255,255,255,0.78);}html[data-theme="dark"]{--surface:rgba(22,24,42,0.10);--line:rgba(255,255,255,0.14);}header{-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);}.pdf-item,.cat-card{-webkit-backdrop-filter:blur(30px);backdrop-filter:blur(30px);}html[data-theme="light"] .pdf-item,html[data-theme="light"] .cat-card{border:1px solid rgba(20,22,40,0.18);box-shadow:0 4px 16px rgba(20,22,40,0.14);}html[data-theme="dark"] .pdf-item,html[data-theme="dark"] .cat-card{border:1px solid rgba(255,255,255,0.16);box-shadow:0 6px 20px rgba(0,0,0,0.45);}
+.cat-list{display:flex;flex-direction:column;gap:14px}
+.cat-card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:24px 26px;text-decoration:none;color:var(--ink);display:flex;align-items:center;gap:20px;box-shadow:var(--shadow);transition:transform 0.25s cubic-bezier(0.2,0.8,0.2,1),box-shadow 0.25s,border-color 0.25s;position:relative;overflow:hidden}
+.cat-card::after{content:"";position:absolute;inset:0;background:var(--accent-soft);opacity:0;transition:opacity 0.25s;pointer-events:none}
+.cat-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift);border-color:var(--accent)}
+.cat-card:hover::after{opacity:1}
+.cat-idx{font-family:"Space Grotesk",monospace;font-size:15px;font-weight:700;color:var(--accent);width:34px;flex-shrink:0;position:relative;z-index:1}
+.cat-info{flex:1;position:relative;z-index:1}
+.cat-name{font-size:18px;font-weight:700;letter-spacing:0.01em}
+.cat-count{font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--ink-soft);margin-top:4px}
+.cat-arrow{color:var(--ink-soft);font-size:20px;position:relative;z-index:1;transition:transform 0.2s,color 0.2s}
+.cat-card:hover .cat-arrow{transform:translateX(4px);color:var(--accent)}
+@media(max-width:600px){header{padding:18px 24px}.container{padding:32px 24px 60px}}
+</style>
+</head>
+<body>
+<header>
+<div>
+<div class="nav"><a href="../">トップ</a><span>/</span><span>物理</span></div>
+<div class="title-row"><span class="title-symbol">Phys</span><h1>物理</h1></div>
+</div>
+<button class="theme-toggle" id="theme-toggle">🌙</button>
+</header>
+<div class="container">
+
+<div class="cat-list" id="cats"><div class="empty"><span class="spinner"></span></div></div></div>
+<script>
+function applyTheme(t){document.documentElement.setAttribute('data-theme',t);var b=document.getElementById('theme-toggle');if(b)b.textContent=t==='dark'?'☀️':'🌙';localStorage.setItem('pdf-site-theme',t);}
+applyTheme(localStorage.getItem('pdf-site-theme')||(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'));
+var _tt=document.getElementById('theme-toggle');if(_tt)_tt.addEventListener('click',function(){applyTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark');});
+var PW_KEY="pw_物理";function checkAuth(){if(sessionStorage.getItem(PW_KEY)!=="ok"){location.href="../";return false;}return true;}
+if(!checkAuth())throw new Error('auth');
+var EXTRA_LINKS=[];
+function extraCards(){return EXTRA_LINKS.map(function(l){return'<a class="cat-card" href="'+l.url+'"><div class="cat-idx">★</div><div class="cat-info"><div class="cat-name">'+l.name+'</div><div class="cat-count">'+l.desc+'</div></div><div class="cat-arrow">→</div></a>';}).join('');}
+var allSubs = [];
+async function load(){var el=document.getElementById('cats');var extra=extraCards();try{var res=await fetch('../filelist.json?'+Date.now());var data=await res.json();var folder=data.folders.find(function(f){return f.name==='物理';});if(!folder||!folder.subs||folder.subs.length===0){el.innerHTML=extra||'<div class="empty">カテゴリがありません</div>';return;}allSubs=folder.subs;renderCats(allSubs, extra);}catch(e){el.innerHTML=extra+'<div class="empty">読み込み失敗</div>';}}
+function renderCats(subs, extra) {
+  var el = document.getElementById('cats');
+  var html = extra || '';
+  if(subs.length===0){
+    el.innerHTML = html + '<div class="empty">見つかりませんでした</div>';
+    return;
+  }
+  html += subs.map(function(s,i){var num=String(i+1).padStart(2,'0');return'<a class="cat-card" href="'+encodeURIComponent(s.name)+'/"><div class="cat-idx">'+num+'</div><div class="cat-info"><div class="cat-name">'+s.name+'</div><div class="cat-count">'+s.files.length+' files</div></div><div class="cat-arrow">→</div></a>';}).join('');
+  el.innerHTML = html;
+}
+
+load();
+</script>
+</body>
+</html>
