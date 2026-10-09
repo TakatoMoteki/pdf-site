@@ -7,6 +7,14 @@
 cd "$(dirname "$0")"
 SITE_DIR="$(pwd)"
 GDRIVE_LOCAL="/Users/takato/Library/CloudStorage/GoogleDrive-g.lambdag.8pigt@gmail.com/マイドライブ/GoodNotes/公開フォルダ"
+
+# GitHub Actions上ではMacのフォルダが無いので、rcloneでDriveから取得したフォルダを使う
+if [ "$GITHUB_ACTIONS" = "true" ]; then
+  GDRIVE_LOCAL="$HOME/gdrive-src"
+  mkdir -p "$GDRIVE_LOCAL"
+  rclone sync "gdrive:GoodNotes/公開フォルダ" "$GDRIVE_LOCAL" \
+    --include "*.pdf" --include "*.PDF" --create-empty-src-dirs
+fi
 DEST_DIR="$SITE_DIR/pdfs"
 TRACK_FILE="$SITE_DIR/gdrive-folders.txt"
 LOG_FILE="$SITE_DIR/gdrive-sync.log"
