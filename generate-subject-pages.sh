@@ -18,11 +18,11 @@ human_size() {
   else echo "${bytes} B"; fi
 }
 file_date() {
-  if stat --version 2>/dev/null | grep -q 'GNU'; then date -d "@$(stat -c %Y "$1")" "+%Y/%m/%d %H:%M"
+  if [ "$(uname)" = "Linux" ]; then date -d "@$(stat -c %Y "$1")" "+%Y/%m/%d %H:%M"
   else stat -f "%Sm" -t "%Y/%m/%d %H:%M" "$1" 2>/dev/null; fi
 }
 get_bytes() {
-  if stat --version 2>/dev/null | grep -q 'GNU'; then stat -c%s "$1" 2>/dev/null
+  if [ "$(uname)" = "Linux" ]; then stat -c%s "$1" 2>/dev/null
   else stat -f%z "$1" 2>/dev/null; fi
 }
 
