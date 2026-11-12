@@ -155,7 +155,7 @@ for subject_dir in "$PDFS_DIR"/*/; do
   # 科目別の外部リンク（カテゴリ一覧の先頭にカードとして表示）
   # 化学のお試しアプリ（静的Webエクスポート）。同一オリジン /pdf-site/apps/<id>/ に配置。
   if [ "$subject" = "化学" ]; then
-    EXTRA_LINKS_JS='[{name:"お試しむき",desc:"アプリ体験版",url:"../apps/muki/"},{name:"お試しゆーき",desc:"アプリ体験版",url:"../apps/yuuki/"}]'
+    EXTRA_LINKS_JS='[{name:"お試しむき",desc:"アプリ体験版",url:"../apps/muki/"},{name:"お試しゆーき",desc:"アプリ体験版",url:"../apps/yuuki/"},{name:"過去問 正誤チェック",desc:"共テ・センター 202題",url:"../apps/kyotsu-seigo/"}]'
   else
     EXTRA_LINKS_JS='[]'
   fi
