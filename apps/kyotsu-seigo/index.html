@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <script>(function(){var ok=false;try{ok=sessionStorage.getItem("pw_化学")==="ok";}catch(e){}try{if(ok)localStorage.setItem("cfc-auth","ok");else ok=localStorage.getItem("cfc-auth")==="ok";}catch(e){}if(!ok){location.replace("/pdf-site/");return;}
-try{var c=JSON.parse(localStorage.getItem("cfc-cfg")||"{}")||{},d=document.documentElement,t=c.th||"auto";if(t==="auto")t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";d.setAttribute("data-theme",t);if(c.fz)d.style.setProperty("--fz",c.fz);}catch(e){}})();</script>
+try{var c=JSON.parse(localStorage.getItem("cfc-cfg")||"{}")||{},d=document.documentElement,t=c.th||"light";if(t==="auto")t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";d.setAttribute("data-theme",t);if(c.fz)d.style.setProperty("--fz",c.fz);}catch(e){}})();</script>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#13254a">
 <link rel="apple-touch-icon" href="icon-180.png">
@@ -14,7 +14,7 @@ try{var c=JSON.parse(localStorage.getItem("cfc-cfg")||"{}")||{},d=document.docum
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>化学ファイナルチェックお試し</title>
-<link rel="stylesheet" href="katex/katex.min.css?v=202611130627">
+<link rel="stylesheet" href="katex/katex.min.css?v=202611130710">
 <style>
 :root{--navy:#13254a;--teal:#1f4e8c;--amber:#d18f1f;--ink:#1f2328;--sub:#5b6270;--line:#e3e6ea;--line2:#cfd5dc;--bg:#f6f7f9;--card:#fff;--soft:#eef1f5;--glass:rgba(255,255,255,.97);--hd:#13254a;--ok:#1a7f4b;--ng:#c0392b;--okbg:#e8f5ee;--ngbg:#fbeceb;--fz:1}
 html[data-theme="dark"]{--ink:#e6e8ee;--sub:#9aa2b2;--line:#2c3446;--line2:#3a4357;--bg:#0f1420;--card:#171d2b;--soft:#222a3b;--glass:rgba(23,29,43,.97);--hd:#cdd9f3;--ok:#3fbf7f;--ng:#ff6b5e;--okbg:#14301f;--ngbg:#3a1b1b;--teal:#5b8fd9;color-scheme:dark}
@@ -256,9 +256,8 @@ table.tb td{border:1px solid #888;padding:3px 8px}
 .rbtns button.sec{background:var(--soft);color:var(--ink)}
 
 /* ---- ホームの機能ボタン ---- */
-.acts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:2px 0 6px}
-@media(max-width:520px){.acts{grid-template-columns:repeat(2,1fr)}}
-.act{position:relative;display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--card);border-radius:12px;padding:10px 10px;cursor:pointer;text-align:left;color:var(--ink);min-height:54px}
+.acts{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:4px 0 8px}
+.act{position:relative;display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--card);border-radius:12px;padding:12px;cursor:pointer;text-align:left;color:var(--ink);min-height:64px}
 .act .ai{flex:none;width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;background:var(--soft);color:var(--hd)}
 .act b{display:block;font-size:13.5px;color:var(--hd)}
 .act small{display:block;font-size:10.5px;color:var(--sub);line-height:1.3}
@@ -323,6 +322,7 @@ table.tb td{border:1px solid #888;padding:3px 8px}
 .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 @media(max-width:520px){.tiles{grid-template-columns:repeat(2,1fr)}}
 .tile{border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--soft)}
+.tiles.t3{grid-template-columns:repeat(3,1fr)}
 .tile b{display:block;font-size:22px;color:var(--hd)}
 .tile span{font-size:11px;color:var(--sub)}
 .srow{display:grid;grid-template-columns:minmax(0,1fr) 90px 54px;align-items:center;gap:8px;padding:6px 2px;border-top:1px solid var(--line);font-size:13px;cursor:pointer}
@@ -495,10 +495,13 @@ html[data-theme="dark"] .setup{background:rgba(0,0,0,.55)}
 <label><input type="radio" name="fz" value="1.3"><span>特大</span></label>
 </div></fieldset>
 <fieldset><legend>画面</legend><div class="opts">
-<label><input type="radio" name="th" value="auto" checked><span>端末に合わせる</span></label>
-<label><input type="radio" name="th" value="light"><span>ライト</span></label>
+<label><input type="radio" name="th" value="light" checked><span>ライト</span></label>
+<label><input type="radio" name="th" value="auto"><span>端末に合わせる</span></label>
 <label><input type="radio" name="th" value="dark"><span>ダーク</span></label>
 </div></fieldset>
+<h3>ニックネーム</h3>
+<input id="nick" type="text" maxlength="12" placeholder="12文字まで" autocomplete="off" style="width:100%;border:1px solid var(--line2);border-radius:8px;padding:9px 11px;font-size:15px;background:var(--card);color:var(--ink);font-family:inherit">
+<p class="note2">成績画面に表示されます（ランキングは準備中）．下の「記録の引き継ぎ」で別の端末に移すと，ニックネームも同じ人として引き継がれます．本名は使わないでください．</p>
 <h3>記録の引き継ぎ</h3>
 <p class="note2">記録（○×・記述ごとの成績・復習の予定）は端末ごとに保存されています．別の端末へ移すには，ここで書き出したコードやファイルを，移したい端末の「読み込む」に入れてください．</p>
 <div class="row"><button type="button" class="pri" id="expBtn">この端末の記録を書き出す</button></div>
@@ -523,10 +526,10 @@ html[data-theme="dark"] .setup{background:rgba(0,0,0,.55)}
 <div class="sfoot"><span class="pn"></span><button type="button" id="cfgClose">閉じる</button></div>
 </div></div>
 
-<script src="katex/katex.min.js?v=202611130627"></script>
-<script src="katex/mhchem.min.js?v=202611130627"></script>
-<script src="data.js?v=202611130627"></script>
-<script src="qrcode.js?v=202611130627" defer></script>
-<script src="app.js?v=202611130627"></script>
+<script src="katex/katex.min.js?v=202611130710"></script>
+<script src="katex/mhchem.min.js?v=202611130710"></script>
+<script src="data.js?v=202611130710"></script>
+<script src="qrcode.js?v=202611130710" defer></script>
+<script src="app.js?v=202611130710"></script>
 </body>
 </html>

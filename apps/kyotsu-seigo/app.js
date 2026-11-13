@@ -24,7 +24,19 @@
     else return;
     sv('cfc-rv', RV); updRev();
   }
+  // ボタン1回ごとの解答数（ランキング用）  n:解いた数 c:正解数 wk:{週の開始日:[n,c]}
+  var CT = ld('cfc-ct', { n: 0, c: 0, wk: {} });
+  function weekStart(d) { d = d === undefined ? today() : d; return d - (d + 3) % 7; }   // 月曜はじまり
+  function cnt(ok) {
+    CT.n++; if (ok) CT.c++;
+    var w = weekStart(), a = CT.wk[w] || [0, 0]; a[0]++; if (ok) a[1]++; CT.wk[w] = a;
+    Object.keys(CT.wk).forEach(function (k) { if (+k < w - 56) delete CT.wk[k]; });
+    sv('cfc-ct', CT);
+  }
+  var PROF = ld('cfc-prof', {});
+  if (!PROF.id) { PROF.id = 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); sv('cfc-prof', PROF); }
   function recS(id, s, ok) {
+    cnt(ok);
     var k = id + '#' + s, r = ST[k] || [0, 0, 0];
     if (ok) r[0]++; else r[1]++;
     r[2] = today(); ST[k] = r; sv('cfc-st', ST);
@@ -277,6 +289,7 @@
         if (selp[k] !== undefined) {
           judged++;
           var ok = selp[k] === ans;
+          cnt(ok);
           if (ok) right++;
           r.classList.add(ok ? 'ok' : 'ng');
         }
@@ -429,6 +442,7 @@
     stat();
   }
   window.addEventListener('hashchange', function () {
+    if (/^#import=/.test(location.hash)) { checkImport(); return; }
     if (run || ses) return; fromHash(); clearSearch(); render();
     var nav = document.getElementById('nav');
     if (pendingJump || window.pageYOffset > nav.offsetTop) jumpList();
@@ -876,7 +890,14 @@
     var A = acc(STM), stTried = STM.filter(function (o) { return ST[o.k]; }).length;
     var t = today(), due = dueList().length, rvn = Object.keys(RV).length;
     var h = '<div class="rbar"><span class="rpos">成績</span><span class="rprog" style="visibility:hidden"></span><button type="button" class="rquit" id="sback">ホームへ</button></div>';
-    h += '<div class="sts"><h2>成績</h2><div class="tiles">' +
+    var wk = CT.wk[weekStart()] || [0, 0];
+    h += '<div class="sts"><h2>成績' + (PROF.nick ? '<small style="font-size:13px;color:var(--sub);margin-left:8px">' + esc(PROF.nick) + '</small>' : '') + '</h2>' +
+      '<div class="tiles t3">' +
+      '<div class="tile"><b>' + CT.n + '</b><span>解いた数（○×・番号ボタン）</span></div>' +
+      '<div class="tile"><b>' + (CT.n ? Math.round(1000 * CT.c / CT.n) / 10 + '%' : '－') + '</b><span>正答率（' + CT.c + ' / ' + CT.n + '）</span></div>' +
+      '<div class="tile"><b>' + wk[0] + '</b><span>今週の解いた数（月曜から）</span></div></div>' +
+      '<p class="shint">ボタンを1回押して答え合わせするごとに数えます（解き直しも毎回数えます）．' + (PROF.nick ? '' : '設定でニックネームを登録できます．') + '</p>' +
+      '<div class="tiles" style="margin-top:10px">' +
       '<div class="tile"><b>' + my.length + '</b><span>記録した問題 / ' + D.length + '</span></div>' +
       '<div class="tile"><b>' + y + '</b><span>○ できた問題</span></div>' +
       '<div class="tile"><b>' + (A.p === null ? '－' : A.p + '%') + '</b><span>記述の正答率（' + stTried + ' / ' + STM.length + ' 記述）</span></div>' +
@@ -930,7 +951,7 @@
   function applyCfg() {
     var de = document.documentElement;
     de.style.setProperty('--fz', CFG.fz || 1);
-    var th = CFG.th || 'auto';
+    var th = CFG.th || 'light';
     if (th === 'auto') th = window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     de.setAttribute('data-theme', th);
     var mt = document.querySelector('meta[name="theme-color"]'); if (mt) mt.content = th === 'dark' ? '#0f1420' : '#13254a';
@@ -938,7 +959,7 @@
   if (window.matchMedia) { var mq = matchMedia('(prefers-color-scheme: dark)'); if (mq.addEventListener) mq.addEventListener('change', applyCfg); }
   applyCfg();
   function openCfg() {
-    var f = String(CFG.fz || 1), th = CFG.th || 'auto';
+    var f = String(CFG.fz || 1), th = CFG.th || 'light';
     Array.prototype.forEach.call(cfg.querySelectorAll('input[name="fz"]'), function (x) { x.checked = x.value === f; });
     Array.prototype.forEach.call(cfg.querySelectorAll('input[name="th"]'), function (x) { x.checked = x.value === th; });
     $('expBox').hidden = true; $('impBox').hidden = true; $('impMsg').textContent = '';
@@ -948,6 +969,13 @@
     cfg.classList.add('on');
   }
   $('goCfg').onclick = openCfg;
+  function syncNick() { var x = $('nick'); if (x) x.value = PROF.nick || ''; }
+  syncNick();
+  $('nick').addEventListener('change', function () {
+    var v = this.value.replace(/[\u0000-\u001f<>]/g, '').trim().slice(0, 12);
+    this.value = v; if (v) PROF.nick = v; else delete PROF.nick; sv('cfc-prof', PROF);
+    toast(v ? 'ニックネームを「' + v + '」にしました' : 'ニックネームを消しました');
+  });
   $('cfgClose').onclick = function () { cfg.classList.remove('on'); };
   cfg.addEventListener('click', function (e) { if (e.target === cfg) cfg.classList.remove('on'); });
   cfg.addEventListener('change', function (e) {
@@ -967,7 +995,7 @@
   function streamBytes(bytes, ts) {
     return new Response(new Blob([bytes]).stream().pipeThrough(ts)).arrayBuffer().then(function (b) { return new Uint8Array(b); });
   }
-  function payload() { return JSON.stringify({ v: 1, m: marks, s: ST, r: RV }); }
+  function payload() { return JSON.stringify({ v: 1, m: marks, s: ST, r: RV, c: CT, p: PROF }); }
   function encode() {
     var u = new TextEncoder().encode(payload());
     if (window.CompressionStream) {
@@ -1035,15 +1063,20 @@
   $('impOpen').onclick = function () { openImport(''); };
   function applyImport(d, mode) {
     if (!d || typeof d !== 'object' || !d.m) throw new Error('記録の形式が正しくありません');
-    if (mode === 'replace') { marks = d.m || {}; ST = d.s || {}; RV = d.r || {}; }
+    if (d.p && d.p.id) { PROF.id = d.p.id; if (d.p.nick) PROF.nick = d.p.nick; sv('cfc-prof', PROF); }   // 同じ人として連携
+    if (mode === 'replace') { marks = d.m || {}; ST = d.s || {}; RV = d.r || {}; if (d.c) CT = d.c; }
     else {
       Object.keys(d.m || {}).forEach(function (k) { if (!marks[k]) marks[k] = d.m[k]; });
       Object.keys(d.s || {}).forEach(function (k) {
         var a = ST[k], b = d.s[k]; ST[k] = a ? [Math.max(a[0], b[0]), Math.max(a[1], b[1]), Math.max(a[2], b[2])] : b;
       });
       Object.keys(d.r || {}).forEach(function (k) { var a = RV[k], b = d.r[k]; if (!a || b[1] < a[1]) RV[k] = b; });
+      if (d.c) {
+        if (d.c.n > CT.n) { CT.n = d.c.n; CT.c = d.c.c; }
+        Object.keys(d.c.wk || {}).forEach(function (k) { var a = CT.wk[k], b = d.c.wk[k]; if (!a || b[0] > a[0]) CT.wk[k] = b; });
+      }
     }
-    save(); sv('cfc-st', ST); sv('cfc-rv', RV);
+    save(); sv('cfc-st', ST); sv('cfc-rv', RV); sv('cfc-ct', CT); syncNick();
   }
   $('impGo').onclick = function () {
     var mode = (cfg.querySelector('input[name="impm"]:checked') || {}).value;
@@ -1062,7 +1095,7 @@
   };
   $('resetAll').onclick = function () {
     if (!confirm('この端末の記録（○×・記述の成績・復習の予定）をすべて消します．元に戻せません．よろしいですか？')) return;
-    marks = {}; ST = {}; RV = {}; save(); sv('cfc-st', ST); sv('cfc-rv', RV);
+    marks = {}; ST = {}; RV = {}; CT = { n: 0, c: 0, wk: {} }; save(); sv('cfc-st', ST); sv('cfc-rv', RV); sv('cfc-ct', CT);
     cfg.classList.remove('on'); render(); updRev(); toast('記録を消しました');
   };
 
@@ -1074,9 +1107,11 @@
   fromHash();
   render();
   updRev();
-  if (/^#import=/.test(location.hash)) {
+  function checkImport() {
+    if (!/^#import=/.test(location.hash)) return;
     var code = decodeURIComponent(location.hash.slice(8));
     history.replaceState(null, '', location.pathname + location.search);
     openCfg(); openImport(code);
   }
+  checkImport();
 })();
