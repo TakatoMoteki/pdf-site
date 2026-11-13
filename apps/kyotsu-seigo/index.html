@@ -5,7 +5,7 @@
 <script>if(sessionStorage.getItem("pw_化学")!=="ok"){location.replace("/pdf-site/");}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>化学ファイナルチェックお試し</title>
-<link rel="stylesheet" href="katex/katex.min.css?v=202611130008">
+<link rel="stylesheet" href="katex/katex.min.css?v=202611130122">
 <style>
 :root{--navy:#13254a;--teal:#007878;--amber:#d18f1f;--ink:#1f2328;--sub:#5b6270;--line:#e3e6ea;--bg:#f6f7f9;--ok:#1a7f4b;--ng:#c0392b;--okbg:#e8f5ee;--ngbg:#fbeceb}
 *{box-sizing:border-box}
@@ -168,7 +168,7 @@ table.tb td{border:1px solid #888;padding:3px 8px}
 <header><div class="hd">
 <div class="kicker"><a href="../../化学/">化学</a>　/　過去問 正誤問題</div>
 <h1>化学ファイナルチェックお試し</h1>
-<p>共通テスト 2021〜2026（本試・追試）／センター試験 2015〜2020（本試・追試）　全202問．各記述を ○× で判定してから「答え合わせ」．見出しに（改）とある問題は，誤りを含む記述の数が問題ごとにばらばらになるように記述を改め，各記述に ○× をつける形式にした改題です．</p>
+<p>化学：共通テスト 2021〜2026（本試・追試）／センター試験 2015〜2020（本試・追試），化学基礎：共通テスト 2021〜2026（本試・追試）　全288問．各記述を ○× で判定してから「答え合わせ」．見出しに（改）とある問題は，誤りを含む記述の数が問題ごとにばらばらになるように記述を改め，各記述に ○× をつける形式にした改題です．</p>
 <button type="button" class="go-run" id="openSetup">🎯 演習モード（ランダム・タイマー）</button>
 </div></header>
 <nav>
@@ -194,6 +194,7 @@ table.tb td{border:1px solid #888;padding:3px 8px}
 <label><input type="checkbox" name="sch" value="3" checked><span>3. 無機物質</span></label>
 <label><input type="checkbox" name="sch" value="4" checked><span>4. 有機化合物</span></label>
 <label><input type="checkbox" name="sch" value="5" checked><span>5. 天然有機化合物と高分子化合物</span></label>
+<label><input type="checkbox" name="sch" value="6" checked><span>6. 化学基礎</span></label>
 </div></fieldset>
 <fieldset><legend>出典</legend><div class="opts">
 <label><input type="radio" name="src" value="all" checked><span>すべて</span></label>
@@ -229,9 +230,9 @@ table.tb td{border:1px solid #888;padding:3px 8px}
 <div class="sfoot"><span class="pn">対象 <b id="poolN">0</b> 問</span><button type="button" id="closeSetup">閉じる</button><button type="button" id="startRun">スタート</button></div>
 </div></div>
 
-<script src="katex/katex.min.js?v=202611130008"></script>
-<script src="katex/mhchem.min.js?v=202611130008"></script>
-<script src="data.js?v=202611130008"></script>
-<script src="app.js?v=202611130008"></script>
+<script src="katex/katex.min.js?v=202611130122"></script>
+<script src="katex/mhchem.min.js?v=202611130122"></script>
+<script src="data.js?v=202611130122"></script>
+<script src="app.js?v=202611130122"></script>
 </body>
 </html>

@@ -1,7 +1,7 @@
 /* 化学ファイナルチェックお試し：過去問 正誤問題（記述ごとの○×判定・演習モード） */
 (function () {
   'use strict';
-  var CH = ['物質の状態と構造', '物質の変化と平衡', '無機物質', '有機化合物', '天然有機化合物と高分子化合物'];
+  var CH = ['物質の状態と構造', '物質の変化と平衡', '無機物質', '有機化合物', '天然有機化合物と高分子化合物', '化学基礎'];
   var D = window.CFC_DATA;
   var BYID = {};
   D.forEach(function (it) { BYID[it.id] = it; });
@@ -269,7 +269,7 @@
     var ng = all.filter(function (it) { return marks[it.id] === 'n'; }).length;
     document.getElementById('stat').textContent = '○' + ok + '　×' + ng + '　／' + all.length + '問';
   }
-  function fromHash() { var m = (location.hash || '').match(/^#ch([1-5])$/); ch = m ? +m[1] : 1; }
+  function fromHash() { var m = (location.hash || '').match(/^#ch([1-6])$/); ch = m ? +m[1] : 1; }
   function render() {
     document.body.classList.remove('running');
     Array.prototype.forEach.call(document.querySelectorAll('.tab'), function (t, i) { t.classList.toggle('on', i + 1 === ch); });
