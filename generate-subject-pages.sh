@@ -199,6 +199,7 @@ for subject_dir in "$PDFS_DIR"/*/; do
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+<meta name="robots" content="noindex,nofollow">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#fafaf7" media="(prefers-color-scheme: light)">
@@ -269,6 +270,7 @@ SUBEOF
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+<meta name="robots" content="noindex,nofollow">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#fafaf7" media="(prefers-color-scheme: light)">

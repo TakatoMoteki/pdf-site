@@ -13,8 +13,9 @@ try{var c=JSON.parse(localStorage.getItem("cfc-cfg")||"{}")||{},d=document.docum
 <meta name="apple-mobile-web-app-title" content="化学FC">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
 <title>化学ファイナルチェックお試し</title>
-<link rel="stylesheet" href="katex/katex.min.css?v=202611130831">
+<link rel="stylesheet" href="katex/katex.min.css?v=202611130854">
 <style>
 :root{--navy:#13254a;--teal:#1f4e8c;--amber:#d18f1f;--ink:#1f2328;--sub:#5b6270;--line:#e3e6ea;--line2:#cfd5dc;--bg:#f6f7f9;--card:#fff;--soft:#eef1f5;--glass:rgba(255,255,255,.97);--hd:#13254a;--ok:#1a7f4b;--ng:#c0392b;--okbg:#e8f5ee;--ngbg:#fbeceb;--fz:1}
 html[data-theme="dark"]{--ink:#e6e8ee;--sub:#9aa2b2;--line:#2c3446;--line2:#3a4357;--bg:#0f1420;--card:#171d2b;--soft:#222a3b;--glass:rgba(23,29,43,.97);--hd:#cdd9f3;--ok:#3fbf7f;--ng:#ff6b5e;--okbg:#14301f;--ngbg:#3a1b1b;--teal:#5b8fd9;color-scheme:dark}
@@ -364,6 +365,15 @@ body{padding-bottom:env(safe-area-inset-bottom)}
 html[data-theme="dark"] .opts input:checked+span{background:#1d3358;color:#cfe0ff;border-color:#5b8fd9}
 html[data-theme="dark"] .dnext,html[data-theme="dark"] .bline button:not(.sec),html[data-theme="dark"] .cfgb .row button.pri,html[data-theme="dark"] .reveal,html[data-theme="dark"] .top{background:#2c5394;border-color:#2c5394}
 html[data-theme="dark"] .setup{background:rgba(0,0,0,.55)}
+
+.bknote{display:flex;gap:10px;align-items:center;flex-wrap:wrap;border:1px solid var(--gold);background:var(--card);border-radius:12px;padding:10px 12px;margin:2px 0 8px;font-size:12.5px;line-height:1.6;color:var(--ink)}
+.bknote[hidden]{display:none}
+.bknote .bki{font-size:20px}
+.bknote .bkt{flex:1;min-width:200px}.bknote .bkt b{display:block;color:var(--hd);font-size:13.5px}
+.bknote .bkb{display:flex;gap:6px}
+.bknote button{border:0;border-radius:8px;padding:8px 12px;font-size:13px;font-weight:700;cursor:pointer;background:var(--navy);color:#fff}
+.bknote button.sec{background:var(--soft);color:var(--ink)}
+#main > .card{content-visibility:auto;contain-intrinsic-size:auto 640px}
 </style>
 </head>
 <body>
@@ -387,6 +397,7 @@ html[data-theme="dark"] .setup{background:rgba(0,0,0,.55)}
 <button type="button" class="act" id="goStats"><span class="ai">📊</span><span><b>成績</b><small>章別・単元別</small></span></button>
 <button type="button" class="act" id="goCfg"><span class="ai">⚙️</span><span><b>設定</b><small>文字・画面・引き継ぎ</small></span></button>
 </div>
+<div class="bknote" id="bkNote" hidden><span class="bki">💾</span><span class="bkt"><b>記録のバックアップ</b><span id="bkText"></span></span><span class="bkb"><button type="button" id="bkGo">書き出す</button><button type="button" id="bkLater" class="sec">あとで</button></span></div>
 <div class="cv-band"></div>
 </div></header>
 <div class="intro"><p>化学：共通テスト 2021〜2026（本試・追試）／センター試験 2015〜2020（本試・追試），化学基礎：共通テスト 2021〜2026（本試・追試）／センター試験 2015〜2020（本試・追試）　全367問．各記述を ○× で判定してから「答え合わせ」．</p>
@@ -521,15 +532,17 @@ html[data-theme="dark"] .setup{background:rgba(0,0,0,.55)}
 <h3>ホーム画面に追加（オフラインでも使える）</h3>
 <p class="note2"><b>iPhone・iPad</b>：Safari の共有ボタン → 「ホーム画面に追加」．<br><b>Android</b>：Chrome のメニュー → 「ホーム画面に追加」／「アプリをインストール」．<br>一度開いておくと，電波がなくても問題を解けます（「紙面で見る」の画像は一度開いたものだけ）．ホーム画面のアプリと Safari では記録が別々になるので，必要なら上の「記録の引き継ぎ」で移してください．</p>
 <p class="note2" id="swState"></p>
+<p class="note2" id="psState"></p>
+<div class="row"><button type="button" id="undoBtn" hidden></button></div>
 <h3>記録を消す</h3>
 <div class="row"><button type="button" id="resetAll">この端末の記録をすべて消す</button></div>
 <div class="sfoot"><span class="pn"></span><button type="button" id="cfgClose">閉じる</button></div>
 </div></div>
 
-<script src="katex/katex.min.js?v=202611130831"></script>
-<script src="katex/mhchem.min.js?v=202611130831"></script>
-<script src="data.js?v=202611130831"></script>
-<script src="qrcode.js?v=202611130831" defer></script>
-<script src="app.js?v=202611130831"></script>
+<script src="katex/katex.min.js?v=202611130854"></script>
+<script src="katex/mhchem.min.js?v=202611130854"></script>
+<script src="data.js?v=202611130854"></script>
+<script src="qrcode.js?v=202611130854" defer></script>
+<script src="app.js?v=202611130854"></script>
 </body>
 </html>

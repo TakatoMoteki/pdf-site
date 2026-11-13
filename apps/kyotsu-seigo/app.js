@@ -9,10 +9,21 @@
   // ---------------------------------------------------------------- 保存
   var marks = {};
   try { marks = JSON.parse(localStorage.getItem('cfc-marks') || '{}') || {}; } catch (e) { marks = {}; }
-  function save() { try { localStorage.setItem('cfc-marks', JSON.stringify(marks)); } catch (e) {} }
+  var saveWarned = false;
+  function saveFail() {
+    if (saveWarned) return; saveWarned = true;
+    setTimeout(function () { if (window.CFC_toast) CFC_toast('記録を保存できませんでした（プライベートブラウズ中か，端末の空き容量不足の可能性があります）'); }, 0);
+  }
+  function save() { try { localStorage.setItem('cfc-marks', JSON.stringify(marks)); } catch (e) { saveFail(); } }
   function setMark(id, v) { if (v) marks[id] = v; else delete marks[id]; save(); }
   function ld(k, d) { try { var v = JSON.parse(localStorage.getItem(k) || 'null'); return v && typeof v === 'object' ? v : d; } catch (e) { return d; } }
-  function sv(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  function sv(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { saveFail(); } }
+  // 記録を消されにくくする（対応ブラウザのみ．最初に解答したときに一度だけ頼む）
+  var askedPersist = false;
+  function askPersist() {
+    if (askedPersist) return; askedPersist = true;
+    try { if (navigator.storage && navigator.storage.persist) navigator.storage.persisted().then(function (p) { if (!p) navigator.storage.persist(); }); } catch (e) {}
+  }
   var ST = ld('cfc-st', {});     // 記述ごとの成績  'id#s' → [正解数, 誤答数, 最終日]
   var RV = ld('cfc-rv', {});     // 復習予定  's:id#s' / 'q:id' → [段階, 予定日]
   function today() { var d = new Date(); return Math.floor((d.getTime() - d.getTimezoneOffset() * 60000) / 86400000); }
@@ -28,6 +39,7 @@
   var CT = ld('cfc-ct', { n: 0, c: 0, wk: {} });
   function weekStart(d) { d = d === undefined ? today() : d; return d - (d + 3) % 7; }   // 月曜はじまり
   function cnt(ok) {
+    askPersist();
     CT.n++; if (ok) CT.c++;
     var w = weekStart(), a = CT.wk[w] || [0, 0]; a[0]++; if (ok) a[1]++; CT.wk[w] = a;
     Object.keys(CT.wk).forEach(function (k) { if (+k < w - 56) delete CT.wk[k]; });
@@ -201,7 +213,7 @@
       '<div class="ansbox">' +
       '<div class="res"></div>' +
       '<div class="ansline"><span class="lbl">正解</span><span class="v">' + it.a + '</span></div>' +
-      '<div class="kb">' + blocks(it.K) + '</div>' +
+      '<div class="kb"></div>' +
       '<div class="orig k"><button type="button" class="ob">' + (it.perm ? '解説を紙面で見る（元の番号）' : '解説を紙面で見る') + '</button><img class="img" alt="紙面（解説）" data-src="' + it.ki + '" style="aspect-ratio:' + (1 / it.kar).toFixed(4) + '"></div>' +
       '<div class="self"><button type="button" class="y">○ できた</button><button type="button" class="n">× まちがえた</button></div>' +
       '<div class="after"></div>' +
@@ -262,8 +274,10 @@
     n.onclick = function () { manual('n'); };
     syncMark();
 
+    var kbDone = false;
     function open() {
       opened = true;
+      if (!kbDone) { var kb = el.querySelector('.kb'); kb.innerHTML = blocks(it.K); typeset(kb); kbDone = true; }   // 解説は答え合わせのときに組み立てる
       el.classList.add('open');
       var judged = 0, right = 0, total = 0;
       Array.prototype.forEach.call(jgs, function (g) {
@@ -417,7 +431,27 @@
     });
   }
   function fromHash() { var m = (location.hash || '').match(/^#ch([1-6])$/); ch = m ? +m[1] : 1; }
+  // 一覧は最初の数問だけすぐ表示し，残りは少しずつ描画する
+  var RJ = null;
+  function later(f) { if (window.requestIdleCallback) requestIdleCallback(f, { timeout: 120 }); else setTimeout(f, 16); }
+  function queueRender(gens) {
+    var job = { g: gens, i: 0 }; RJ = job;
+    function put() { M.appendChild(job.g[job.i++]()); }
+    for (var n = 0; job.i < job.g.length && n < 8; n++) put();
+    (function step() {
+      if (RJ !== job) return;
+      if (document.body.classList.contains('running')) { RJ = null; return; }
+      if (job.i >= job.g.length) { RJ = null; return; }
+      var t = performance.now();
+      while (job.i < job.g.length && performance.now() - t < 14) put();
+      later(step);
+    })();
+  }
+  function flushRender() { var job = RJ; if (!job) return; RJ = null; while (job.i < job.g.length) M.appendChild(job.g[job.i++]()); }
+  function el2(cls, txt) { return function () { var d = document.createElement('div'); d.className = cls; d.textContent = txt; return d; }; }
+  function cardGen(it) { return function () { return card(it, { onMark: stat }); }; }
   function render(keep) {
+    RJ = null;
     document.body.classList.remove('running');
     ses = null;
     if (searching()) return renderSearch();
@@ -433,12 +467,13 @@
     var h = document.createElement('div'); h.className = 'chtitle'; h.textContent = '第' + ch + '章　' + CH[ch - 1]; M.appendChild(h);
     var L = D.filter(function (it) { return it.ch === ch && pass(it, fsrc) && pass(it, fst); });
     if (!L.length) { var e = document.createElement('div'); e.className = 'empty'; e.textContent = '該当する問題はありません'; M.appendChild(e); }
-    var g = null;
+    var g = null, gens = [];
     L.forEach(function (it) {
       var gg = it.c ? 'センター試験' : '共通テスト';
-      if (gg !== g) { g = gg; var d = document.createElement('div'); d.className = 'grp'; d.textContent = gg; M.appendChild(d); }
-      M.appendChild(card(it, { onMark: stat }));
+      if (gg !== g) { g = gg; gens.push(el2('grp', gg)); }
+      gens.push(cardGen(it));
     });
+    queueRender(gens);
     stat();
   }
   window.addEventListener('hashchange', function () {
@@ -555,6 +590,7 @@
   var ses = null;
   function $(id) { return document.getElementById(id); }
   function esc(t) { return String(t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  window.CFC_toast = function (m) { toast(m); };
   function toast(msg) {
     var t = $('toast');
     if (!t) { t = document.createElement('div'); t.id = 'toast'; document.body.appendChild(t); }
@@ -570,6 +606,7 @@
     fsrc = 'all'; fst = 'all';
     Array.prototype.forEach.call(document.querySelectorAll('.seg button'), function (x) { x.classList.toggle('on', x.dataset.f === 'all'); });
     render();
+    flushRender();
     var el = $('q-' + id); if (el) el.scrollIntoView();
   }
   function plain(h) { var d = document.createElement('div'); d.innerHTML = h; return d.textContent; }
@@ -612,6 +649,7 @@
   function clearSearch() { qtext = ''; qtags = []; var q = $('qbox'); if (q) q.value = ''; syncTags(); }
   var SLIM = 60;
   function renderSearch(more) {
+    RJ = null;
     Array.prototype.forEach.call(document.querySelectorAll('.tab'), function (t) { t.classList.remove('on'); });
     M.innerHTML = '';
     var base = searchBase();
@@ -632,16 +670,17 @@
     };
     if (!L.length) { var e = document.createElement('div'); e.className = 'empty'; e.textContent = '該当する問題はありません'; M.appendChild(e); }
     L.sort(function (a, b) { return a.ch - b.ch || a.n - b.n; });
-    var show = more ? L : L.slice(0, SLIM), g = null;
+    var show = more ? L : L.slice(0, SLIM), g = null, gens = [];
     show.forEach(function (it) {
-      if (it.ch !== g) { g = it.ch; var d = document.createElement('div'); d.className = 'chhd'; d.textContent = '第' + g + '章　' + CH[g - 1]; M.appendChild(d); }
-      M.appendChild(card(it, { onMark: stat }));
+      if (it.ch !== g) { g = it.ch; gens.push(el2('chhd', '第' + g + '章　' + CH[g - 1])); }
+      gens.push(cardGen(it));
     });
-    if (show.length < L.length) {
+    if (show.length < L.length) gens.push(function () {
       var mb = document.createElement('button'); mb.type = 'button'; mb.className = 'reveal';
       mb.textContent = '残り ' + (L.length - show.length) + ' 問も表示'; mb.onclick = function () { renderSearch(true); };
-      M.appendChild(mb);
-    }
+      return mb;
+    });
+    queueRender(gens);
     stat();
     var hd = document.querySelector('#nav .chname'); if (hd) hd.textContent = '検索結果';
   }
@@ -966,9 +1005,24 @@
     var sw = $('swState');
     sw.textContent = !('serviceWorker' in navigator) ? 'この端末のブラウザはオフライン表示に対応していません．' :
       navigator.serviceWorker.controller ? '✓ オフラインでも使える状態です．' : 'オフライン用の準備中です（もう一度開くと有効になります）．';
+    var ps = $('psState');
+    ps.textContent = '';
+    try {
+      if (navigator.storage && navigator.storage.persisted) navigator.storage.persisted().then(function (p) {
+        ps.textContent = p ? '✓ この端末の記録は「消されにくい保存」になっています．' :
+          (isIOS() && !standalone() ? 'Safari では，しばらく開かないと記録が消えることがあります．ホーム画面に追加して使うか，ときどき書き出しておいてください．' :
+            'ブラウザの判断で記録が消えることがまれにあります．ときどき書き出しておくと安心です．');
+      });
+    } catch (e) {}
+    var bk = null; try { bk = JSON.parse(localStorage.getItem('cfc-bak') || 'null'); } catch (e) {}
+    var ub = $('undoBtn');
+    if (bk && bk.d) { var dt = new Date(bk.t); ub.hidden = false; ub.textContent = '「' + bk.why + '」の前の記録に戻す（' + (dt.getMonth() + 1) + '/' + dt.getDate() + ' ' + dt.getHours() + ':' + ('0' + dt.getMinutes()).slice(-2) + '）'; }
+    else ub.hidden = true;
     cfg.classList.add('on');
   }
   $('goCfg').onclick = openCfg;
+  function isIOS() { return /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); }
+  function standalone() { return (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true; }
   function syncNick() { var x = $('nick'); if (x) x.value = PROF.nick || ''; }
   syncNick();
   $('nick').addEventListener('change', function () {
@@ -1019,6 +1073,7 @@
   $('expBtn').onclick = function () {
     encode().then(function (code) {
       lastCode = code;
+      CFG.exp = today(); sv('cfc-cfg', CFG); updBackupNote();
       $('expBox').hidden = false; $('impBox').hidden = true;
       $('expCode').value = code;
       var url = location.origin + location.pathname + '#import=' + code;
@@ -1045,6 +1100,7 @@
   };
   function fname() { var d = new Date(); return 'kagaku-fc-' + d.getFullYear() + ('0' + (d.getMonth() + 1)).slice(-2) + ('0' + d.getDate()).slice(-2) + '.json'; }
   $('expFile').onclick = function () {
+    CFG.exp = today(); sv('cfc-cfg', CFG); updBackupNote();
     var a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([payload()], { type: 'application/json' }));
     a.download = fname(); document.body.appendChild(a); a.click();
@@ -1061,8 +1117,43 @@
     $('impMsg').className = 'msg';
   }
   $('impOpen').onclick = function () { openImport(''); };
+  // 読み込んだ記録の検証：存在する問題・記述の記録だけを，正しい形で受け取る
+  function own(o, k) { return Object.prototype.hasOwnProperty.call(o, k); }
+  function nat(x, max) { return typeof x === 'number' && isFinite(x) && x >= 0 && x <= (max || 1e7) && Math.floor(x) === x; }
+  function isObj(x) { return x && typeof x === 'object' && !Array.isArray(x); }
+  function cleanImport(d) {
+    if (!isObj(d) || !isObj(d.m)) throw new Error('記録の形式が正しくありません');
+    var o = { m: {}, s: {}, r: {}, c: null, p: null }, bad = 0;
+    Object.keys(d.m).forEach(function (k) { if (own(BYID, k) && (d.m[k] === 'y' || d.m[k] === 'n')) o.m[k] = d.m[k]; else bad++; });
+    if (isObj(d.s)) Object.keys(d.s).forEach(function (k) {
+      var v = d.s[k];
+      if (own(SBY, k) && Array.isArray(v) && v.length === 3 && nat(v[0]) && nat(v[1]) && nat(v[2], 1e6)) o.s[k] = [v[0], v[1], v[2]]; else bad++;
+    });
+    if (isObj(d.r)) Object.keys(d.r).forEach(function (k) {
+      var v = d.r[k], ok = (k.slice(0, 2) === 's:' && own(SBY, k.slice(2))) || (k.slice(0, 2) === 'q:' && own(BYID, k.slice(2)));
+      if (ok && Array.isArray(v) && v.length === 2 && nat(v[0], INT.length - 1) && nat(v[1], 1e6)) o.r[k] = [v[0], v[1]]; else bad++;
+    });
+    if (isObj(d.c) && nat(d.c.n) && nat(d.c.c) && d.c.c <= d.c.n) {
+      o.c = { n: d.c.n, c: d.c.c, wk: {} };
+      if (isObj(d.c.wk)) Object.keys(d.c.wk).forEach(function (k) {
+        var v = d.c.wk[k];
+        if (/^\d{1,7}$/.test(k) && Array.isArray(v) && v.length === 2 && nat(v[0]) && nat(v[1]) && v[1] <= v[0]) o.c.wk[k] = [v[0], v[1]];
+      });
+    }
+    if (isObj(d.p) && typeof d.p.id === 'string' && /^p[a-z0-9]{6,40}$/.test(d.p.id)) {
+      o.p = { id: d.p.id };
+      if (typeof d.p.nick === 'string') { var nk = d.p.nick.replace(/[\u0000-\u001f<>]/g, '').trim().slice(0, 12); if (nk) o.p.nick = nk; }
+    }
+    o.bad = bad;
+    return o;
+  }
+  // 読み込み・消去の直前の記録を１世代だけ控えておく（「元に戻す」用）
+  function keepBackup(why) {
+    try { localStorage.setItem('cfc-bak', JSON.stringify({ t: Date.now(), why: why, d: JSON.parse(payload()) })); } catch (e) {}
+  }
   function applyImport(d, mode) {
-    if (!d || typeof d !== 'object' || !d.m) throw new Error('記録の形式が正しくありません');
+    d = cleanImport(d);
+    keepBackup(mode === 'replace' ? '記録の置き換え' : '記録の読み込み');
     if (d.p && d.p.id) { PROF.id = d.p.id; if (d.p.nick) PROF.nick = d.p.nick; sv('cfc-prof', PROF); }   // 同じ人として連携
     if (mode === 'replace') { marks = d.m || {}; ST = d.s || {}; RV = d.r || {}; if (d.c) CT = d.c; }
     else {
@@ -1077,14 +1168,17 @@
       }
     }
     save(); sv('cfc-st', ST); sv('cfc-rv', RV); sv('cfc-ct', CT); syncNick();
+    return d;
   }
   $('impGo').onclick = function () {
     var mode = (cfg.querySelector('input[name="impm"]:checked') || {}).value;
     var msg = $('impMsg');
-    decode($('impCode').value).then(function (d) {
+    var raw = $('impCode').value;
+    if (raw.length > 3e6) { msg.className = 'msg err'; msg.textContent = '読み込めませんでした：データが大きすぎます'; return; }
+    decode(raw).then(function (d) {
       if (mode === 'replace' && !confirm('この端末の記録を，読み込んだ記録で置き換えます．よろしいですか？')) return;
-      applyImport(d, mode);
-      msg.className = 'msg'; msg.textContent = '✓ 読み込みました（問題 ' + Object.keys(d.m || {}).length + ' 問・記述 ' + Object.keys(d.s || {}).length + ' 個）';
+      var r = applyImport(d, mode);
+      msg.className = 'msg'; msg.textContent = '✓ 読み込みました（問題 ' + Object.keys(r.m).length + ' 問・記述 ' + Object.keys(r.s).length + ' 個' + (r.bad ? '．使えないデータ ' + r.bad + ' 件は読み飛ばしました' : '') + '）';
       if (!ses) render(true); updRev();
     }).catch(function (e) { msg.className = 'msg err'; msg.textContent = '読み込めませんでした：' + (e && e.message || e); });
   };
@@ -1093,8 +1187,19 @@
     f.text().then(function (t) { $('impCode').value = t.trim(); $('impGo').onclick(); });
     e.target.value = '';
   };
+  $('undoBtn').onclick = function () {
+    var bk = null; try { bk = JSON.parse(localStorage.getItem('cfc-bak') || 'null'); } catch (e) {}
+    if (!bk || !bk.d) return;
+    if (!confirm('「' + bk.why + '」の前の記録に戻します．よろしいですか？')) return;
+    var d = cleanImport(bk.d);
+    marks = d.m; ST = d.s; RV = d.r; CT = d.c || { n: 0, c: 0, wk: {} };
+    save(); sv('cfc-st', ST); sv('cfc-rv', RV); sv('cfc-ct', CT);
+    try { localStorage.removeItem('cfc-bak'); } catch (e) {}
+    cfg.classList.remove('on'); if (!ses) render(true); updRev(); toast('記録を元に戻しました');
+  };
   $('resetAll').onclick = function () {
     if (!confirm('この端末の記録（○×・記述の成績・復習の予定）をすべて消します．元に戻せません．よろしいですか？')) return;
+    keepBackup('記録の消去');
     marks = {}; ST = {}; RV = {}; CT = { n: 0, c: 0, wk: {} }; save(); sv('cfc-st', ST); sv('cfc-rv', RV); sv('cfc-ct', CT);
     cfg.classList.remove('on'); render(); updRev(); toast('記録を消しました');
   };
@@ -1104,6 +1209,18 @@
     window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
   }
 
+  // 書き出しのすすめ：記録が増えてきて，しばらく書き出していないとき
+  function updBackupNote() {
+    var b = $('bkNote'); if (!b) return;
+    var t = today(), since = CFG.exp ? t - CFG.exp : null;
+    var need = CT.n >= 30 && (since === null || since >= 14) && !(CFG.snooze && CFG.snooze > t);
+    b.hidden = !need;
+    if (need) $('bkText').textContent = (since === null ? 'まだ一度も記録を書き出していません．' : '最後に書き出してから ' + since + ' 日たっています．') +
+      (isIOS() && !standalone() ? 'Safari ではしばらく開かないと記録が消えることがあるので，書き出しておくか，ホーム画面に追加して使うのがおすすめです．' : '端末の故障や機種変更に備えて，ときどき書き出しておくと安心です．');
+  }
+  $('bkGo').onclick = function () { openCfg(); $('expBtn').click(); };
+  $('bkLater').onclick = function () { CFG.snooze = today() + 7; sv('cfc-cfg', CFG); updBackupNote(); };
+  updBackupNote();
   fromHash();
   render();
   updRev();
