@@ -5,34 +5,93 @@
 <script>if(sessionStorage.getItem("pw_化学")!=="ok"){location.replace("/pdf-site/");}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>化学ファイナルチェックお試し</title>
-<link rel="stylesheet" href="katex/katex.min.css?v=202611130307">
+<link rel="stylesheet" href="katex/katex.min.css?v=202611130552">
 <style>
-:root{--navy:#13254a;--teal:#007878;--amber:#d18f1f;--ink:#1f2328;--sub:#5b6270;--line:#e3e6ea;--bg:#f6f7f9;--ok:#1a7f4b;--ng:#c0392b;--okbg:#e8f5ee;--ngbg:#fbeceb}
+:root{--navy:#13254a;--teal:#1f4e8c;--amber:#d18f1f;--ink:#1f2328;--sub:#5b6270;--line:#e3e6ea;--bg:#f6f7f9;--ok:#1a7f4b;--ng:#c0392b;--okbg:#e8f5ee;--ngbg:#fbeceb}
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic",Meiryo,sans-serif;line-height:1.5}
 button{font-family:inherit}
-header{background:#fff;border-bottom:1px solid var(--line)}
-.hd{max-width:760px;margin:0 auto;padding:14px 16px 12px}
-.hd .kicker{font-size:12px;letter-spacing:.08em;color:var(--teal);font-weight:700}
-.hd .kicker a{color:inherit}
-.hd h1{margin:2px 0 4px;font-size:21px;color:var(--navy)}
-.hd p{margin:0;font-size:13px;color:var(--sub)}
-.go-run{margin-top:10px;display:inline-flex;align-items:center;gap:6px;border:0;border-radius:999px;background:var(--teal);color:#fff;font-size:14px;font-weight:700;padding:9px 16px;cursor:pointer}
-nav{position:sticky;top:0;z-index:10;background:rgba(255,255,255,.96);backdrop-filter:blur(6px);border-bottom:1px solid var(--line)}
-body.running nav,body.running header{display:none}
-.tabs{max-width:760px;margin:0 auto;display:flex;gap:6px;overflow-x:auto;padding:8px 12px 6px;scrollbar-width:none}
+/* ---- 表紙風ヘッダー ---- */
+:root{--gold:#c49a45;--gold2:#b8862f;--navy2:#1d3566}
+header.cover{position:relative;overflow:hidden;background:#fff;border-bottom:0}
+header.cover::before{content:"";position:absolute;inset:0;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='97' viewBox='0 0 56 97'%3E%3Cpath d='M28 0 L56 16.17 L56 48.5 L28 64.67 L0 48.5 L0 16.17 Z M28 64.67 L28 97 M0 48.5 L0 80.83 M56 48.5 L56 80.83' fill='none' stroke='%23d5d9e1' stroke-width='1'/%3E%3C/svg%3E");background-size:42px 73px;opacity:.75;
+  -webkit-mask-image:linear-gradient(100deg,transparent 0%,rgba(0,0,0,.35) 35%,#000 75%);mask-image:linear-gradient(100deg,transparent 0%,rgba(0,0,0,.35) 35%,#000 75%)}
+.cv{position:relative;max-width:760px;margin:0 auto;padding:14px 18px 0}
+.cv-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.cv-series{font-size:10px;letter-spacing:.24em;color:#6b7383;padding-top:6px;border-bottom:1px solid #c9ced8;padding-bottom:6px;flex:1;max-width:420px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media(max-width:520px){.cv-series .ser{display:none}}
+.cv-series a{color:inherit;text-decoration:none}
+.cv-series a:hover{color:var(--navy)}
+.cv-tag{flex:none;background:var(--navy);color:#fff;text-align:center;padding:12px 14px 8px;margin-top:-14px;border-bottom:4px solid var(--gold);min-width:78px}
+.cv-tag b{display:block;font-size:22px;letter-spacing:.04em}
+.cv-tag small{display:block;font-size:8px;letter-spacing:.2em;margin-top:2px;opacity:.85}
+.cv-el{display:flex;gap:7px;margin:14px 0 10px}
+.cv-el span{width:44px;height:50px;border:1.5px solid var(--navy);background:#fff;position:relative;display:flex;align-items:center;justify-content:center;font:700 20px/1 "Helvetica Neue",Arial,sans-serif;color:var(--navy)}
+.cv-el span i{position:absolute;left:3px;top:2px;font:400 8px/1 Arial,sans-serif;font-style:normal}
+.cv-el span.c{background:var(--navy);color:#fff}
+.cv-hex{position:absolute;right:6px;top:54px;width:150px;height:110px;pointer-events:none}
+.cv-en{font-family:Georgia,"Times New Roman","Hiragino Mincho ProN",serif;color:var(--navy);font-size:34px;line-height:1.05;margin-top:4px}
+.cv-en em{display:block;font-style:normal;color:var(--gold2);font-size:21px;margin:2px 0 0 4px}
+.cv-rule{width:110px;height:3px;background:var(--gold);margin:10px 0 12px}
+.cv h1{margin:0;font-size:34px;line-height:1.1;color:var(--navy);font-weight:900;letter-spacing:.02em}
+.cv h1 small{font-size:19px;font-weight:800;margin-left:4px;letter-spacing:.04em}
+.cv-sub{margin:6px 0 0;font-size:13px;font-weight:700;color:#4b5465;letter-spacing:.05em}
+.cv-band{height:6px;margin-top:14px;border-top:2px solid var(--navy);border-bottom:2px solid var(--gold);opacity:.85}
+.intro{max-width:760px;margin:0 auto;padding:12px 16px 4px}
+.intro p{margin:0;font-size:12.5px;color:var(--sub);line-height:1.7}
+.intro details{margin-top:6px;font-size:12.5px;color:var(--sub)}
+.intro summary{cursor:pointer;color:var(--navy);font-weight:700}
+/* 演習モードボタン */
+.go-run{display:flex;align-items:center;gap:14px;width:100%;margin:14px 0 6px;border:0;border-radius:14px;cursor:pointer;text-align:left;
+  background:linear-gradient(120deg,var(--navy) 0%,var(--navy2) 70%,#284a8a 100%);color:#fff;padding:14px 16px;box-shadow:0 6px 18px rgba(19,37,74,.28);position:relative;overflow:hidden}
+.go-run::after{content:"";position:absolute;right:-30px;top:-30px;width:120px;height:120px;border:10px solid rgba(196,154,69,.22);border-radius:50%}
+.go-run .gi{flex:none;width:46px;height:46px;border-radius:12px;background:var(--gold);color:var(--navy);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:900}
+.go-run .gt{flex:1;min-width:0}
+.go-run .gt b{display:block;font-size:18px;letter-spacing:.04em}
+.go-run .gt span{display:block;font-size:12px;opacity:.85;margin-top:2px}
+.go-run .ga{flex:none;font-size:22px;color:var(--gold)}
+.go-run:active{transform:translateY(1px)}
+/* 章カード */
+.chsec{max-width:760px;margin:0 auto;padding:8px 12px 2px}
+.sech{font-size:12px;font-weight:700;color:var(--sub);letter-spacing:.08em;margin:8px 4px 6px}
+.chgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+@media(min-width:620px){.chgrid{grid-template-columns:repeat(3,1fr)}}
+.chc{position:relative;text-align:left;border:1px solid var(--line);background:#fff;border-radius:12px;padding:10px 12px 10px;cursor:pointer;display:flex;flex-direction:column;gap:4px;min-height:84px}
+.chc .cn{font:700 22px/1 Georgia,"Times New Roman",serif;color:var(--gold2)}
+.chc .ct{font-size:14px;font-weight:700;color:var(--navy);line-height:1.3}
+.chc .cs{font-size:11.5px;color:var(--sub);margin-top:auto}
+.chc .cb{height:5px;border-radius:3px;background:#edf0f4;overflow:hidden;display:flex}
+.chc .cb i{display:block;height:100%}
+.chc .cb .y{background:var(--ok)}.chc .cb .n{background:var(--ng)}
+.chc.on{border-color:var(--navy);box-shadow:0 0 0 2px var(--navy) inset;background:#f6f8fc}
+.chc.on::after{content:"表示中";position:absolute;right:8px;top:8px;font-size:10px;font-weight:700;color:#fff;background:var(--navy);border-radius:4px;padding:1px 5px}
+/* 固定バー */
+nav{position:sticky;top:0;z-index:10;background:rgba(255,255,255,.97);backdrop-filter:blur(6px);border-bottom:1px solid var(--line);border-top:1px solid var(--line);margin-top:12px;box-shadow:0 2px 8px rgba(19,37,74,.05)}
+body.running nav,body.running header,body.running .intro,body.running .chsec{display:none}
+.tabs{max-width:760px;margin:0 auto;display:flex;gap:4px;overflow-x:auto;padding:8px 12px 4px;scrollbar-width:none}
 .tabs::-webkit-scrollbar{display:none}
-.tab{flex:none;border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font-size:13px;color:var(--ink);cursor:pointer;white-space:nowrap}
-.tab.on{background:var(--navy);border-color:var(--navy);color:#fff}
-.filters{max-width:760px;margin:0 auto;display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:0 12px 8px;font-size:12px}
-.chip{border:1px solid var(--line);background:#fff;border-radius:6px;padding:4px 9px;cursor:pointer;color:var(--sub)}
-.chip.on{border-color:var(--teal);color:var(--teal);font-weight:700;background:#eef7f7}
-.stat{margin-left:auto;color:var(--sub)}
+.tab{flex:none;border:1px solid var(--line);background:#fff;border-radius:9px;padding:6px 11px 6px 8px;font-size:13px;color:var(--ink);cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:6px}
+.tab .tn{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:5px;background:#eef1f6;color:var(--navy);font-weight:700;font-size:12px}
+.tab.on{background:var(--navy);border-color:var(--navy);color:#fff;font-weight:700}
+.tab.on .tn{background:var(--gold);color:var(--navy)}
+.filters{max-width:760px;margin:0 auto;display:flex;gap:8px 12px;flex-wrap:wrap;align-items:center;padding:4px 12px 8px;font-size:12px}
+.fg{display:flex;align-items:center;gap:6px}
+.fg .fl{font-size:11px;font-weight:700;color:var(--sub)}
+.seg{display:inline-flex;border:1px solid #cfd5dc;border-radius:9px;overflow:hidden;background:#fff}
+.seg button{border:0;background:none;padding:6px 10px;font-size:12.5px;color:var(--ink);cursor:pointer;border-left:1px solid #e3e6ea;white-space:nowrap}
+.seg button:first-child{border-left:0}
+.seg button em{font-style:normal;font-size:10.5px;color:var(--sub);margin-left:3px}
+.seg button.on{background:var(--navy);color:#fff;font-weight:700}
+.seg button.on em{color:#d8e0ef}
+.seg button:disabled{color:#b9bec7;cursor:default}
+.stat{margin-left:auto;color:var(--sub);font-size:12px;white-space:nowrap}
+.stat b.y{color:var(--ok)}.stat b.n{color:var(--ng)}
 main{max-width:760px;margin:0 auto;padding:12px 10px 70px}
-.chtitle{font-size:16px;font-weight:700;color:var(--navy);margin:8px 6px 10px;border-left:5px solid var(--teal);padding-left:8px}
-.grp{font-size:13px;font-weight:700;color:var(--sub);margin:18px 6px 8px}
-.card{background:#fff;border:1px solid var(--line);border-radius:10px;margin:0 0 14px;overflow:hidden;scroll-margin-top:96px}
+.chtitle{font-size:17px;font-weight:800;color:var(--navy);margin:10px 6px 10px;border-left:5px solid var(--gold);padding-left:9px}
+.grp{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--navy);margin:18px 6px 8px}
+.grp::after{content:"";flex:1;height:1px;background:var(--line)}
+.card{background:#fff;border:1px solid var(--line);border-radius:10px;margin:0 0 14px;overflow:hidden;scroll-margin-top:120px}
 .meta{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--line);font-size:13px;flex-wrap:wrap}
 .no{font-weight:700;color:var(--navy)}
 .badge{font-size:11px;padding:1px 6px;border-radius:4px;background:#eceff3;color:#333}
@@ -176,20 +235,30 @@ table.tb td{border:1px solid #888;padding:3px 8px}
 </style>
 </head>
 <body>
-<header><div class="hd">
-<div class="kicker"><a href="../../化学/">化学</a>　/　過去問 正誤問題</div>
-<h1>化学ファイナルチェックお試し</h1>
-<p>化学：共通テスト 2021〜2026（本試・追試）／センター試験 2015〜2020（本試・追試），化学基礎：共通テスト 2021〜2026（本試・追試）　全288問．各記述を ○× で判定してから「答え合わせ」．見出しに（改）とある問題は，誤りを含む記述の数が問題ごとにばらばらになるように記述を改め，各記述に ○× をつける形式にした改題です．</p>
-<button type="button" class="go-run" id="openSetup">🎯 演習モード（ランダム・タイマー）</button>
+<header class="cover"><div class="cv">
+<div class="cv-top"><div class="cv-series"><a href="../../化学/">← 化学のページへ</a><span class="ser">　UNIVERSITY ENTRANCE EXAMINATION SERIES</span></div>
+<div class="cv-tag"><b>化学</b><small>CHEMISTRY</small></div></div>
+<div class="cv-el"><span><i>1</i>H</span><span class="c"><i>6</i>C</span><span><i>7</i>N</span><span><i>8</i>O</span></div>
+<svg class="cv-hex" viewBox="0 0 150 110" aria-hidden="true"><g fill="none" stroke="#c49a45" stroke-width="2.2">
+<path d="M45 6 l17 10 v20 l-17 10 l-17 -10 v-20z"/><circle cx="45" cy="26" r="9"/>
+<path d="M98 30 l17 10 v20 l-17 10 l-17 -10 v-20z"/><path d="M85 39 v22" opacity=".0"/><path d="M84 41.5 l14 -8 M115 49 v14 M84 58.5 l14 8"/>
+<path d="M132 54 l17 10 v20 l-17 10 l-17 -10 v-20z" opacity=".7"/><circle cx="132" cy="74" r="9" opacity=".7"/>
+<path d="M81 60 l17 10 v20 l-17 10 l-17 -10 v-20z" opacity=".55"/></g></svg>
+<div class="cv-en">Final Check<em>in Chemistry</em></div>
+<div class="cv-rule"></div>
+<h1>化学<small>ファイナルチェック</small></h1>
+<p class="cv-sub">共通テスト・センター試験　正誤問題の分野別整理</p>
+<button type="button" class="go-run" id="openSetup"><span class="gi">▶</span><span class="gt"><b>演習モードではじめる</b><span>章・出典・問題数を選んでランダム出題　タイマーも使えます</span></span><span class="ga">→</span></button>
+<div class="cv-band"></div>
 </div></header>
-<nav>
+<div class="intro"><p>化学：共通テスト 2021〜2026（本試・追試）／センター試験 2015〜2020（本試・追試），化学基礎：共通テスト 2021〜2026（本試・追試）　全288問．各記述を ○× で判定してから「答え合わせ」．</p>
+<details><summary>（改）とある問題について</summary>見出しに（改）とある問題は，誤りを含む記述の数が問題ごとにばらばらになるように記述を改め，各記述に ○× をつける形式にした改題です．</details></div>
+<section class="chsec"><div class="sech">分野を選ぶ</div><div class="chgrid" id="chgrid"></div></section>
+<nav id="nav">
 <div class="tabs" id="tabs"></div>
 <div class="filters">
-<span class="chip on" data-f="all">すべて</span>
-<span class="chip" data-f="kyotsu">共テのみ</span>
-<span class="chip" data-f="center">センターのみ</span>
-<span class="chip" data-f="ng">×だけ</span>
-<span class="chip" data-f="un">未チェック</span>
+<div class="fg"><span class="fl">出典</span><div class="seg" id="fsrc"><button type="button" data-f="all" class="on">すべて</button><button type="button" data-f="kyotsu">共テ</button><button type="button" data-f="center">センター</button></div></div>
+<div class="fg"><span class="fl">表示</span><div class="seg" id="fst"><button type="button" data-f="all" class="on">すべて</button><button type="button" data-f="ng">×だけ</button><button type="button" data-f="un">未チェック</button></div></div>
 <span class="stat" id="stat"></span>
 </div>
 </nav>
@@ -241,9 +310,9 @@ table.tb td{border:1px solid #888;padding:3px 8px}
 <div class="sfoot"><span class="pn">対象 <b id="poolN">0</b> 問</span><button type="button" id="closeSetup">閉じる</button><button type="button" id="startRun">スタート</button></div>
 </div></div>
 
-<script src="katex/katex.min.js?v=202611130307"></script>
-<script src="katex/mhchem.min.js?v=202611130307"></script>
-<script src="data.js?v=202611130307"></script>
-<script src="app.js?v=202611130307"></script>
+<script src="katex/katex.min.js?v=202611130552"></script>
+<script src="katex/mhchem.min.js?v=202611130552"></script>
+<script src="data.js?v=202611130552"></script>
+<script src="app.js?v=202611130552"></script>
 </body>
 </html>

@@ -280,22 +280,42 @@
   }
 
   // ---------------------------------------------------------------- 一覧
-  var ch = 1, flt = 'all';
+  var ch = 1, fsrc = 'all', fst = 'all';
   var M = document.getElementById('main');
   var tabs = document.getElementById('tabs');
+  var grid = document.getElementById('chgrid');
   CH.forEach(function (t, i) {
     var b = document.createElement('button');
-    b.className = 'tab'; b.textContent = (i + 1) + '. ' + t;
+    b.type = 'button'; b.className = 'tab';
+    b.innerHTML = '<span class="tn">' + (i + 1) + '</span>' + t;
     b.onclick = function () { location.hash = 'ch' + (i + 1); };
     tabs.appendChild(b);
-  });
-  Array.prototype.forEach.call(document.querySelectorAll('.chip'), function (c) {
+    var c = document.createElement('button');
+    c.type = 'button'; c.className = 'chc';
+    c.innerHTML = '<span class="cn">' + (i + 1) + '</span><span class="ct">' + t + '</span><span class="cs"></span><span class="cb"><i class="y"></i><i class="n"></i></span>';
     c.onclick = function () {
-      flt = c.dataset.f;
-      Array.prototype.forEach.call(document.querySelectorAll('.chip'), function (x) { x.classList.toggle('on', x === c); });
-      render();
+      if (location.hash === '#ch' + (i + 1)) jumpList(); else { pendingJump = true; location.hash = 'ch' + (i + 1); }
     };
+    grid.appendChild(c);
   });
+  var pendingJump = false;
+  function jumpList() {
+    var nav = document.getElementById('nav');
+    window.scrollTo({ top: nav.getBoundingClientRect().top + window.pageYOffset - 0, behavior: 'smooth' });
+  }
+  function segs(id, set) {
+    var box = document.getElementById(id);
+    Array.prototype.forEach.call(box.querySelectorAll('button'), function (x) {
+      x.onclick = function () {
+        if (x.disabled) return;
+        set(x.dataset.f);
+        Array.prototype.forEach.call(box.querySelectorAll('button'), function (y) { y.classList.toggle('on', y === x); });
+        render(true);
+      };
+    });
+  }
+  segs('fsrc', function (f) { fsrc = f; });
+  segs('fst', function (f) { fst = f; });
   function pass(it, f) {
     return f === 'all' || (f === 'kyotsu' && !it.c) || (f === 'center' && it.c) || (f === 'ng' && marks[it.id] === 'n') ||
       (f === 'un' && !marks[it.id]) || (f === 'ngun' && marks[it.id] !== 'y');
@@ -304,15 +324,45 @@
     var all = D.filter(function (it) { return it.ch === ch; });
     var ok = all.filter(function (it) { return marks[it.id] === 'y'; }).length;
     var ng = all.filter(function (it) { return marks[it.id] === 'n'; }).length;
-    document.getElementById('stat').textContent = '○' + ok + '　×' + ng + '　／' + all.length + '問';
+    document.getElementById('stat').innerHTML = '<b class="y">○' + ok + '</b>　<b class="n">×' + ng + '</b>　／' + all.length + '問';
+    // 出典・表示ボタンの件数
+    ['all', 'kyotsu', 'center'].forEach(function (f) {
+      var b = document.querySelector('#fsrc button[data-f="' + f + '"]');
+      var n = all.filter(function (it) { return pass(it, f) && pass(it, fst); }).length;
+      b.dataset.label = b.dataset.label || b.textContent;
+      b.innerHTML = b.dataset.label + '<em>' + n + '</em>';
+      b.disabled = f !== 'all' && !all.filter(function (it) { return pass(it, f); }).length;
+    });
+    ['all', 'ng', 'un'].forEach(function (f) {
+      var b = document.querySelector('#fst button[data-f="' + f + '"]');
+      var n = all.filter(function (it) { return pass(it, fsrc) && pass(it, f); }).length;
+      b.dataset.label = b.dataset.label || b.textContent;
+      b.innerHTML = b.dataset.label + '<em>' + n + '</em>';
+    });
+    // 章カード
+    Array.prototype.forEach.call(grid.children, function (c, i) {
+      var L = D.filter(function (it) { return it.ch === i + 1; });
+      var y = L.filter(function (it) { return marks[it.id] === 'y'; }).length;
+      var n = L.filter(function (it) { return marks[it.id] === 'n'; }).length;
+      c.querySelector('.cs').textContent = L.length + '問　○' + y + '　×' + n;
+      c.querySelector('.cb .y').style.width = (L.length ? 100 * y / L.length : 0) + '%';
+      c.querySelector('.cb .n').style.width = (L.length ? 100 * n / L.length : 0) + '%';
+      c.classList.toggle('on', i + 1 === ch);
+    });
   }
   function fromHash() { var m = (location.hash || '').match(/^#ch([1-6])$/); ch = m ? +m[1] : 1; }
-  function render() {
+  function render(keep) {
     document.body.classList.remove('running');
+    // センターの問題がない章では「センター」を選べないので，すべてに戻す
+    if (fsrc === 'center' && !D.some(function (it) { return it.ch === ch && it.c; })) {
+      fsrc = 'all';
+      Array.prototype.forEach.call(document.querySelectorAll('#fsrc button'), function (y) { y.classList.toggle('on', y.dataset.f === 'all'); });
+    }
     Array.prototype.forEach.call(document.querySelectorAll('.tab'), function (t, i) { t.classList.toggle('on', i + 1 === ch); });
+    var on = tabs.children[ch - 1]; if (on && on.scrollIntoView) tabs.scrollLeft = on.offsetLeft - 12;
     M.innerHTML = '';
     var h = document.createElement('div'); h.className = 'chtitle'; h.textContent = '第' + ch + '章　' + CH[ch - 1]; M.appendChild(h);
-    var L = D.filter(function (it) { return it.ch === ch && pass(it, flt); });
+    var L = D.filter(function (it) { return it.ch === ch && pass(it, fsrc) && pass(it, fst); });
     if (!L.length) { var e = document.createElement('div'); e.className = 'empty'; e.textContent = '該当する問題はありません'; M.appendChild(e); }
     var g = null;
     L.forEach(function (it) {
@@ -322,7 +372,12 @@
     });
     stat();
   }
-  window.addEventListener('hashchange', function () { if (run) return; fromHash(); render(); window.scrollTo(0, 0); });
+  window.addEventListener('hashchange', function () {
+    if (run) return; fromHash(); render();
+    var nav = document.getElementById('nav');
+    if (pendingJump || window.pageYOffset > nav.offsetTop) jumpList();
+    pendingJump = false;
+  });
   document.getElementById('top').onclick = function () { window.scrollTo({ top: 0, behavior: 'smooth' }); };
 
   // ---------------------------------------------------------------- 演習モード
@@ -424,8 +479,8 @@
         var id = li.dataset.id, it = BYID[id];
         run = null; ch = it.ch;
         if (location.hash !== '#ch' + ch) history.replaceState(null, '', '#ch' + ch);
-        flt = 'all';
-        Array.prototype.forEach.call(document.querySelectorAll('.chip'), function (x) { x.classList.toggle('on', x.dataset.f === 'all'); });
+        fsrc = 'all'; fst = 'all';
+        Array.prototype.forEach.call(document.querySelectorAll('.seg button'), function (x) { x.classList.toggle('on', x.dataset.f === 'all'); });
         render();
         var el = document.getElementById('q-' + id); if (el) el.scrollIntoView();
       };
