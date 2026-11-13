@@ -1,7 +1,7 @@
 /* 化学ファイナルチェックお試し：過去問 正誤問題（記述ごとの○×判定・演習モード） */
 (function () {
   'use strict';
-  var CH = ['物質の状態と構造', '物質の変化と平衡', '無機物質', '有機化合物', '天然有機化合物と高分子化合物', '化学基礎'];
+  var CH = ['化学基礎', '物質の構成と状態', '物質の変化と平衡', '無機化学', '脂肪族と芳香族', '高分子'];
   var D = window.CFC_DATA;
   var BYID = {};
   D.forEach(function (it) { BYID[it.id] = it; });
@@ -128,13 +128,21 @@
         return '<div class="jpr st"><span class="lb">' + x.l + '</span><span class="bd">の記述は</span>' + judgeBtns(x.s) + '</div>';
       }).join('') + '</div>';
     }
-    var hint = it.ns ? '<div class="hint">各記述が正しければ ○，誤りを含めば × をタップしてから答え合わせ（省略して解答を見ることもできます）</div>' : '';
+    var hint = it.ns ? '<div class="hint">各記述が正しければ ○，誤りを含めば × をタップしてから答え合わせ（省略して解答を見ることもできます）</div>' :
+      (it.sel ? '<div class="hint">答えの番号をタップしてから答え合わせ（省略して解答を見ることもできます）</div>' : '');
+    if (it.sel) {
+      panel += '<div class="jp sp"><div class="jph">答えを選ぶ</div>' + it.sel.map(function (r, k) {
+        var bs = '';
+        for (var i = 0; i < r.n; i++) bs += '<button type="button" class="sb" data-c="' + CIR.charAt(i) + '">' + CIR.charAt(i) + '</button>';
+        return '<div class="spr" data-k="' + k + '">' + (r.l ? '<span class="lb">' + r.l + '</span>' : '') + bs + '</div>';
+      }).join('') + '</div>';
+    }
     el.innerHTML =
       '<div class="meta">' + metaHTML(it) + markHTML(it.id) + '</div>' +
       hint +
       '<div class="pb">' + blocks(it.P) + panel + '</div>' +
       '<div class="orig"><button type="button" class="ob">' + (it.perm ? '紙面で見る（元の番号）' : '紙面で見る') + '</button><img class="img" alt="紙面（問題）" data-src="' + it.pi + '" style="aspect-ratio:' + (1 / it.par).toFixed(4) + '"></div>' +
-      '<button type="button" class="reveal">' + (it.ns ? '答え合わせ' : '解答を見る') + '</button>' +
+      '<button type="button" class="reveal">' + ((it.ns || it.sel) ? '答え合わせ' : '解答を見る') + '</button>' +
       '<div class="ansbox">' +
       '<div class="res"></div>' +
       '<div class="ansline"><span class="lbl">正解</span><span class="v">' + it.a + '</span></div>' +
@@ -155,6 +163,18 @@
           var s = g.dataset.s, v = +b.dataset.v;
           if (pick[s] === v) delete pick[s]; else pick[s] = v;
           Array.prototype.forEach.call(g.querySelectorAll('.jb'), function (x) { x.classList.toggle('on', pick[s] === +x.dataset.v); });
+        });
+      });
+    });
+    var selp = {};          // 選択行 → 選んだ番号
+    var sprs = el.querySelectorAll('.spr');
+    Array.prototype.forEach.call(sprs, function (r) {
+      Array.prototype.forEach.call(r.querySelectorAll('.sb'), function (b) {
+        b.addEventListener('click', function () {
+          if (opened) return;
+          var k = r.dataset.k, c = b.dataset.c;
+          if (selp[k] === c) delete selp[k]; else selp[k] = c;
+          Array.prototype.forEach.call(r.querySelectorAll('.sb'), function (x) { x.classList.toggle('on', selp[k] === x.dataset.c); });
         });
       });
     });
@@ -199,10 +219,22 @@
           g.classList.add(ok ? 'ok' : 'ng');
         }
       });
+      Array.prototype.forEach.call(sprs, function (r) {
+        var k = r.dataset.k, ans = it.sel[+k].a;
+        total++;
+        r.classList.add('shown');
+        Array.prototype.forEach.call(r.querySelectorAll('.sb'), function (x) { x.classList.toggle('ans', x.dataset.c === ans); });
+        if (selp[k] !== undefined) {
+          judged++;
+          var ok = selp[k] === ans;
+          if (ok) right++;
+          r.classList.add(ok ? 'ok' : 'ng');
+        }
+      });
       var res = el.querySelector('.res');
       var mark = null;
       if (judged) {
-        res.innerHTML = '記述の判定：<b>' + right + '</b> / ' + total + ' 正解' + (judged < total ? '（' + (total - judged) + ' 個は未判定）' : '');
+        res.innerHTML = (it.sel ? '解答：' : '記述の判定：') + '<b>' + right + '</b> / ' + total + ' 正解' + (judged < total ? '（' + (total - judged) + ' 個は未' + (it.sel ? '解答' : '判定') + '）' : '');
         res.className = 'res ' + (right === total ? 'ok' : 'ng');
         if (judged === total) {
           mark = right === total ? 'y' : 'n';
@@ -224,7 +256,12 @@
         g.classList.remove('shown', 'ok', 'ng');
         Array.prototype.forEach.call(g.querySelectorAll('.jb'), function (x) { x.classList.remove('on'); });
       });
-      rb.textContent = it.ns ? '答え合わせ' : '解答を見る';
+      rb.textContent = (it.ns || it.sel) ? '答え合わせ' : '解答を見る';
+      selp = {};
+      Array.prototype.forEach.call(sprs, function (r) {
+        r.classList.remove('shown', 'ok', 'ng');
+        Array.prototype.forEach.call(r.querySelectorAll('.sb'), function (x) { x.classList.remove('on', 'ans'); });
+      });
     }
     rb.onclick = function () {
       if (opened) { reset(); el.scrollIntoView({ block: 'start', behavior: 'smooth' }); }

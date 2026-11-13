@@ -5,7 +5,7 @@
 <script>if(sessionStorage.getItem("pw_化学")!=="ok"){location.replace("/pdf-site/");}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>化学ファイナルチェックお試し</title>
-<link rel="stylesheet" href="katex/katex.min.css?v=202611130122">
+<link rel="stylesheet" href="katex/katex.min.css?v=202611130307">
 <style>
 :root{--navy:#13254a;--teal:#007878;--amber:#d18f1f;--ink:#1f2328;--sub:#5b6270;--line:#e3e6ea;--bg:#f6f7f9;--ok:#1a7f4b;--ng:#c0392b;--okbg:#e8f5ee;--ngbg:#fbeceb}
 *{box-sizing:border-box}
@@ -87,6 +87,17 @@ table.tb td{border:1px solid #888;padding:3px 8px}
 .jg.ng::after{content:"✗";color:var(--ng);font-weight:700}
 .jp{margin:10px 0 4px;border:1px solid var(--line);border-radius:8px;padding:6px 10px}
 .jph{font-size:12px;color:var(--sub);font-weight:700}
+.spr{display:flex;align-items:center;flex-wrap:wrap;gap:6px;padding:6px 0}
+.spr .lb{font-size:13px;color:var(--sub);font-weight:700;margin-right:2px}
+.sb{min-width:38px;height:34px;border-radius:8px;border:1px solid #cfd5dc;background:#fff;font-size:18px;color:#3a414b;cursor:pointer;padding:0 4px}
+.sb.on{background:#2f6fd6;border-color:#2f6fd6;color:#fff}
+.spr.shown .sb{cursor:default}
+.spr.shown .sb.ans{box-shadow:0 0 0 2px var(--ok);font-weight:700}
+.spr.ng .sb.on{background:var(--ng);border-color:var(--ng)}
+.spr.ok .sb.on{background:var(--ok);border-color:var(--ok)}
+.spr.ok::after{content:"✓";color:var(--ok);font-weight:700}
+.spr.ng::after{content:"✗";color:var(--ng);font-weight:700}
+
 .jpr{display:flex;align-items:center;gap:6px;padding:4px 0}
 .jpr .lb{font-weight:700}.jpr .bd{flex:1;font-size:13px;color:var(--sub)}
 /* 紙面 */
@@ -189,12 +200,12 @@ table.tb td{border:1px solid #888;padding:3px 8px}
 <div class="sbox">
 <h2>演習モード</h2>
 <fieldset><legend>出題範囲（章）</legend><div class="opts">
-<label><input type="checkbox" name="sch" value="1" checked><span>1. 物質の状態と構造</span></label>
-<label><input type="checkbox" name="sch" value="2" checked><span>2. 物質の変化と平衡</span></label>
-<label><input type="checkbox" name="sch" value="3" checked><span>3. 無機物質</span></label>
-<label><input type="checkbox" name="sch" value="4" checked><span>4. 有機化合物</span></label>
-<label><input type="checkbox" name="sch" value="5" checked><span>5. 天然有機化合物と高分子化合物</span></label>
-<label><input type="checkbox" name="sch" value="6" checked><span>6. 化学基礎</span></label>
+<label><input type="checkbox" name="sch" value="1" checked><span>1. 化学基礎</span></label>
+<label><input type="checkbox" name="sch" value="2" checked><span>2. 物質の構成と状態</span></label>
+<label><input type="checkbox" name="sch" value="3" checked><span>3. 物質の変化と平衡</span></label>
+<label><input type="checkbox" name="sch" value="4" checked><span>4. 無機化学</span></label>
+<label><input type="checkbox" name="sch" value="5" checked><span>5. 脂肪族と芳香族</span></label>
+<label><input type="checkbox" name="sch" value="6" checked><span>6. 高分子</span></label>
 </div></fieldset>
 <fieldset><legend>出典</legend><div class="opts">
 <label><input type="radio" name="src" value="all" checked><span>すべて</span></label>
@@ -230,9 +241,9 @@ table.tb td{border:1px solid #888;padding:3px 8px}
 <div class="sfoot"><span class="pn">対象 <b id="poolN">0</b> 問</span><button type="button" id="closeSetup">閉じる</button><button type="button" id="startRun">スタート</button></div>
 </div></div>
 
-<script src="katex/katex.min.js?v=202611130122"></script>
-<script src="katex/mhchem.min.js?v=202611130122"></script>
-<script src="data.js?v=202611130122"></script>
-<script src="app.js?v=202611130122"></script>
+<script src="katex/katex.min.js?v=202611130307"></script>
+<script src="katex/mhchem.min.js?v=202611130307"></script>
+<script src="data.js?v=202611130307"></script>
+<script src="app.js?v=202611130307"></script>
 </body>
 </html>
