@@ -29,8 +29,8 @@
   // ---------------------------------------------------------------- ブロック → HTML
   function fig(b) {
     var ar = (1 / b.ar).toFixed(4);
-    if (b.inline) return '<img class="ifig" loading="lazy" src="' + b.src + '" style="width:' + b.w + '%;aspect-ratio:' + ar + '" alt="図">';
-    return '<div class="figw"><img class="fig" loading="lazy" src="' + b.src + '" style="width:' + b.w + '%;aspect-ratio:' + ar + '" alt="図"></div>';
+    if (b.inline) return '<img class="ifig" loading="lazy" src="' + b.src + '" style="width:' + b.w + 'px;max-width:100%;aspect-ratio:' + ar + '" alt="図">';
+    return '<div class="figw"><img class="fig" loading="lazy" src="' + b.src + '" style="width:' + b.w + 'px;max-width:100%;aspect-ratio:' + ar + '" alt="図"></div>';
   }
   function judgeBtns(s) {
     return '<span class="jg" data-s="' + s + '"><button type="button" class="jb" data-v="1" aria-label="正しい">○</button>' +

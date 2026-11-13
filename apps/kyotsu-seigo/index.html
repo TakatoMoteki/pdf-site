@@ -5,7 +5,7 @@
 <script>if(sessionStorage.getItem("pw_化学")!=="ok"){location.replace("/pdf-site/");}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>化学ファイナルチェックお試し</title>
-<link rel="stylesheet" href="katex/katex.min.css?v=202611130552">
+<link rel="stylesheet" href="katex/katex.min.css?v=202611130600">
 <style>
 :root{--navy:#13254a;--teal:#1f4e8c;--amber:#d18f1f;--ink:#1f2328;--sub:#5b6270;--line:#e3e6ea;--bg:#f6f7f9;--ok:#1a7f4b;--ng:#c0392b;--okbg:#e8f5ee;--ngbg:#fbeceb}
 *{box-sizing:border-box}
@@ -120,6 +120,7 @@ u{text-decoration:none;border-bottom:1px solid currentColor;padding-bottom:1px}
 .lst>li.st{border-top:1px dashed #eef0f3}
 .lst>li .lb{flex:none;min-width:1.6em;font-weight:700}
 .lst>li .bd{flex:1;min-width:0}
+.lst>li .bd .figw{margin-left:-1.6em}
 .lst>li .bd p{margin:0}
 .chs{display:flex;flex-wrap:wrap;gap:4px 18px;margin:8px 0 6px 1em}
 .ch .lb{font-weight:700}
@@ -303,16 +304,16 @@ table.tb td{border:1px solid #888;padding:3px 8px}
 </div></fieldset>
 <fieldset><legend>制限時間</legend><div class="opts">
 <label><input type="radio" name="tm" value="0" checked><span>なし</span></label>
-<label><input type="radio" name="tm" value="90"><span>1問 1分30秒</span></label>
-<label><input type="radio" name="tm" value="120"><span>1問 2分</span></label>
-<label><input type="radio" name="tm" value="180"><span>1問 3分</span></label>
+<label><input type="radio" name="tm" value="40"><span>1問 40秒</span></label>
+<label><input type="radio" name="tm" value="60"><span>1問 60秒</span></label>
+<label><input type="radio" name="tm" value="80"><span>1問 80秒</span></label>
 </div></fieldset>
 <div class="sfoot"><span class="pn">対象 <b id="poolN">0</b> 問</span><button type="button" id="closeSetup">閉じる</button><button type="button" id="startRun">スタート</button></div>
 </div></div>
 
-<script src="katex/katex.min.js?v=202611130552"></script>
-<script src="katex/mhchem.min.js?v=202611130552"></script>
-<script src="data.js?v=202611130552"></script>
-<script src="app.js?v=202611130552"></script>
+<script src="katex/katex.min.js?v=202611130600"></script>
+<script src="katex/mhchem.min.js?v=202611130600"></script>
+<script src="data.js?v=202611130600"></script>
+<script src="app.js?v=202611130600"></script>
 </body>
 </html>
