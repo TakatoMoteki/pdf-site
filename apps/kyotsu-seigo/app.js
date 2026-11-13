@@ -78,6 +78,12 @@
   });
 
   // ---------------------------------------------------------------- 数式
+  function splitCe(tex) {
+    var m = tex.match(/^\\ce\{([^{}\[\]]*)\}$/);
+    if (!m || m[1].length < 26) return null;
+    var p = m[1].split(/ (?=(?:\+|->|<=>|<-->|<=>>|<<=>) )/);
+    return p.length > 1 ? p.map(function (x) { return '\\ce{' + x + '}'; }) : null;
+  }
   function typeset(root) {
     if (!window.katex) return;
     var els = root.querySelectorAll('span.m:not(.done)');
@@ -85,7 +91,15 @@
       var el = els[i];
       var tex = el.textContent;
       try {
-        katex.render(tex, el, { displayMode: el.classList.contains('d'), throwOnError: false, strict: 'ignore' });
+        var parts = !el.classList.contains('d') && splitCe(tex);
+        if (parts) {   // 長い反応式は ＋・→ の前で折り返せるように分けて描く
+          el.textContent = '';
+          parts.forEach(function (t, k) {
+            if (k) el.appendChild(document.createTextNode('\u2009'));
+            var sp = document.createElement('span'); sp.className = 'ceb';
+            katex.render(t, sp, { throwOnError: false, strict: 'ignore' }); el.appendChild(sp);
+          });
+        } else katex.render(tex, el, { displayMode: el.classList.contains('d'), throwOnError: false, strict: 'ignore' });
       } catch (e) { el.textContent = tex; }
       el.classList.add('done');
     }
@@ -734,17 +748,20 @@
   function leadOf(o) {
     if (!o.stem) return '';
     var m = o.stem.h.match(/^(.*?)を，次の/);
-    return m ? m[1] : '';
+    if (m) return m[1];
+    // 「次の物質①〜⑥について，単体であれば○…」のような短い問題文は，そのまま見出しにする
+    return plain(o.stem.h).length <= 110 && !/図|表/.test(plain(o.stem.h)) ? o.stem.h : '';
   }
   function dcard(o, done) {
     var it = o.it, lead = leadOf(o);
     var ctx = (it.P || []).filter(function (b) { return b !== o.lst; });
     var auto = !o.b || !lead || ctx.length > 1;
+    var noCtx = o.b && lead === (o.stem && o.stem.h) && ctx.length === 1;   // 見出しが問題文そのもの
     var el = document.createElement('section');
     el.className = 'dcard';
     el.innerHTML = '<div class="meta">' + metaHTML(it) + '</div>' +
       (lead ? '<div class="dlead">' + lead + '</div>' : '') +
-      '<details class="dctx"' + (auto ? ' open' : '') + '><summary>問題文' + (it.P.some(function (b) { return b.t === 'fig' || b.t === 'pf'; }) ? '・図' : '') + '</summary><div class="pb">' + blocks(ctx) + '</div></details>' +
+      (noCtx ? '' : '<details class="dctx"' + (auto ? ' open' : '') + '><summary>問題文' + (it.P.some(function (b) { return b.t === 'fig' || b.t === 'pf'; }) ? '・図' : '') + '</summary><div class="pb">' + blocks(ctx) + '</div></details>') +
       (o.b ? '<div class="dst"><span class="lb">' + o.l + '</span><div class="bd">' + blocks(o.b) + '</div></div>' :
         '<div class="dst"><div class="bd"><p>上の問題文・図の <b>' + o.l + '</b> は' + (o.stem && /適当/.test(o.stem.h) ? '適当？' : '正しい？') + '</p></div></div>') +
       '<div class="dbtns"><button type="button" class="dO" data-v="1">○<small>正しい</small></button><button type="button" class="dX" data-v="0">×<small>誤り</small></button></div>' +

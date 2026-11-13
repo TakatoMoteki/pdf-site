@@ -15,7 +15,7 @@ try{var c=JSON.parse(localStorage.getItem("cfc-cfg")||"{}")||{},d=document.docum
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>化学ファイナルチェックお試し</title>
-<link rel="stylesheet" href="katex/katex.min.css?v=202611130854">
+<link rel="stylesheet" href="katex/katex.min.css?v=202611131052">
 <style>
 :root{--navy:#13254a;--teal:#1f4e8c;--amber:#d18f1f;--ink:#1f2328;--sub:#5b6270;--line:#e3e6ea;--line2:#cfd5dc;--bg:#f6f7f9;--card:#fff;--soft:#eef1f5;--glass:rgba(255,255,255,.97);--hd:#13254a;--ok:#1a7f4b;--ng:#c0392b;--okbg:#e8f5ee;--ngbg:#fbeceb;--fz:1}
 html[data-theme="dark"]{--ink:#e6e8ee;--sub:#9aa2b2;--line:#2c3446;--line2:#3a4357;--bg:#0f1420;--card:#171d2b;--soft:#222a3b;--glass:rgba(23,29,43,.97);--hd:#cdd9f3;--ok:#3fbf7f;--ng:#ff6b5e;--okbg:#14301f;--ngbg:#3a1b1b;--teal:#5b8fd9;color-scheme:dark}
@@ -374,6 +374,7 @@ html[data-theme="dark"] .setup{background:rgba(0,0,0,.55)}
 .bknote button{border:0;border-radius:8px;padding:8px 12px;font-size:13px;font-weight:700;cursor:pointer;background:var(--navy);color:#fff}
 .bknote button.sec{background:var(--soft);color:var(--ink)}
 #main > .card{content-visibility:auto;contain-intrinsic-size:auto 640px}
+.ceb{white-space:nowrap}
 </style>
 </head>
 <body>
@@ -400,7 +401,7 @@ html[data-theme="dark"] .setup{background:rgba(0,0,0,.55)}
 <div class="bknote" id="bkNote" hidden><span class="bki">💾</span><span class="bkt"><b>記録のバックアップ</b><span id="bkText"></span></span><span class="bkb"><button type="button" id="bkGo">書き出す</button><button type="button" id="bkLater" class="sec">あとで</button></span></div>
 <div class="cv-band"></div>
 </div></header>
-<div class="intro"><p>化学：共通テスト 2021〜2026（本試・追試）／センター試験 2015〜2020（本試・追試），化学基礎：共通テスト 2021〜2026（本試・追試）／センター試験 2015〜2020（本試・追試）　全367問．各記述を ○× で判定してから「答え合わせ」．</p>
+<div class="intro"><p>化学：共通テスト 2021〜2026（本試・追試）／センター試験 2015〜2020（本試・追試），化学基礎：共通テスト 2021〜2026（本試・追試）／センター試験 2015〜2020（本試・追試）　全368問．各記述を ○× で判定してから「答え合わせ」．</p>
 <details><summary>（改）とある問題について</summary>見出しに（改）とある問題は，誤りを含む記述の数が問題ごとにばらばらになるように記述を改め，各記述に ○× をつける形式にした改題です．</details></div>
 <section class="chsec"><div class="sech">分野を選ぶ</div><div class="chgrid" id="chgrid"></div></section>
 <section class="srch"><div class="sech">語句・単元で探す</div>
@@ -539,10 +540,10 @@ html[data-theme="dark"] .setup{background:rgba(0,0,0,.55)}
 <div class="sfoot"><span class="pn"></span><button type="button" id="cfgClose">閉じる</button></div>
 </div></div>
 
-<script src="katex/katex.min.js?v=202611130854"></script>
-<script src="katex/mhchem.min.js?v=202611130854"></script>
-<script src="data.js?v=202611130854"></script>
-<script src="qrcode.js?v=202611130854" defer></script>
-<script src="app.js?v=202611130854"></script>
+<script src="katex/katex.min.js?v=202611131052"></script>
+<script src="katex/mhchem.min.js?v=202611131052"></script>
+<script src="data.js?v=202611131052"></script>
+<script src="qrcode.js?v=202611131052" defer></script>
+<script src="app.js?v=202611131052"></script>
 </body>
 </html>
