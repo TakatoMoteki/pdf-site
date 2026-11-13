@@ -77,6 +77,36 @@
     }
   }
 
+
+  // 演習モード：選択肢（記述①〜）の順番を入れかえ，番号を振り直したコピーを返す
+  var CIR = '①②③④⑤⑥⑦⑧⑨';
+  function permItem(it) {
+    if (!it.sh) return it;
+    var x = JSON.parse(JSON.stringify(it));
+    var L = null;
+    x.P.forEach(function (b) { if (!L && b.t === 'list' && b.items.some(function (y) { return y.s !== undefined; })) L = b; });
+    if (!L) return it;
+    var n = L.items.length, idx = [];
+    for (var i = 0; i < n; i++) idx.push(i);
+    var same = true;
+    for (var tries = 0; tries < 5 && same; tries++) { shuffle(idx); same = idx.every(function (v, i) { return v === i; }); }
+    var map = {};
+    var items = idx.map(function (j, i) { var y = L.items[j]; map[y.l] = CIR.charAt(i); y.l = CIR.charAt(i); return y; });
+    L.items = items;
+    var re = new RegExp('[' + CIR + ']', 'g');
+    function rp(str) { return str.replace(re, function (c) { return map[c] || c; }); }
+    x.K = JSON.parse(rp(JSON.stringify(x.K)));
+    x.K.forEach(function (b) {
+      if (b.t === 'hantei') b.items.sort(function (p, q) { return CIR.indexOf(p.l) - CIR.indexOf(q.l); });
+    });
+    var a = rp(x.a), tok = a.split('，');
+    if (tok.length > 1 && tok.every(function (t) { return CIR.indexOf(t.charAt(0)) >= 0; }))
+      a = tok.sort(function (p, q) { return CIR.indexOf(p.charAt(0)) - CIR.indexOf(q.charAt(0)); }).join('，');
+    x.a = a;
+    x.perm = true;
+    return x;
+  }
+  window.CFC_perm = permItem;
   // ---------------------------------------------------------------- カード
   function markHTML(id) {
     var m = marks[id];
@@ -103,13 +133,13 @@
       '<div class="meta">' + metaHTML(it) + markHTML(it.id) + '</div>' +
       hint +
       '<div class="pb">' + blocks(it.P) + panel + '</div>' +
-      '<div class="orig"><button type="button" class="ob">紙面で見る</button><img class="img" alt="紙面（問題）" data-src="' + it.pi + '" style="aspect-ratio:' + (1 / it.par).toFixed(4) + '"></div>' +
+      '<div class="orig"><button type="button" class="ob">' + (it.perm ? '紙面で見る（元の番号）' : '紙面で見る') + '</button><img class="img" alt="紙面（問題）" data-src="' + it.pi + '" style="aspect-ratio:' + (1 / it.par).toFixed(4) + '"></div>' +
       '<button type="button" class="reveal">' + (it.ns ? '答え合わせ' : '解答を見る') + '</button>' +
       '<div class="ansbox">' +
       '<div class="res"></div>' +
       '<div class="ansline"><span class="lbl">正解</span><span class="v">' + it.a + '</span></div>' +
       '<div class="kb">' + blocks(it.K) + '</div>' +
-      '<div class="orig k"><button type="button" class="ob">解説を紙面で見る</button><img class="img" alt="紙面（解説）" data-src="' + it.ki + '" style="aspect-ratio:' + (1 / it.kar).toFixed(4) + '"></div>' +
+      '<div class="orig k"><button type="button" class="ob">' + (it.perm ? '解説を紙面で見る（元の番号）' : '解説を紙面で見る') + '</button><img class="img" alt="紙面（解説）" data-src="' + it.ki + '" style="aspect-ratio:' + (1 / it.kar).toFixed(4) + '"></div>' +
       '<div class="self"><button type="button" class="y">○ できた</button><button type="button" class="n">× まちがえた</button></div>' +
       '<div class="after"></div>' +
       '</div>';
@@ -205,7 +235,7 @@
       b.onclick = function () {
         var on = o.classList.toggle('on');
         if (on && !im.getAttribute('src')) im.src = im.dataset.src;
-        b.textContent = on ? '紙面を閉じる' : (o.classList.contains('k') ? '解説を紙面で見る' : '紙面で見る');
+        b.textContent = on ? '紙面を閉じる' : ((o.classList.contains('k') ? '解説を紙面で見る' : '紙面で見る') + (it.perm ? '（元の番号）' : ''));
       };
     });
     el.cfc = { open: open, after: el.querySelector('.after') };
@@ -288,7 +318,7 @@
     setup.classList.remove('on');
   };
   function startRun(ids, per) {
-    run = { ids: ids, k: 0, res: {}, per: per, left: per ? per * ids.length : 0, over: false };
+    run = { ids: ids, k: 0, res: {}, per: per, left: per ? per * ids.length : 0, over: false, sh: val('chs') !== 'keep' };
     document.body.classList.add('running');
     clearInterval(timerId);
     if (per) timerId = setInterval(tick, 1000);
@@ -309,7 +339,7 @@
       '<button type="button" class="rquit" id="rquit">終了</button></div>';
   }
   function showRun() {
-    var id = run.ids[run.k], it = BYID[id];
+    var id = run.ids[run.k], it = run.sh ? permItem(BYID[id]) : BYID[id];
     M.innerHTML = runBar();
     var c = card(it, {
       onDone: function (r) { run.res[id] = r; nextBtn(c); },

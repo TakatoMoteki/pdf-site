@@ -5,7 +5,7 @@
 <script>if(sessionStorage.getItem("pw_化学")!=="ok"){location.replace("/pdf-site/");}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>化学ファイナルチェックお試し</title>
-<link rel="stylesheet" href="katex/katex.min.css?v=202611121129">
+<link rel="stylesheet" href="katex/katex.min.css?v=202611130008">
 <style>
 :root{--navy:#13254a;--teal:#007878;--amber:#d18f1f;--ink:#1f2328;--sub:#5b6270;--line:#e3e6ea;--bg:#f6f7f9;--ok:#1a7f4b;--ng:#c0392b;--okbg:#e8f5ee;--ngbg:#fbeceb}
 *{box-sizing:border-box}
@@ -212,9 +212,13 @@ table.tb td{border:1px solid #888;padding:3px 8px}
 <label><input type="radio" name="cnt" value="20"><span>20問</span></label>
 <label><input type="radio" name="cnt" value="all"><span>全部</span></label>
 </div></fieldset>
-<fieldset><legend>順番</legend><div class="opts">
+<fieldset><legend>出題順</legend><div class="opts">
 <label><input type="radio" name="ord" value="rand" checked><span>ランダム</span></label>
 <label><input type="radio" name="ord" value="seq"><span>番号順</span></label>
+</div></fieldset>
+<fieldset><legend>選択肢の順番</legend><div class="opts">
+<label><input type="radio" name="chs" value="rand" checked><span>ランダム</span></label>
+<label><input type="radio" name="chs" value="keep"><span>そのまま</span></label>
 </div></fieldset>
 <fieldset><legend>制限時間</legend><div class="opts">
 <label><input type="radio" name="tm" value="0" checked><span>なし</span></label>
@@ -225,9 +229,9 @@ table.tb td{border:1px solid #888;padding:3px 8px}
 <div class="sfoot"><span class="pn">対象 <b id="poolN">0</b> 問</span><button type="button" id="closeSetup">閉じる</button><button type="button" id="startRun">スタート</button></div>
 </div></div>
 
-<script src="katex/katex.min.js?v=202611121129"></script>
-<script src="katex/mhchem.min.js?v=202611121129"></script>
-<script src="data.js?v=202611121129"></script>
-<script src="app.js?v=202611121129"></script>
+<script src="katex/katex.min.js?v=202611130008"></script>
+<script src="katex/mhchem.min.js?v=202611130008"></script>
+<script src="data.js?v=202611130008"></script>
+<script src="app.js?v=202611130008"></script>
 </body>
 </html>
