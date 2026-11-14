@@ -1,9 +1,13 @@
 /* 化学ファイナルチェックお試し：過去問 正誤問題（記述ごとの○×判定・演習モード） */
 (function () {
   'use strict';
-  var CH = ['物質の構成', '物質の変化', '化学と人間生活・実験', '物質の構成と状態', '物質の変化と平衡', '無機化学', '脂肪族と芳香族', '高分子'];
+  var CH = ['物質の構成', '物質の変化', '化学と人間生活・実験', '物質の構成と状態', '物質の変化と平衡', '非金属元素', '金属元素', '脂肪族と芳香族', '高分子化合物'];
+  var CHS = ['物質の構成', '物質の変化', '人間生活・実験', '構成と状態', '変化と平衡', '非金属元素', '金属元素', '脂肪族・芳香族', '高分子化合物'];   // 狭い画面の章タブ用
   var KISO = 3;   // 第1〜3章が化学基礎
-  function chTitle(n) { return (n <= KISO ? '化学基礎：' : '') + CH[n - 1]; }
+  var GRP = ['kiso', 'kiso', 'kiso', 'riron', 'riron', 'muki', 'muki', 'yuki', 'yuki'];   // 化学基礎・理論・無機・有機
+  var GNM = { kiso: '基礎', riron: '理論', muki: '無機', yuki: '有機' };
+  function gBadge(n, long) { var g = GRP[n - 1]; return '<small class="kb2 g-' + g + '">' + (long && g === 'kiso' ? '化学基礎' : GNM[g]) + '</small>'; }
+  function chTitle(n) { return GNM[GRP[n - 1]] + '：' + CH[n - 1]; }
   // コース：化学（全章）／化学基礎（第1〜3章）．記録はコースに関係なく共通
   var COURSE = 'chem';
   try { if ((JSON.parse(localStorage.getItem('cfc-cfg') || '{}') || {}).course === 'kiso') COURSE = 'kiso'; } catch (e) {}
@@ -37,6 +41,7 @@
   function today() { var d = new Date(); return Math.floor((d.getTime() - d.getTimezoneOffset() * 60000) / 86400000); }
   var INT = [1, 3, 7];           // 間違えた翌日 → 3日後 → 1週間後 → 卒業
   function srs(k, ok) {
+    if (ses && ses.nosrs) return;   // 今日の復習の解き直しでは予定を変えない
     var t = today(), r = RV[k];
     if (!ok) RV[k] = [0, t + 1];
     else if (r && r[1] <= t) { var g = r[0] + 1; if (g >= INT.length) delete RV[k]; else RV[k] = [g, t + INT[g]]; }
@@ -418,13 +423,13 @@
   CH.forEach(function (t, i) {
     if (!chIn(i + 1)) return;
     var b = document.createElement('button');
-    b.type = 'button'; b.className = 'tab'; b.dataset.ch = i + 1;
-    b.innerHTML = '<span class="tn">' + (i + 1) + '</span>' + (i < KISO && COURSE === 'chem' ? '<small class="kb2">基礎</small>' : '') + t;
+    b.type = 'button'; b.className = 'tab g-' + GRP[i]; b.dataset.ch = i + 1;
+    b.innerHTML = '<span class="tn">' + (i + 1) + '</span>' + gBadge(i + 1) + '<span class="tf">' + t + '</span><span class="ts">' + CHS[i] + '</span>';
     b.onclick = function () { if (searching()) { clearSearch(); if (location.hash === '#ch' + (i + 1)) { render(); return; } } location.hash = 'ch' + (i + 1); };
     tabs.appendChild(b);
     var c = document.createElement('button');
-    c.type = 'button'; c.className = 'chc'; c.dataset.ch = i + 1;
-    c.innerHTML = '<span class="cn">' + (i + 1) + (i < KISO ? '<small class="kb2">化学基礎</small>' : '') + '</span><span class="ct">' + t + '</span><span class="cs"></span><span class="cb"><i class="y"></i><i class="n"></i></span>';
+    c.type = 'button'; c.className = 'chc g-' + GRP[i]; c.dataset.ch = i + 1;
+    c.innerHTML = '<span class="cn">' + (i + 1) + gBadge(i + 1, true) + '</span><span class="ct">' + t + '</span><span class="cs"></span><span class="cb"><i class="y"></i><i class="n"></i></span>';
     c.onclick = function () {
       if (searching()) { clearSearch(); if (location.hash === '#ch' + (i + 1)) { render(); jumpList(); return; } }
       if (location.hash === '#ch' + (i + 1)) jumpList(); else { pendingJump = true; location.hash = 'ch' + (i + 1); }
@@ -484,7 +489,7 @@
       c.classList.toggle('on', i + 1 === ch && !searching());
     });
   }
-  function fromHash() { var m = (location.hash || '').match(/^#ch([1-8])$/); ch = m ? +m[1] : 1; if (!chIn(ch)) { ch = 1; if (m) history.replaceState(null, '', location.pathname + location.search + '#ch1'); } }
+  function fromHash() { var m = (location.hash || '').match(/^#ch([1-9])$/); ch = m ? +m[1] : 1; if (!chIn(ch)) { ch = 1; if (m) history.replaceState(null, '', location.pathname + location.search + '#ch1'); } }
   // 一覧は最初の数問だけすぐ表示し，残りは少しずつ描画する
   var RJ = null;
   function later(f) { if (window.requestIdleCallback) requestIdleCallback(f, { timeout: 120 }); else setTimeout(f, 16); }
@@ -569,32 +574,44 @@
     setup.classList.remove('on');
   };
   function startRun(ids, per) {
-    run = { ids: ids, k: 0, res: {}, per: per, left: per ? per * ids.length : 0, over: false, sh: val('chs') !== 'keep' };
+    run = { ids: ids, k: 0, res: {}, per: per, left: per ? per * ids.length : 0, over: false, sh: val('chs') !== 'keep',
+      t0: Date.now(), qt: {}, qs: Date.now(), end: 0 };
     document.body.classList.add('running');
     clearInterval(timerId);
-    if (per) timerId = setInterval(tick, 1000);
+    timerId = setInterval(tick, 1000);
     showRun();
   }
   function fmt(s) { var m = Math.floor(s / 60), x = s % 60; return m + ':' + (x < 10 ? '0' : '') + x; }
+  function sec(ms) { return Math.max(0, Math.floor(ms / 1000)); }
+  // 経過時間（全体）と，この問題にかけている時間（答え合わせで止まる）
+  function clocks() {
+    var a = document.getElementById('relap'), q = document.getElementById('rq'), id = run.ids[run.k];
+    if (a) a.textContent = fmt(sec(Date.now() - run.t0));
+    if (q) { q.textContent = fmt(sec(run.qt[id] !== undefined ? run.qt[id] : Date.now() - run.qs)); q.parentNode.classList.toggle('stop', run.qt[id] !== undefined); }
+  }
   function tick() {
-    if (!run) return;
+    if (!run || run.end) return;
+    clocks();
+    if (!run.per) return;
     run.left--;
     var t = document.getElementById('rtime');
-    if (t) { t.textContent = '⏱ ' + fmt(Math.max(0, run.left)); t.classList.toggle('warn', run.left <= 60); }
+    if (t) { t.textContent = '残り ' + fmt(Math.max(0, run.left)); t.classList.toggle('warn', run.left <= 60); }
     if (run.left <= 0) { clearInterval(timerId); run.over = true; showResult(); }
   }
   function runBar() {
     return '<div class="rbar"><span class="rpos">' + (run.k + 1) + ' / ' + run.ids.length + '</span>' +
       '<span class="rprog"><i style="width:' + (100 * run.k / run.ids.length) + '%"></i></span>' +
-      (run.per ? '<span class="rtime" id="rtime">⏱ ' + fmt(run.left) + '</span>' : '') +
-      '<button type="button" class="rquit" id="rquit">終了</button></div>';
+      '<button type="button" class="rquit" id="rquit">終了</button>' +
+      '<span class="rclk">' + (run.per ? '<span class="rtime" id="rtime">残り ' + fmt(run.left) + '</span>' : '') +
+      '<span>⏱ 全体 <b id="relap">0:00</b></span><span>この問題 <b id="rq">0:00</b></span></span></div>';
   }
   function showRun() {
     var id = run.ids[run.k], it = run.sh ? permItem(BYID[id]) : BYID[id];
-    M.innerHTML = runBar();
+    run.qs = Date.now();
+    M.innerHTML = runBar(); clocks();
     var c = card(it, {
       run: true,
-      onDone: function (r) { run.res[id] = r; nextBtn(c); },
+      onDone: function (r) { run.res[id] = r; if (run.qt[id] === undefined) run.qt[id] = Date.now() - run.qs; clocks(); nextBtn(c); },
       onMark: function () { var r = run.res[id]; if (r) r.mark = marks[id] || null; }
     });
     M.appendChild(c);
@@ -612,7 +629,8 @@
     };
   }
   function showResult() {
-    var ids = run.ids, ok = 0, ng = 0, un = 0, sr = 0, st = 0;
+    if (!run.end) run.end = Date.now();
+    var ids = run.ids, ok = 0, ng = 0, un = 0, sr = 0, st = 0, tq = 0, nq = 0;
     var rows = ids.map(function (id, i) {
       var it = BYID[id], r = run.res[id];
       var m = r ? (r.mark || marks[id] || null) : null;
@@ -620,13 +638,15 @@
       if (!r) un++; else if (m === 'y') ok++; else if (m === 'n') ng++; else un++;
       var ic = !r ? '<span class="ri un">－</span>' : m === 'y' ? '<span class="ri ok">○</span>' : m === 'n' ? '<span class="ri ng">×</span>' : '<span class="ri un">？</span>';
       var det = r && r.judged ? '<span class="rd">記述 ' + r.right + '/' + r.total + '</span>' : '';
-      return '<li data-id="' + id + '">' + ic + '<span class="rm">' + metaHTML(it) + '</span>' + det + '</li>';
+      var qt = run.qt[id]; if (qt !== undefined) { tq += qt; nq++; }
+      return '<li data-id="' + id + '">' + ic + '<span class="rm">' + metaHTML(it) + '</span>' + det + (qt !== undefined ? '<span class="rq">' + fmt(sec(qt)) + '</span>' : '') + '</li>';
     }).join('');
     var wrong = ids.filter(function (id) { var r = run.res[id]; return !r || (r.mark || marks[id]) !== 'y'; });
     M.innerHTML = '<div class="result"><h2>結果' + (run.over ? '（時間切れ）' : '') + '</h2>' +
       '<div class="score"><b>' + ok + '</b> / ' + ids.length + ' 問 正解</div>' +
       (st ? '<div class="sub">記述ごとの判定：' + sr + ' / ' + st + '（' + Math.round(100 * sr / st) + '%）</div>' : '') +
       '<div class="sub">○ ' + ok + '　× ' + ng + '　未解答・未記録 ' + un + '</div>' +
+      '<div class="sub rtm">⏱ かかった時間 <b>' + fmt(sec(run.end - run.t0)) + '</b>' + (nq ? '　1問あたり平均 <b>' + fmt(Math.round(tq / nq / 1000)) + '</b>' : '') + '</div>' +
       '<ul class="rlist">' + rows + '</ul>' +
       '<div class="rbtns">' + (wrong.length ? '<button type="button" id="again">○以外の ' + wrong.length + ' 問をもう一度</button>' : '') +
       '<button type="button" id="back" class="sec">一覧に戻る</button></div></div>';
@@ -861,12 +881,12 @@
   };
 
   // ---------------------------------------------------------------- セッション（一問一答・今日の復習）
-  function startSes(q, title) {
+  function startSes(q, title, kind) {
     q = q.filter(function (e) { return e.t === 'q' ? BYID[e.id] : SBY[e.k]; });
     if (!q.length) { toast('出題できる問題がありません'); return; }
     run = null; clearInterval(timerId);
     document.body.classList.add('running');
-    ses = { q: q, k: 0, res: [], title: title };
+    ses = { q: q, k: 0, res: [], title: title, kind: kind || '', nosrs: kind === 'rvp' };
     showSes();
   }
   function sesBar() {
@@ -890,6 +910,7 @@
       var o = SBY[e.k];
       var c = dcard(o, function (ok, el) {
         my.res[my.k] = { e: e, ok: ok };
+        if (my.kind === 'rv') logRv(e, ok);
         var b = sesNext(el.querySelector('.dfoot'));
         try { b.focus({ preventScroll: true }); } catch (x) {}
         var r = el.querySelector('.dres').getBoundingClientRect();
@@ -902,9 +923,10 @@
         run: true,
         onDone: function (r) {
           my.res[my.k] = { e: e, ok: r.mark ? r.mark === 'y' : null };
+          if (my.kind === 'rv') logRv(e, my.res[my.k].ok);
           var box = cc.cfc.after; box.style.padding = '0 12px 14px'; sesNext(box);
         },
-        onMark: function () { var r = my.res[my.k]; if (r) r.ok = marks[e.id] ? marks[e.id] === 'y' : null; }
+        onMark: function () { var r = my.res[my.k]; if (r) { r.ok = marks[e.id] ? marks[e.id] === 'y' : null; if (my.kind === 'rv') logRv(e, r.ok); } }
       });
       M.appendChild(cc);
     }
@@ -942,6 +964,9 @@
     if (wrong.length) $('again').onclick = function () { startSes(wrong.map(function (r) { return r.e; }), my.title); };
     $('back').onclick = function () { ses = null; fromHash(); render(); updRev(); window.scrollTo(0, 0); };
     Array.prototype.forEach.call(M.querySelectorAll('.dlist li'), function (x) { x.onclick = function () { goTo(x.dataset.id); }; });
+    if (my.kind === 'rv' && !dueList().length) { RVP = { d: rvDay(), done: true }; sv('cfc-rvp', RVP); }
+    if (my.kind === 'rv') M.querySelector('.rbtns').insertAdjacentHTML('beforeend', '<button type="button" id="rvlog" class="sec">今日の復習の一覧</button>');
+    if ($('rvlog')) $('rvlog').onclick = showRvLog;
     ses = { done: true };
     updRev();
     window.scrollTo(0, 0);
@@ -960,19 +985,93 @@
     var next = Object.keys(RV).map(function (k) { return RV[k][1]; }).filter(function (x) { return x > t; }).sort(function (a, b) { return a - b; })[0];
     n.textContent = d; n.classList.toggle('on', d > 0);
     b.classList.toggle('due', d > 0);
-    sub.textContent = d ? d + ' 個が待っています' : (next ? '次は' + (next - t === 1 ? '明日' : (next - t) + '日後') : '間違えた記述');
+    sub.textContent = d ? d + ' 個が待っています' : rvLog().length ? '今日は済み・一覧を見る' : (next ? '次は' + (next - t === 1 ? '明日' : (next - t) + '日後') : '間違えた記述');
   }
-  $('goReview').onclick = function () {
+  function startReview() {
     var q = dueList();
     if (!q.length) {
-      var t = today(), tot = Object.keys(RV).length;
+      if (rvLog().length) { showRvLog(); return; }
+      var tot = Object.keys(RV).length;
       toast(tot ? '今日の復習はありません（予定 ' + tot + ' 個）' : '復習はまだありません．間違えた記述が翌日から出題されます．');
       return;
     }
     shuffle(q);
     q.sort(function (a, b) { return (a.t === 'q') - (b.t === 'q'); });
-    startSes(q, '今日の復習');
-  };
+    startSes(q, '今日の復習', 'rv');
+  }
+  $('goReview').onclick = startReview;
+
+  // ---------------------------------------------------------------- 今日の復習：お知らせと記録
+  // 1日の区切りは朝5時．その日の復習が全部終わるまで，ページを開くたび（30分以上離れて戻ったときも）お知らせする
+  function rvDay() { var d = new Date(); return Math.floor((d.getTime() - d.getTimezoneOffset() * 60000 - 5 * 3600000) / 86400000); }
+  var RVP = ld('cfc-rvp', {});      // { d: 日, done: その日の復習を終えたか }
+  var RVL = ld('cfc-rvlog', {});    // { d: 日, r: [[種類, キー, ○×], …] }  その日に復習で解いたもの
+  function rvLog() { return RVL && RVL.d === rvDay() && Array.isArray(RVL.r) ? RVL.r : []; }
+  function logRv(e, ok) {
+    var d = rvDay(), key = e.t === 's' ? e.k : e.id;
+    if (!RVL || RVL.d !== d || !Array.isArray(RVL.r)) RVL = { d: d, r: [] };
+    var i = RVL.r.findIndex(function (x) { return x[0] === e.t && x[1] === key; });
+    var v = ok === null || ok === undefined ? null : ok ? 1 : 0;
+    if (i >= 0) RVL.r[i][2] = v; else RVL.r.push([e.t, key, v]);
+    sv('cfc-rvlog', RVL);
+  }
+  function rvEntry(x) { return x[0] === 's' ? { t: 's', k: x[1] } : { t: 'q', id: x[1] }; }
+  function rvLi(x) {
+    var ic = x[2] === 1 ? '<span class="ri ok">○</span>' : x[2] === 0 ? '<span class="ri ng">×</span>' : '<span class="ri un">？</span>';
+    if (x[0] === 's') {
+      var o = SBY[x[1]]; if (!o) return '';
+      return '<li data-id="' + o.id + '"><div class="dm">' + ic + ' ' + o.it.ch + '–' + o.it.n + '　' + o.it.y + '年度 ' + o.it.ex + '　→ この記述は' + (o.v ? '正しい' : '誤り') + '</div><div class="dt"><b>' + o.l + '</b> ' + (o.b ? blocks(o.b) : '（問題文・図を参照）') + '</div></li>';
+    }
+    var it = BYID[x[1]]; if (!it) return '';
+    return '<li data-id="' + it.id + '"><div class="dm">' + ic + ' 問題　' + it.ch + '–' + it.n + '　' + it.y + '年度 ' + it.ex + '</div><div class="dt">' + esc(it.q) + '</div></li>';
+  }
+  function showRvLog() {
+    var L = rvLog();
+    run = null; clearInterval(timerId); ses = { stats: true };
+    document.body.classList.add('running');
+    var ok = L.filter(function (x) { return x[2] === 1; }).length, ng = L.filter(function (x) { return x[2] === 0; });
+    var due = dueList().length;
+    M.innerHTML = '<div class="rbar"><span class="rpos">今日の復習</span><span class="rprog" style="visibility:hidden"></span><button type="button" class="rquit" id="lback">ホームへ</button></div>' +
+      '<div class="result"><h2>今日の復習' + (due ? '' : '（済）') + '</h2>' +
+      (L.length ? '<div class="score"><b>' + ok + '</b> / ' + L.length + ' 正解</div>' +
+        '<div class="sub">' + (due ? 'まだ ' + due + ' 個残っています．' : '今日の分は終わりました．') + '解き直しても，復習の予定（翌日 → 3日後 → 1週間後）は変わりません．</div>' +
+        '<div class="rbtns" style="margin:12px 0">' + (due ? '<button type="button" id="lrest">残りの ' + due + ' 個を解く</button>' : '') +
+        '<button type="button" id="lall"' + (due ? ' class="sec"' : '') + '>もう一度解く（' + L.length + ' 個）</button>' +
+        (ng.length ? '<button type="button" id="lng" class="sec">間違えた ' + ng.length + ' 個だけ</button>' : '') + '</div>' +
+        '<h3 style="font-size:14px;margin:14px 0 4px;color:var(--hd)">今日解いたもの（タップで問題へ）</h3><ul class="dlist rvl">' + L.map(rvLi).join('') + '</ul>'
+        : '<div class="sub">今日はまだ復習をしていません．</div>') +
+      '</div>';
+    typeset(M);
+    $('lback').onclick = function () { ses = null; fromHash(); render(); updRev(); window.scrollTo(0, 0); };
+    if ($('lrest')) $('lrest').onclick = startReview;
+    if ($('lall')) $('lall').onclick = function () { startSes(shuffle(L.map(rvEntry)), '今日の復習（解き直し）', 'rvp'); };
+    if ($('lng')) $('lng').onclick = function () { startSes(shuffle(ng.map(rvEntry)), '今日の復習（解き直し）', 'rvp'); };
+    Array.prototype.forEach.call(M.querySelectorAll('.rvl li'), function (x) { x.onclick = function () { goTo(x.dataset.id); }; });
+    window.scrollTo(0, 0);
+  }
+  // お知らせ
+  var rvAsk = $('rvask');
+  function askRv() {
+    if (!rvAsk || rvAsk.classList.contains('on')) return;
+    if (document.body.classList.contains('running') || document.querySelector('.setup.on')) return;
+    if (/^#import/.test(location.hash)) return;
+    var n = dueList().length;
+    if (!n || (RVP.d === rvDay() && RVP.done)) return;
+    $('rvaN').textContent = n;
+    var L = rvLog(); $('rvaSub').textContent = L.length ? '今日はすでに ' + L.length + ' 個解きました．残りを片づけましょう．' : '';
+    rvAsk.classList.add('on');
+  }
+  if (rvAsk) {
+    $('rvNow').onclick = function () { rvAsk.classList.remove('on'); startReview(); };
+    $('rvLater').onclick = function () { rvAsk.classList.remove('on'); toast('ホームの「今日の復習」からいつでもできます'); };
+    rvAsk.addEventListener('click', function (e) { if (e.target === rvAsk) rvAsk.classList.remove('on'); });
+    setTimeout(askRv, 700);
+    var hiddenAt = 0;
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) hiddenAt = Date.now();
+      else if (hiddenAt && Date.now() - hiddenAt >= 30 * 60000) { hiddenAt = 0; askRv(); }
+    });
+  }
 
   // ---------------------------------------------------------------- 成績
   function acc(list) {
@@ -1012,7 +1111,7 @@
       var L = D.filter(function (it) { return it.ch === i + 1; });
       var yy = L.filter(function (it) { return marks[it.id] === 'y'; }).length, nn = L.filter(function (it) { return marks[it.id] === 'n'; }).length;
       var a = acc(STM.filter(function (o) { return o.it.ch === i + 1; }));
-      h += srow((i + 1) + '. ' + (i < KISO && COURSE === 'chem' ? '<small class="kb2">基礎</small>' : '') + name + '<small style="color:var(--sub)">　' + L.length + '問　○' + yy + ' ×' + nn + '</small>', a.c, a.w, a.n, a.p, 'data-ch="' + (i + 1) + '"', !a.n && !yy && !nn);
+      h += srow((i + 1) + '. ' + gBadge(i + 1) + name + '<small style="color:var(--sub)">　' + L.length + '問　○' + yy + ' ×' + nn + '</small>', a.c, a.w, a.n, a.p, 'data-ch="' + (i + 1) + '"', !a.n && !yy && !nn);
     });
     // 単元別
     var T = TAGS.map(function (name, i) {
@@ -1294,6 +1393,12 @@
     window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
   }
 
+  // ---------------------------------------------------------------- 検索ボタン（章タブの下）
+  $('goSearch').onclick = function () {
+    var sec = document.querySelector('.srch'), q = $('qbox');
+    window.scrollTo({ top: sec.getBoundingClientRect().top + window.pageYOffset - 12, behavior: 'smooth' });
+    try { q.focus({ preventScroll: true }); } catch (e) { q.focus(); }
+  };
   // ================================================================ コース切り替え
   (function setupCourse() {
     Array.prototype.forEach.call(document.querySelectorAll('label[data-ch]'), function (l) {

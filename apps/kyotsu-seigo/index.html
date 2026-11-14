@@ -15,7 +15,7 @@ try{var c=JSON.parse(localStorage.getItem("cfc-cfg")||"{}")||{},d=document.docum
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>化学ファイナルチェックお試し</title>
-<link rel="stylesheet" href="katex/katex.min.css?v=202611140107">
+<link rel="stylesheet" href="katex/katex.min.css?v=202611140346">
 <style>
 :root{--navy:#13254a;--teal:#1f4e8c;--amber:#d18f1f;--ink:#1f2328;--sub:#5b6270;--line:#e3e6ea;--line2:#cfd5dc;--bg:#f6f7f9;--card:#fff;--soft:#eef1f5;--glass:rgba(255,255,255,.97);--hd:#13254a;--ok:#1a7f4b;--ng:#c0392b;--okbg:#e8f5ee;--ngbg:#fbeceb;--fz:1}
 html[data-theme="dark"]{--ink:#e6e8ee;--sub:#9aa2b2;--line:#2c3446;--line2:#3a4357;--bg:#0f1420;--card:#171d2b;--soft:#222a3b;--glass:rgba(23,29,43,.97);--hd:#cdd9f3;--ok:#3fbf7f;--ng:#ff6b5e;--okbg:#14301f;--ngbg:#3a1b1b;--teal:#5b8fd9;color-scheme:dark}
@@ -394,6 +394,84 @@ body.kiso .kb2,body.kiso .ichem{display:none}
 .wq[hidden],.wc[hidden]{display:none!important}
 .wc{font-size:11px;font-weight:700;color:var(--ng);min-width:22px;text-align:left;white-space:nowrap}
 .dcard .meta .wq{margin-left:auto}
+
+/* ---- 章の色分け：化学基礎＝淡い黄色，化学＝淡い紺．化学は理論（グラフ）・無機（結晶格子）・有機（ベンゼン環）の模様 */
+:root{--gk-bg:#fdf8e5;--gk-bd:#eee0ad;--gk-ac:#9c7a1b;--gk-bb:#f6e9b9;--gk-bt:#7a5d10;
+--gc-bg:#edf1f9;--gc-bd:#cfd8eb;--gc-ac:#1d3566;--gc-bb:#dde4f2;--gc-bt:#1d3566;--pt-riron:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 92 62%22%3E%3Cg stroke=%22%231d3566%22 stroke-opacity=%220.17%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221%22%3E%3Cpath d=%22M26 6V58%22/%3E%3Cpath d=%22M42 6V58%22/%3E%3Cpath d=%22M58 6V58%22/%3E%3Cpath d=%22M74 6V58%22/%3E%3Cpath d=%22M10 10H86%22/%3E%3Cpath d=%22M10 26H86%22/%3E%3Cpath d=%22M10 42H86%22/%3E%3C/g%3E%3Cg stroke=%22%231d3566%22 stroke-opacity=%220.17%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.8%22%3E%3Cpath d=%22M10 4V58H88%22/%3E%3Cpath d=%22M12 56C30 55 36 46 44 34S62 13 86 11%22/%3E%3C/g%3E%3Cg fill=%22%231d3566%22 fill-opacity=%220.17%22%3E%3Ccircle cx=%2244%22 cy=%2234%22 r=%222.6%22/%3E%3C/g%3E%3C/svg%3E");--pt-muki:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 92 74%22%3E%3Cg stroke=%22%231d3566%22 stroke-opacity=%220.17%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.7%22%3E%3Cpath d=%22M46.0 30.0L46.0 11.0%22/%3E%3Cpath d=%22M46.0 44.0L46.0 63.0%22/%3E%3Cpath d=%22M39.1 37.9L19.0 40.5%22/%3E%3Cpath d=%22M52.9 36.1L73.0 33.5%22/%3E%3Cpath d=%22M41.5 42.4L33.6 51.9%22/%3E%3Cpath d=%22M12.0 44.0L9.0 56.0L19.0 63.0L27.5 57.5%22/%3E%3C/g%3E%3Cg stroke=%22%231d3566%22 stroke-opacity=%220.17%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.5%22%3E%3Cpath d=%22M50.5 31.6L58.4 22.1%22 stroke-dasharray=%223 3%22/%3E%3C/g%3E%3Ccircle cx=%2246%22 cy=%2237%22 r=%227%22 stroke=%22%231d3566%22 stroke-opacity=%220.17%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%222%22/%3E%3Cg fill=%22%231d3566%22 fill-opacity=%220.22%22%3E%3Ccircle cx=%2246%22 cy=%227%22 r=%223.8%22/%3E%3Ccircle cx=%2246%22 cy=%2267%22 r=%223.8%22/%3E%3Ccircle cx=%2215%22 cy=%2241%22 r=%223.8%22/%3E%3Ccircle cx=%2277%22 cy=%2233%22 r=%223.8%22/%3E%3Ccircle cx=%2231%22 cy=%2255%22 r=%223.8%22/%3E%3Ccircle cx=%2261%22 cy=%2219%22 r=%223.8%22/%3E%3Ccircle cx=%2246%22 cy=%2237%22 r=%223.2%22/%3E%3C/g%3E%3C/svg%3E");--pt-yuki:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 92 70%22%3E%3Cg stroke=%22%231d3566%22 stroke-opacity=%220.17%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.8%22%3E%3Cpath d=%22M40.0 16.0 L19.2 28.0 L19.2 52.0 L40.0 64.0 L60.8 52.0 L60.8 28.0Z%22/%3E%3Cpath d=%22M38.8 22.5L25.5 30.2%22/%3E%3Cpath d=%22M25.5 49.8L38.8 57.5%22/%3E%3Cpath d=%22M55.8 47.7L55.8 32.3%22/%3E%3Cpath d=%22M40.0 16.0V2%22/%3E%3Cpath d=%22M60.8 52.0L75.8 60.5L89.8 52.0%22/%3E%3C/g%3E%3C/svg%3E");--pt-riron-on:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 92 62%22%3E%3Cg stroke=%22%23ffffff%22 stroke-opacity=%220.22%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221%22%3E%3Cpath d=%22M26 6V58%22/%3E%3Cpath d=%22M42 6V58%22/%3E%3Cpath d=%22M58 6V58%22/%3E%3Cpath d=%22M74 6V58%22/%3E%3Cpath d=%22M10 10H86%22/%3E%3Cpath d=%22M10 26H86%22/%3E%3Cpath d=%22M10 42H86%22/%3E%3C/g%3E%3Cg stroke=%22%23ffffff%22 stroke-opacity=%220.22%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.8%22%3E%3Cpath d=%22M10 4V58H88%22/%3E%3Cpath d=%22M12 56C30 55 36 46 44 34S62 13 86 11%22/%3E%3C/g%3E%3Cg fill=%22%23ffffff%22 fill-opacity=%220.22%22%3E%3Ccircle cx=%2244%22 cy=%2234%22 r=%222.6%22/%3E%3C/g%3E%3C/svg%3E");--pt-muki-on:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 92 74%22%3E%3Cg stroke=%22%23ffffff%22 stroke-opacity=%220.22%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.7%22%3E%3Cpath d=%22M46.0 30.0L46.0 11.0%22/%3E%3Cpath d=%22M46.0 44.0L46.0 63.0%22/%3E%3Cpath d=%22M39.1 37.9L19.0 40.5%22/%3E%3Cpath d=%22M52.9 36.1L73.0 33.5%22/%3E%3Cpath d=%22M41.5 42.4L33.6 51.9%22/%3E%3Cpath d=%22M12.0 44.0L9.0 56.0L19.0 63.0L27.5 57.5%22/%3E%3C/g%3E%3Cg stroke=%22%23ffffff%22 stroke-opacity=%220.22%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.5%22%3E%3Cpath d=%22M50.5 31.6L58.4 22.1%22 stroke-dasharray=%223 3%22/%3E%3C/g%3E%3Ccircle cx=%2246%22 cy=%2237%22 r=%227%22 stroke=%22%23ffffff%22 stroke-opacity=%220.22%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%222%22/%3E%3Cg fill=%22%23ffffff%22 fill-opacity=%220.29%22%3E%3Ccircle cx=%2246%22 cy=%227%22 r=%223.8%22/%3E%3Ccircle cx=%2246%22 cy=%2267%22 r=%223.8%22/%3E%3Ccircle cx=%2215%22 cy=%2241%22 r=%223.8%22/%3E%3Ccircle cx=%2277%22 cy=%2233%22 r=%223.8%22/%3E%3Ccircle cx=%2231%22 cy=%2255%22 r=%223.8%22/%3E%3Ccircle cx=%2261%22 cy=%2219%22 r=%223.8%22/%3E%3Ccircle cx=%2246%22 cy=%2237%22 r=%223.2%22/%3E%3C/g%3E%3C/svg%3E");--pt-yuki-on:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 92 70%22%3E%3Cg stroke=%22%23ffffff%22 stroke-opacity=%220.22%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.8%22%3E%3Cpath d=%22M40.0 16.0 L19.2 28.0 L19.2 52.0 L40.0 64.0 L60.8 52.0 L60.8 28.0Z%22/%3E%3Cpath d=%22M38.8 22.5L25.5 30.2%22/%3E%3Cpath d=%22M25.5 49.8L38.8 57.5%22/%3E%3Cpath d=%22M55.8 47.7L55.8 32.3%22/%3E%3Cpath d=%22M40.0 16.0V2%22/%3E%3Cpath d=%22M60.8 52.0L75.8 60.5L89.8 52.0%22/%3E%3C/g%3E%3C/svg%3E")}
+html[data-theme="dark"]{--gk-bg:#25220f;--gk-bd:#4b4320;--gk-ac:#e3c675;--gk-bb:#4a4019;--gk-bt:#f0d68e;
+--gc-bg:#192236;--gc-bd:#2e3d5c;--gc-ac:#a9c1ef;--gc-bb:#263757;--gc-bt:#c6d6f5;--pt-riron:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 92 62%22%3E%3Cg stroke=%22%23cdd9f3%22 stroke-opacity=%220.13%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221%22%3E%3Cpath d=%22M26 6V58%22/%3E%3Cpath d=%22M42 6V58%22/%3E%3Cpath d=%22M58 6V58%22/%3E%3Cpath d=%22M74 6V58%22/%3E%3Cpath d=%22M10 10H86%22/%3E%3Cpath d=%22M10 26H86%22/%3E%3Cpath d=%22M10 42H86%22/%3E%3C/g%3E%3Cg stroke=%22%23cdd9f3%22 stroke-opacity=%220.13%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.8%22%3E%3Cpath d=%22M10 4V58H88%22/%3E%3Cpath d=%22M12 56C30 55 36 46 44 34S62 13 86 11%22/%3E%3C/g%3E%3Cg fill=%22%23cdd9f3%22 fill-opacity=%220.13%22%3E%3Ccircle cx=%2244%22 cy=%2234%22 r=%222.6%22/%3E%3C/g%3E%3C/svg%3E");--pt-muki:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 92 74%22%3E%3Cg stroke=%22%23cdd9f3%22 stroke-opacity=%220.13%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.7%22%3E%3Cpath d=%22M46.0 30.0L46.0 11.0%22/%3E%3Cpath d=%22M46.0 44.0L46.0 63.0%22/%3E%3Cpath d=%22M39.1 37.9L19.0 40.5%22/%3E%3Cpath d=%22M52.9 36.1L73.0 33.5%22/%3E%3Cpath d=%22M41.5 42.4L33.6 51.9%22/%3E%3Cpath d=%22M12.0 44.0L9.0 56.0L19.0 63.0L27.5 57.5%22/%3E%3C/g%3E%3Cg stroke=%22%23cdd9f3%22 stroke-opacity=%220.13%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.5%22%3E%3Cpath d=%22M50.5 31.6L58.4 22.1%22 stroke-dasharray=%223 3%22/%3E%3C/g%3E%3Ccircle cx=%2246%22 cy=%2237%22 r=%227%22 stroke=%22%23cdd9f3%22 stroke-opacity=%220.13%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%222%22/%3E%3Cg fill=%22%23cdd9f3%22 fill-opacity=%220.17%22%3E%3Ccircle cx=%2246%22 cy=%227%22 r=%223.8%22/%3E%3Ccircle cx=%2246%22 cy=%2267%22 r=%223.8%22/%3E%3Ccircle cx=%2215%22 cy=%2241%22 r=%223.8%22/%3E%3Ccircle cx=%2277%22 cy=%2233%22 r=%223.8%22/%3E%3Ccircle cx=%2231%22 cy=%2255%22 r=%223.8%22/%3E%3Ccircle cx=%2261%22 cy=%2219%22 r=%223.8%22/%3E%3Ccircle cx=%2246%22 cy=%2237%22 r=%223.2%22/%3E%3C/g%3E%3C/svg%3E");--pt-yuki:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 92 70%22%3E%3Cg stroke=%22%23cdd9f3%22 stroke-opacity=%220.13%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.8%22%3E%3Cpath d=%22M40.0 16.0 L19.2 28.0 L19.2 52.0 L40.0 64.0 L60.8 52.0 L60.8 28.0Z%22/%3E%3Cpath d=%22M38.8 22.5L25.5 30.2%22/%3E%3Cpath d=%22M25.5 49.8L38.8 57.5%22/%3E%3Cpath d=%22M55.8 47.7L55.8 32.3%22/%3E%3Cpath d=%22M40.0 16.0V2%22/%3E%3Cpath d=%22M60.8 52.0L75.8 60.5L89.8 52.0%22/%3E%3C/g%3E%3C/svg%3E")}
+.g-kiso{--g-bg:var(--gk-bg);--g-bd:var(--gk-bd);--g-ac:var(--gk-ac);--g-bb:var(--gk-bb);--g-bt:var(--gk-bt);--g-pt:none;--g-pton:none}
+.g-riron,.g-muki,.g-yuki{--g-bg:var(--gc-bg);--g-bd:var(--gc-bd);--g-ac:var(--gc-ac);--g-bb:var(--gc-bb);--g-bt:var(--gc-bt)}
+.g-riron{--g-pt:var(--pt-riron);--g-pton:var(--pt-riron-on)}
+.g-muki{--g-pt:var(--pt-muki);--g-pton:var(--pt-muki-on)}
+.g-yuki{--g-pt:var(--pt-yuki);--g-pton:var(--pt-yuki-on)}
+.kb2[class*="g-"]{background:var(--g-bb);color:var(--g-bt)}
+.chc[class*="g-"]{background:var(--g-pt) no-repeat right 10px center/auto 52%,var(--g-bg);border-color:var(--g-bd)}
+.chc[class*="g-"] .cn{color:var(--g-ac)}
+.chc[class*="g-"] .cb{background:rgba(127,127,127,.14)}
+.chc.on[class*="g-"]{background:var(--g-pt) no-repeat right 10px center/auto 52%,var(--g-bg);border-color:var(--navy)}
+html[data-theme="dark"] .chc.on[class*="g-"]{border-color:#8fb2ea;box-shadow:0 0 0 2px #8fb2ea inset}
+/* ---- 章タブ：化学基礎1段＋化学2段（横スクロールなし） */
+.tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;overflow:visible}
+.tab{min-width:0;overflow:hidden;gap:5px;padding:5px 8px 5px 6px}
+.tab[class*="g-"]{background:var(--g-pt) no-repeat right 5px center/auto 78%,var(--g-bg);border-color:var(--g-bd)}
+.tab[class*="g-"] .tn{background:var(--g-bb);color:var(--g-ac)}
+.tab .tf,.tab .ts{overflow:hidden;text-overflow:ellipsis}
+.tab .ts{display:none}
+.tab .kb2{margin:0}
+.tab.on[class*="g-"]{background:var(--g-pton) no-repeat right 5px center/auto 78%,var(--navy);border-color:var(--navy);color:#fff}
+.tab.on[class*="g-"] .tn{background:var(--gold);color:var(--hd)}
+html[data-theme="dark"] .tab.on[class*="g-"]{background:var(--g-pton) no-repeat right 5px center/auto 78%,#2c5394;border-color:#2c5394}
+html[data-theme="dark"] .tab.on[class*="g-"] .tn{color:#13254a}
+@media (max-width:619px){
+ .tabs{padding:6px 8px 3px;gap:3px}
+ .tab{font-size:12px;padding:4px 5px 4px 4px;gap:4px;border-radius:8px}
+ .tab .tn{width:18px;height:18px;font-size:11px;flex:none}
+ .tab .tf,.tab .kb2{display:none}
+ .tab .ts{display:inline}
+}
+/* ---- 検索ボタン（章タブの下に常に表示） */
+.sbtn{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--line2);background:var(--card);color:var(--hd);border-radius:16px;padding:4px 11px 4px 9px;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap}
+.sbtn:hover{border-color:var(--navy)}
+.stat+.sbtn{margin-left:4px}
+
+/* ---- 分野カード：スマホでも3列（化学基礎1段＋化学2段） */
+@media (max-width:619px){
+ .chgrid{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+ .chc{padding:8px 8px 8px;min-height:0;border-radius:10px;gap:3px}
+ .chc .cn{font-size:18px;display:flex;align-items:center;flex-wrap:wrap;gap:2px}
+ .chc .cn .kb2{font-size:9.5px;margin-left:4px;vertical-align:0}
+ .chc .ct{font-size:12.5px}
+ .chc .cs{font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ .chc.on::after{display:none}
+}
+@media (min-width:620px){
+ .sbtn span{display:none}
+ .sbtn{padding:5px 7px;border-radius:50%}
+ #fsrc button,#fst button{padding:6px 8px}
+ .filters{column-gap:10px}
+ .stat+.sbtn{margin-left:0}
+}
+
+/* ---- 演習モードの時間 */
+.rbar{flex-wrap:wrap;row-gap:4px}
+.rclk{flex-basis:100%;display:flex;gap:14px;justify-content:flex-end;font-size:12px;color:var(--sub);font-variant-numeric:tabular-nums;white-space:nowrap}
+.rclk b{color:var(--hd);font-weight:700}
+.rclk .stop b{color:var(--teal)}
+.rclk .rtime{margin-right:auto;font-size:12.5px;color:var(--hd)}
+.rclk .rtime.warn{color:var(--ng)}
+.rlist .rq{margin-left:auto;font-size:12px;color:var(--sub);font-variant-numeric:tabular-nums;padding-left:8px}
+.rlist .rd+.rq{margin-left:8px}
+
+/* ---- 今日の復習のお知らせ */
+#rvask{align-items:center}
+.rvbox{border-radius:14px;max-width:400px;margin:0 16px;text-align:center;padding:20px 18px 18px}
+.rvbox .rvi{font-size:30px;line-height:1;margin-bottom:6px}
+.rvbox .rvm{font-size:15px;margin:4px 0 8px}
+.rvbox .rvm b{font-size:20px;color:var(--ng)}
+.rvbox .shint{margin:4px 0}
+.rvbox .rbtns{margin-top:14px}
+.rvl .dm .ri{display:inline-block;min-width:16px;font-weight:700}
 </style>
 </head>
 <body>
@@ -410,7 +488,7 @@ body.kiso .kb2,body.kiso .ichem{display:none}
 <div class="cv-rule"></div>
 <h1>化学<small>ファイナルチェック</small></h1>
 <p class="cv-sub">共通テスト・センター試験　正誤問題の分野別整理</p>
-<div class="course" id="course" role="group" aria-label="コース"><button type="button" data-c="chem"><b>化学</b><small>化学基礎＋化学　全8章</small></button><button type="button" data-c="kiso"><b>化学基礎</b><small>化学基礎のみ　第1〜3章</small></button></div>
+<div class="course" id="course" role="group" aria-label="コース"><button type="button" data-c="chem"><b>化学</b><small>化学基礎＋化学　全9章</small></button><button type="button" data-c="kiso"><b>化学基礎</b><small>化学基礎のみ　第1〜3章</small></button></div>
 <button type="button" class="go-run" id="openSetup"><span class="gi">▶</span><span class="gt"><b>演習モードではじめる</b><span>章・出典・問題数を選んでランダム出題　タイマーも使えます</span></span><span class="ga">→</span></button>
 <div class="acts">
 <button type="button" class="act" id="goDrill"><span class="ai">⚡</span><span><b>一問一答</b><small>記述を1つずつ ○×</small></span></button>
@@ -434,6 +512,7 @@ body.kiso .kb2,body.kiso .ichem{display:none}
 <div class="fg"><span class="fl">出典</span><div class="seg" id="fsrc"><button type="button" data-f="all" class="on">すべて</button><button type="button" data-f="kyotsu">共テ</button><button type="button" data-f="center">センター</button></div></div>
 <div class="fg"><span class="fl">表示</span><div class="seg" id="fst"><button type="button" data-f="all" class="on">すべて</button><button type="button" data-f="ng">×だけ</button><button type="button" data-f="un">未チェック</button><button type="button" data-f="w2">×2回以上</button></div></div>
 <span class="stat" id="stat"></span>
+<button type="button" class="sbtn" id="goSearch" aria-label="検索"><svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.6" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M12.8 12.8 L17.5 17.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg><span>検索</span></button>
 </div>
 </nav>
 <main id="main"></main>
@@ -443,14 +522,15 @@ body.kiso .kb2,body.kiso .ichem{display:none}
 <div class="sbox">
 <h2>演習モード</h2>
 <fieldset><legend>出題範囲（章）</legend><div class="opts">
-<label data-ch="1"><input type="checkbox" name="sch" value="1" checked><span>1. <small class="kb2">基礎</small>物質の構成</span></label>
-<label data-ch="2"><input type="checkbox" name="sch" value="2" checked><span>2. <small class="kb2">基礎</small>物質の変化</span></label>
-<label data-ch="3"><input type="checkbox" name="sch" value="3" checked><span>3. <small class="kb2">基礎</small>化学と人間生活・実験</span></label>
-<label data-ch="4"><input type="checkbox" name="sch" value="4" checked><span>4. 物質の構成と状態</span></label>
-<label data-ch="5"><input type="checkbox" name="sch" value="5" checked><span>5. 物質の変化と平衡</span></label>
-<label data-ch="6"><input type="checkbox" name="sch" value="6" checked><span>6. 無機化学</span></label>
-<label data-ch="7"><input type="checkbox" name="sch" value="7" checked><span>7. 脂肪族と芳香族</span></label>
-<label data-ch="8"><input type="checkbox" name="sch" value="8" checked><span>8. 高分子</span></label>
+<label data-ch="1"><input type="checkbox" name="sch" value="1" checked><span>1. <small class="kb2 g-kiso">基礎</small>物質の構成</span></label>
+<label data-ch="2"><input type="checkbox" name="sch" value="2" checked><span>2. <small class="kb2 g-kiso">基礎</small>物質の変化</span></label>
+<label data-ch="3"><input type="checkbox" name="sch" value="3" checked><span>3. <small class="kb2 g-kiso">基礎</small>化学と人間生活・実験</span></label>
+<label data-ch="4"><input type="checkbox" name="sch" value="4" checked><span>4. <small class="kb2 g-riron">理論</small>物質の構成と状態</span></label>
+<label data-ch="5"><input type="checkbox" name="sch" value="5" checked><span>5. <small class="kb2 g-riron">理論</small>物質の変化と平衡</span></label>
+<label data-ch="6"><input type="checkbox" name="sch" value="6" checked><span>6. <small class="kb2 g-muki">無機</small>非金属元素</span></label>
+<label data-ch="7"><input type="checkbox" name="sch" value="7" checked><span>7. <small class="kb2 g-muki">無機</small>金属元素</span></label>
+<label data-ch="8"><input type="checkbox" name="sch" value="8" checked><span>8. <small class="kb2 g-yuki">有機</small>脂肪族と芳香族</span></label>
+<label data-ch="9"><input type="checkbox" name="sch" value="9" checked><span>9. <small class="kb2 g-yuki">有機</small>高分子化合物</span></label>
 </div></fieldset>
 <fieldset><legend>出典</legend><div class="opts">
 <label><input type="radio" name="src" value="all" checked><span>すべて</span></label>
@@ -487,19 +567,29 @@ body.kiso .kb2,body.kiso .ichem{display:none}
 <div class="sfoot"><span class="pn">対象 <b id="poolN">0</b> 問</span><button type="button" id="closeSetup">閉じる</button><button type="button" id="startRun">スタート</button></div>
 </div></div>
 
+<div class="setup" id="rvask" role="dialog" aria-modal="true" aria-label="今日の復習">
+<div class="sbox rvbox">
+<div class="rvi">🔁</div>
+<h2>今日の復習</h2>
+<p class="rvm">間違えた記述などが <b id="rvaN">0</b> 個待っています．</p>
+<p class="shint" id="rvaSub"></p>
+<p class="shint">今やらなくても，ホームの「今日の復習」からいつでもできます．終わるまで，ページを開くたびにお知らせします．</p>
+<div class="rbtns"><button type="button" id="rvNow">今やる</button><button type="button" id="rvLater" class="sec">あとで</button></div>
+</div></div>
 <div class="setup" id="dsetup" role="dialog" aria-modal="true" aria-label="一問一答の設定">
 <div class="sbox">
 <h2>一問一答</h2>
 <p class="shint" style="margin:-4px 0 10px">問題から記述を1つずつ取り出して ○× で答えます．間違えた記述は「今日の復習」に入ります．</p>
 <fieldset><legend>出題範囲（章）</legend><div class="opts">
-<label data-ch="1"><input type="checkbox" name="dch" value="1" checked><span>1. <small class="kb2">基礎</small>物質の構成</span></label>
-<label data-ch="2"><input type="checkbox" name="dch" value="2" checked><span>2. <small class="kb2">基礎</small>物質の変化</span></label>
-<label data-ch="3"><input type="checkbox" name="dch" value="3" checked><span>3. <small class="kb2">基礎</small>化学と人間生活・実験</span></label>
-<label data-ch="4"><input type="checkbox" name="dch" value="4" checked><span>4. 物質の構成と状態</span></label>
-<label data-ch="5"><input type="checkbox" name="dch" value="5" checked><span>5. 物質の変化と平衡</span></label>
-<label data-ch="6"><input type="checkbox" name="dch" value="6" checked><span>6. 無機化学</span></label>
-<label data-ch="7"><input type="checkbox" name="dch" value="7" checked><span>7. 脂肪族と芳香族</span></label>
-<label data-ch="8"><input type="checkbox" name="dch" value="8" checked><span>8. 高分子</span></label>
+<label data-ch="1"><input type="checkbox" name="dch" value="1" checked><span>1. <small class="kb2 g-kiso">基礎</small>物質の構成</span></label>
+<label data-ch="2"><input type="checkbox" name="dch" value="2" checked><span>2. <small class="kb2 g-kiso">基礎</small>物質の変化</span></label>
+<label data-ch="3"><input type="checkbox" name="dch" value="3" checked><span>3. <small class="kb2 g-kiso">基礎</small>化学と人間生活・実験</span></label>
+<label data-ch="4"><input type="checkbox" name="dch" value="4" checked><span>4. <small class="kb2 g-riron">理論</small>物質の構成と状態</span></label>
+<label data-ch="5"><input type="checkbox" name="dch" value="5" checked><span>5. <small class="kb2 g-riron">理論</small>物質の変化と平衡</span></label>
+<label data-ch="6"><input type="checkbox" name="dch" value="6" checked><span>6. <small class="kb2 g-muki">無機</small>非金属元素</span></label>
+<label data-ch="7"><input type="checkbox" name="dch" value="7" checked><span>7. <small class="kb2 g-muki">無機</small>金属元素</span></label>
+<label data-ch="8"><input type="checkbox" name="dch" value="8" checked><span>8. <small class="kb2 g-yuki">有機</small>脂肪族と芳香族</span></label>
+<label data-ch="9"><input type="checkbox" name="dch" value="9" checked><span>9. <small class="kb2 g-yuki">有機</small>高分子化合物</span></label>
 </div></fieldset>
 <fieldset><legend>出典</legend><div class="opts">
 <label><input type="radio" name="dsrc" value="all" checked><span>すべて</span></label>
@@ -566,10 +656,10 @@ body.kiso .kb2,body.kiso .ichem{display:none}
 <div class="sfoot"><span class="pn"></span><button type="button" id="cfgClose">閉じる</button></div>
 </div></div>
 
-<script src="katex/katex.min.js?v=202611140107"></script>
-<script src="katex/mhchem.min.js?v=202611140107"></script>
-<script src="data.js?v=202611140107"></script>
-<script src="qrcode.js?v=202611140107" defer></script>
-<script src="app.js?v=202611140107"></script>
+<script src="katex/katex.min.js?v=202611140346"></script>
+<script src="katex/mhchem.min.js?v=202611140346"></script>
+<script src="data.js?v=202611140346"></script>
+<script src="qrcode.js?v=202611140346" defer></script>
+<script src="app.js?v=202611140346"></script>
 </body>
 </html>
