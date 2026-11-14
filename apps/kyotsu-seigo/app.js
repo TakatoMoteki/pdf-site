@@ -31,6 +31,7 @@
     if (askedPersist) return; askedPersist = true;
     try { if (navigator.storage && navigator.storage.persist) navigator.storage.persisted().then(function (p) { if (!p) navigator.storage.persist(); }); } catch (e) {}
   }
+  var QW = ld('cfc-qw', {});     // 問題ごとの答え合わせ  'id' → [正解回数, 間違い回数, 最終日]
   var ST = ld('cfc-st', {});     // 記述ごとの成績  'id#s' → [正解数, 誤答数, 最終日]
   var RV = ld('cfc-rv', {});     // 復習予定  's:id#s' / 'q:id' → [段階, 予定日]
   function today() { var d = new Date(); return Math.floor((d.getTime() - d.getTimezoneOffset() * 60000) / 86400000); }
@@ -61,9 +62,24 @@
     r[2] = today(); ST[k] = r; sv('cfc-st', ST);
     srs('s:' + k, ok);
   }
+  function recQ(id, ok) {
+    var r = QW[id] || [0, 0, 0];
+    if (ok) r[0]++; else r[1]++;
+    r[2] = today(); QW[id] = r; sv('cfc-qw', QW);
+  }
+  // 間違えた回数：記述の ○× で間違えた回数（一問一答を含む）
+  function sW(id, s) { var r = ST[id + '#' + s]; return r ? r[1] : 0; }
+  // 問題として間違えた回数：答え合わせで間違えた回数．記述ごとの最大値より少なければそちらを使う（以前の記録や一問一答の分）
+  function qW(id) {
+    var w = QW[id] ? QW[id][1] : 0, ss = SIDS[id] || [];
+    for (var i = 0; i < ss.length; i++) w = Math.max(w, sW(id, ss[i]));
+    return w;
+  }
+  function wqHTML(id) { var w = qW(id); return '<span class="wq' + (w >= 3 ? ' w3' : '') + '"' + (w ? '' : ' hidden') + ' title="間違えた回数">間違い ' + w + '回</span>'; }
+  function wcHTML(id, s) { var w = sW(id, s); return '<span class="wc"' + (w ? '' : ' hidden') + ' title="この記述を間違えた回数">×' + w + '</span>'; }
   var TAGS = window.CFC_TAGS || [];
   // 記述の一覧（一問一答・成績用）
-  var STM = [], SBY = {};
+  var STM = [], SBY = {}, SIDS = {};
   D.forEach(function (it) {
     var stem = null, lst = null;
     (it.P || []).forEach(function (b) {
@@ -72,7 +88,7 @@
     });
     function add(x, isJ) {
       var o = { k: it.id + '#' + x.s, id: it.id, s: x.s, l: x.l, b: isJ ? null : x.b, v: x.v, it: it, lst: lst, stem: stem };
-      STM.push(o); SBY[o.k] = o;
+      STM.push(o); SBY[o.k] = o; (SIDS[it.id] = SIDS[it.id] || []).push(x.s);
     }
     function walk(bs) {
       (bs || []).forEach(function (b) {
@@ -225,7 +241,7 @@
       }).join('') + '</div>';
     }
     el.innerHTML =
-      '<div class="meta">' + metaHTML(it) + markHTML(it.id) + '</div>' +
+      '<div class="meta">' + metaHTML(it) + wqHTML(it.id) + markHTML(it.id) + '</div>' +
       (!opts.run && it.tg && it.tg.length ? '<div class="tgs">' + it.tg.map(function (i) { return '<button type="button" class="tg" data-t="' + i + '">#' + TAGS[i] + '</button>'; }).join('') + '</div>' : '') +
       hint +
       '<div class="pb">' + blocks(it.P) + panel + '</div>' +
@@ -242,6 +258,12 @@
     typeset(el);
 
     var pick = {};          // 記述番号 → 0/1
+    Array.prototype.forEach.call(el.querySelectorAll('.jg'), function (g) { g.insertAdjacentHTML('beforeend', wcHTML(it.id, g.dataset.s)); });
+    function updW() {
+      var q = el.querySelector('.wq'); if (q) q.outerHTML = wqHTML(it.id);
+      Array.prototype.forEach.call(el.querySelectorAll('.jg'), function (g) { var c = g.querySelector('.wc'); if (c) c.outerHTML = wcHTML(it.id, g.dataset.s); });
+    }
+    var qrec = false, qrecM = null;   // この回の答え合わせを問題の記録に入れたか（自己採点は付け替えられる）
     var opened = false;
     var jgs = el.querySelectorAll('.jg');
     Array.prototype.forEach.call(jgs, function (g) {
@@ -288,6 +310,12 @@
     var lastJudged = 0;
     function manual(v) {
       setMark(it.id, marks[it.id] === v ? null : v); syncMark();
+      // 答え合わせで記録していないとき（自己採点だけのとき）は，○×ボタンで問題の記録を付け替える
+      if (!qrec) {
+        if (qrecM) { var r0 = QW[it.id]; if (r0) { r0[qrecM === 'y' ? 0 : 1] = Math.max(0, r0[qrecM === 'y' ? 0 : 1] - 1); sv('cfc-qw', QW); } qrecM = null; }
+        if (marks[it.id] === v) { recQ(it.id, v === 'y'); qrecM = v; }
+        updW();
+      }
       // 記述の判定をしていない問題は，問題単位で復習に入れる
       if (marks[it.id] === v && (!jgs.length || !lastJudged)) srs('q:' + it.id, v === 'y');
     }
@@ -329,6 +357,9 @@
           r.classList.add(ok ? 'ok' : 'ng');
         }
       });
+      if (judged && right < judged) { recQ(it.id, false); qrec = true; }
+      else if (judged && judged === total) { recQ(it.id, true); qrec = true; }
+      updW();
       var res = el.querySelector('.res');
       var mark = null;
       if (judged) {
@@ -349,7 +380,7 @@
       if (opts.onDone) opts.onDone({ id: it.id, judged: judged, right: right, total: total, mark: mark });
     }
     function reset() {
-      opened = false;
+      opened = false; qrec = false; qrecM = null;
       el.classList.remove('open');
       pick = {};
       Array.prototype.forEach.call(jgs, function (g) {
@@ -420,7 +451,7 @@
   segs('fst', function (f) { fst = f; });
   function pass(it, f) {
     return f === 'all' || (f === 'kyotsu' && !it.c) || (f === 'center' && it.c) || (f === 'ng' && marks[it.id] === 'n') ||
-      (f === 'un' && !marks[it.id]) || (f === 'ngun' && marks[it.id] !== 'y');
+      (f === 'un' && !marks[it.id]) || (f === 'ngun' && marks[it.id] !== 'y') || (f === 'w2' && qW(it.id) >= 2);
   }
   function stat() {
     var all = searching() ? searchBase() : D.filter(function (it) { return it.ch === ch; });
@@ -435,7 +466,7 @@
       b.innerHTML = b.dataset.label + '<em>' + n + '</em>';
       b.disabled = f !== 'all' && !all.filter(function (it) { return pass(it, f); }).length;
     });
-    ['all', 'ng', 'un'].forEach(function (f) {
+    ['all', 'ng', 'un', 'w2'].forEach(function (f) {
       var b = document.querySelector('#fst button[data-f="' + f + '"]');
       var n = all.filter(function (it) { return pass(it, fsrc) && pass(it, f); }).length;
       b.dataset.label = b.dataset.label || b.textContent;
@@ -770,7 +801,8 @@
     var noCtx = o.b && lead === (o.stem && o.stem.h) && ctx.length === 1;   // 見出しが問題文そのもの
     var el = document.createElement('section');
     el.className = 'dcard';
-    el.innerHTML = '<div class="meta">' + metaHTML(it) + '</div>' +
+    function dw() { var w = sW(o.id, o.s); return '<span class="wq' + (w >= 3 ? ' w3' : '') + '"' + (w ? '' : ' hidden') + '>この記述の間違い ' + w + '回</span>'; }
+    el.innerHTML = '<div class="meta">' + metaHTML(it) + dw() + '</div>' +
       (lead ? '<div class="dlead">' + lead + '</div>' : '') +
       (noCtx ? '' : '<details class="dctx"' + (auto ? ' open' : '') + '><summary>問題文' + (it.P.some(function (b) { return b.t === 'fig' || b.t === 'pf'; }) ? '・図' : '') + '</summary><div class="pb">' + blocks(ctx) + '</div></details>') +
       (o.b ? '<div class="dst"><span class="lb">' + o.l + '</span><div class="bd">' + blocks(o.b) + '</div></div>' :
@@ -784,6 +816,7 @@
         if (answered) return; answered = true;
         var v = +b.dataset.v, ok = v === o.v;
         recS(o.id, o.s, ok);
+        var wq = el.querySelector('.meta .wq'); if (wq) wq.outerHTML = dw();
         Array.prototype.forEach.call(el.querySelectorAll('.dbtns button'), function (x) { x.disabled = true; x.classList.toggle('pick', x === b); });
         var dv = el.querySelector('.dv');
         dv.className = 'dv ' + (ok ? 'ok' : 'ng');
@@ -810,6 +843,7 @@
       if (tgt === 'un') return !r;
       if (tgt === 'ng') return !!(r && r[1]);
       if (tgt === 'weak') return !!(r && r[1] > r[0]);
+      if (tgt === 'w2') return !!(r && r[1] >= 2);
       return true;
     });
   }
@@ -991,6 +1025,16 @@
       if (!a.q) return;
       h += srow(esc(a.name) + '<small style="color:var(--sub)">　' + a.q + '問' + (a.n ? '・' + a.n + '回' : '') + '</small>', a.c, a.w, a.n, a.p, 'data-t="' + a.i + '"', !a.n);
     });
+    // よく間違える問題
+    var WQ = DV.filter(function (it) { return qW(it.id); }).sort(function (a, b) {
+      return qW(b.id) - qW(a.id) || (QW[b.id] ? QW[b.id][2] : 0) - (QW[a.id] ? QW[a.id][2] : 0);
+    });
+    h += '<h3>よく間違える問題</h3>';
+    if (!WQ.length) h += '<p class="shint">まだありません．答え合わせで間違えると，ここに集まります．</p>';
+    else h += '<p class="shint">答え合わせで間違えた回数（記述の ○× や一問一答で同じ記述を何度も間違えたときは，その回数）の多い順．タップでその問題へ．</p><ul class="wlist wq2">' + WQ.slice(0, 20).map(function (it) {
+      return '<li data-id="' + it.id + '"><div class="wm"><span>' + it.ch + '–' + it.n + '　' + it.y + '年度 ' + esc(it.ex) + '　' + esc(it.q) + '</span><span><b>間違い ' + qW(it.id) + '回</b>' + (QW[it.id] && QW[it.id][0] ? '　正解 ' + QW[it.id][0] + '回' : '') + '</span></div></li>';
+    }).join('') + '</ul>';
+    if (WQ.length) h += '<div class="bline" style="margin-top:8px"><button type="button" id="wqrun">間違えた ' + Math.min(WQ.length, 20) + ' 問を演習モードで解く</button></div>';
     // よく間違える記述
     var W = STV.filter(function (o) { var r = ST[o.k]; return r && r[1]; }).sort(function (a, b) {
       var p = ST[a.k], q = ST[b.k]; return (q[1] - q[0]) - (p[1] - p[0]) || q[1] - p[1] || q[2] - p[2];
@@ -1009,6 +1053,7 @@
     function home() { ses = null; fromHash(); render(); window.scrollTo(0, 0); }
     $('sback').onclick = home; $('sback2').onclick = home;
     if ($('wdrill')) $('wdrill').onclick = function () { startSes(shuffle(W.slice()).slice(0, 50).map(function (o) { return { t: 's', k: o.k }; }), '間違えた記述'); };
+    if ($('wqrun')) $('wqrun').onclick = function () { startRun(shuffle(WQ.slice(0, 20).map(function (it) { return it.id; })), 0); };
     if ($('wrev')) $('wrev').onclick = function () { $('goReview').onclick(); };
     Array.prototype.forEach.call(M.querySelectorAll('.srow[data-ch]'), function (r) { r.onclick = function () { ses = null; clearSearch(); location.hash = 'ch' + r.dataset.ch; fromHash(); render(); jumpList(); }; });
     Array.prototype.forEach.call(M.querySelectorAll('.srow[data-t]'), function (r) { r.onclick = function () { ses = null; qtext = ''; var q = $('qbox'); if (q) q.value = ''; setTags([+r.dataset.t]); jumpList(); }; });
@@ -1082,7 +1127,7 @@
   function streamBytes(bytes, ts) {
     return new Response(new Blob([bytes]).stream().pipeThrough(ts)).arrayBuffer().then(function (b) { return new Uint8Array(b); });
   }
-  function payload() { return JSON.stringify({ v: 1, m: marks, s: ST, r: RV, c: CT, p: PROF }); }
+  function payload() { return JSON.stringify({ v: 1, m: marks, s: ST, q: QW, r: RV, c: CT, p: PROF }); }
   function encode() {
     var u = new TextEncoder().encode(payload());
     if (window.CompressionStream) {
@@ -1156,11 +1201,15 @@
   function isObj(x) { return x && typeof x === 'object' && !Array.isArray(x); }
   function cleanImport(d) {
     if (!isObj(d) || !isObj(d.m)) throw new Error('記録の形式が正しくありません');
-    var o = { m: {}, s: {}, r: {}, c: null, p: null }, bad = 0;
+    var o = { m: {}, s: {}, q: {}, r: {}, c: null, p: null }, bad = 0;
     Object.keys(d.m).forEach(function (k) { if (own(BYID, k) && (d.m[k] === 'y' || d.m[k] === 'n')) o.m[k] = d.m[k]; else bad++; });
     if (isObj(d.s)) Object.keys(d.s).forEach(function (k) {
       var v = d.s[k];
       if (own(SBY, k) && Array.isArray(v) && v.length === 3 && nat(v[0]) && nat(v[1]) && nat(v[2], 1e6)) o.s[k] = [v[0], v[1], v[2]]; else bad++;
+    });
+    if (isObj(d.q)) Object.keys(d.q).forEach(function (k) {
+      var v = d.q[k];
+      if (own(BYID, k) && Array.isArray(v) && v.length === 3 && nat(v[0]) && nat(v[1]) && nat(v[2], 1e6)) o.q[k] = [v[0], v[1], v[2]]; else bad++;
     });
     if (isObj(d.r)) Object.keys(d.r).forEach(function (k) {
       var v = d.r[k], ok = (k.slice(0, 2) === 's:' && own(SBY, k.slice(2))) || (k.slice(0, 2) === 'q:' && own(BYID, k.slice(2)));
@@ -1188,11 +1237,14 @@
     d = cleanImport(d);
     keepBackup(mode === 'replace' ? '記録の置き換え' : '記録の読み込み');
     if (d.p && d.p.id) { PROF.id = d.p.id; if (d.p.nick) PROF.nick = d.p.nick; sv('cfc-prof', PROF); }   // 同じ人として連携
-    if (mode === 'replace') { marks = d.m || {}; ST = d.s || {}; RV = d.r || {}; if (d.c) CT = d.c; }
+    if (mode === 'replace') { marks = d.m || {}; ST = d.s || {}; QW = d.q || {}; RV = d.r || {}; if (d.c) CT = d.c; }
     else {
       Object.keys(d.m || {}).forEach(function (k) { if (!marks[k]) marks[k] = d.m[k]; });
       Object.keys(d.s || {}).forEach(function (k) {
         var a = ST[k], b = d.s[k]; ST[k] = a ? [Math.max(a[0], b[0]), Math.max(a[1], b[1]), Math.max(a[2], b[2])] : b;
+      });
+      Object.keys(d.q || {}).forEach(function (k) {
+        var a = QW[k], b = d.q[k]; QW[k] = a ? [Math.max(a[0], b[0]), Math.max(a[1], b[1]), Math.max(a[2], b[2])] : b;
       });
       Object.keys(d.r || {}).forEach(function (k) { var a = RV[k], b = d.r[k]; if (!a || b[1] < a[1]) RV[k] = b; });
       if (d.c) {
@@ -1200,7 +1252,7 @@
         Object.keys(d.c.wk || {}).forEach(function (k) { var a = CT.wk[k], b = d.c.wk[k]; if (!a || b[0] > a[0]) CT.wk[k] = b; });
       }
     }
-    save(); sv('cfc-st', ST); sv('cfc-rv', RV); sv('cfc-ct', CT); syncNick();
+    save(); sv('cfc-st', ST); sv('cfc-qw', QW); sv('cfc-rv', RV); sv('cfc-ct', CT); syncNick();
     return d;
   }
   $('impGo').onclick = function () {
@@ -1225,15 +1277,15 @@
     if (!bk || !bk.d) return;
     if (!confirm('「' + bk.why + '」の前の記録に戻します．よろしいですか？')) return;
     var d = cleanImport(bk.d);
-    marks = d.m; ST = d.s; RV = d.r; CT = d.c || { n: 0, c: 0, wk: {} };
-    save(); sv('cfc-st', ST); sv('cfc-rv', RV); sv('cfc-ct', CT);
+    marks = d.m; ST = d.s; QW = d.q; RV = d.r; CT = d.c || { n: 0, c: 0, wk: {} };
+    save(); sv('cfc-st', ST); sv('cfc-qw', QW); sv('cfc-rv', RV); sv('cfc-ct', CT);
     try { localStorage.removeItem('cfc-bak'); } catch (e) {}
     cfg.classList.remove('on'); if (!ses) render(true); updRev(); toast('記録を元に戻しました');
   };
   $('resetAll').onclick = function () {
     if (!confirm('この端末の記録（○×・記述の成績・復習の予定）をすべて消します．元に戻せません．よろしいですか？')) return;
     keepBackup('記録の消去');
-    marks = {}; ST = {}; RV = {}; CT = { n: 0, c: 0, wk: {} }; save(); sv('cfc-st', ST); sv('cfc-rv', RV); sv('cfc-ct', CT);
+    marks = {}; ST = {}; QW = {}; RV = {}; CT = { n: 0, c: 0, wk: {} }; save(); sv('cfc-st', ST); sv('cfc-qw', QW); sv('cfc-rv', RV); sv('cfc-ct', CT);
     cfg.classList.remove('on'); render(); updRev(); toast('記録を消しました');
   };
 

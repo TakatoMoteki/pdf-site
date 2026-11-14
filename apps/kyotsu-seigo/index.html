@@ -15,7 +15,7 @@ try{var c=JSON.parse(localStorage.getItem("cfc-cfg")||"{}")||{},d=document.docum
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>化学ファイナルチェックお試し</title>
-<link rel="stylesheet" href="katex/katex.min.css?v=202611140058">
+<link rel="stylesheet" href="katex/katex.min.css?v=202611140107">
 <style>
 :root{--navy:#13254a;--teal:#1f4e8c;--amber:#d18f1f;--ink:#1f2328;--sub:#5b6270;--line:#e3e6ea;--line2:#cfd5dc;--bg:#f6f7f9;--card:#fff;--soft:#eef1f5;--glass:rgba(255,255,255,.97);--hd:#13254a;--ok:#1a7f4b;--ng:#c0392b;--okbg:#e8f5ee;--ngbg:#fbeceb;--fz:1}
 html[data-theme="dark"]{--ink:#e6e8ee;--sub:#9aa2b2;--line:#2c3446;--line2:#3a4357;--bg:#0f1420;--card:#171d2b;--soft:#222a3b;--glass:rgba(23,29,43,.97);--hd:#cdd9f3;--ok:#3fbf7f;--ng:#ff6b5e;--okbg:#14301f;--ngbg:#3a1b1b;--teal:#5b8fd9;color-scheme:dark}
@@ -99,7 +99,8 @@ body.running nav,body.running header,body.running .intro,body.running .chsec,bod
 .tab.on .tn{background:var(--gold);color:var(--hd)}
 .filters{max-width:760px;margin:0 auto;display:flex;gap:8px 12px;flex-wrap:wrap;align-items:center;padding:4px 12px 8px;font-size:12px}
 .fg{display:flex;align-items:center;gap:6px}
-.fg .fl{font-size:11px;font-weight:700;color:var(--sub)}
+.fg .fl{font-size:11px;font-weight:700;color:var(--sub);flex:none;white-space:nowrap}
+@media (max-width:400px){#fst button{padding:6px 7px;font-size:12px}#fst button em{margin-left:2px}}
 .seg{display:inline-flex;border:1px solid var(--line2);border-radius:9px;overflow:hidden;background:var(--card)}
 .seg button{border:0;background:none;padding:6px 10px;font-size:12.5px;color:var(--ink);cursor:pointer;border-left:1px solid var(--line);white-space:nowrap}
 .seg button:first-child{border-left:0}
@@ -387,6 +388,12 @@ html[data-theme="dark"] .course button.on{background:#2c5394}
 .chc .cn .kb2{font-size:10px;vertical-align:4px;margin-left:6px}
 label[hidden]{display:none!important}
 body.kiso .kb2,body.kiso .ichem{display:none}
+
+.wq{display:inline-block;font-size:11.5px;font-weight:700;color:var(--ng);background:var(--ngbg);border-radius:10px;padding:1px 8px;line-height:1.6;white-space:nowrap}
+.wq.w3{background:var(--ng);color:#fff}
+.wq[hidden],.wc[hidden]{display:none!important}
+.wc{font-size:11px;font-weight:700;color:var(--ng);min-width:22px;text-align:left;white-space:nowrap}
+.dcard .meta .wq{margin-left:auto}
 </style>
 </head>
 <body>
@@ -425,7 +432,7 @@ body.kiso .kb2,body.kiso .ichem{display:none}
 <div class="tabs" id="tabs"></div>
 <div class="filters">
 <div class="fg"><span class="fl">出典</span><div class="seg" id="fsrc"><button type="button" data-f="all" class="on">すべて</button><button type="button" data-f="kyotsu">共テ</button><button type="button" data-f="center">センター</button></div></div>
-<div class="fg"><span class="fl">表示</span><div class="seg" id="fst"><button type="button" data-f="all" class="on">すべて</button><button type="button" data-f="ng">×だけ</button><button type="button" data-f="un">未チェック</button></div></div>
+<div class="fg"><span class="fl">表示</span><div class="seg" id="fst"><button type="button" data-f="all" class="on">すべて</button><button type="button" data-f="ng">×だけ</button><button type="button" data-f="un">未チェック</button><button type="button" data-f="w2">×2回以上</button></div></div>
 <span class="stat" id="stat"></span>
 </div>
 </nav>
@@ -455,6 +462,7 @@ body.kiso .kb2,body.kiso .ichem{display:none}
 <label><input type="radio" name="tgt" value="ng"><span>×をつけた問題</span></label>
 <label><input type="radio" name="tgt" value="un"><span>未チェック</span></label>
 <label><input type="radio" name="tgt" value="ngun"><span>○以外</span></label>
+<label><input type="radio" name="tgt" value="w2"><span>2回以上間違えた</span></label>
 </div></fieldset>
 <fieldset><legend>問題数</legend><div class="opts">
 <label><input type="radio" name="cnt" value="5"><span>5問</span></label>
@@ -504,6 +512,7 @@ body.kiso .kb2,body.kiso .ichem{display:none}
 <label><input type="radio" name="dtgt" value="un"><span>まだ解いていない</span></label>
 <label><input type="radio" name="dtgt" value="ng"><span>間違えたことがある</span></label>
 <label><input type="radio" name="dtgt" value="weak"><span>苦手（正解より間違いが多い）</span></label>
+<label><input type="radio" name="dtgt" value="w2"><span>2回以上間違えた</span></label>
 </div></fieldset>
 <fieldset><legend>問題数</legend><div class="opts">
 <label><input type="radio" name="dcnt" value="10"><span>10</span></label>
@@ -557,10 +566,10 @@ body.kiso .kb2,body.kiso .ichem{display:none}
 <div class="sfoot"><span class="pn"></span><button type="button" id="cfgClose">閉じる</button></div>
 </div></div>
 
-<script src="katex/katex.min.js?v=202611140058"></script>
-<script src="katex/mhchem.min.js?v=202611140058"></script>
-<script src="data.js?v=202611140058"></script>
-<script src="qrcode.js?v=202611140058" defer></script>
-<script src="app.js?v=202611140058"></script>
+<script src="katex/katex.min.js?v=202611140107"></script>
+<script src="katex/mhchem.min.js?v=202611140107"></script>
+<script src="data.js?v=202611140107"></script>
+<script src="qrcode.js?v=202611140107" defer></script>
+<script src="app.js?v=202611140107"></script>
 </body>
 </html>
