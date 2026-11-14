@@ -1,7 +1,14 @@
 /* 化学ファイナルチェックお試し：過去問 正誤問題（記述ごとの○×判定・演習モード） */
 (function () {
   'use strict';
-  var CH = ['化学基礎', '物質の構成と状態', '物質の変化と平衡', '無機化学', '脂肪族と芳香族', '高分子'];
+  var CH = ['物質の構成', '物質の変化', '化学と人間生活・実験', '物質の構成と状態', '物質の変化と平衡', '無機化学', '脂肪族と芳香族', '高分子'];
+  var KISO = 3;   // 第1〜3章が化学基礎
+  function chTitle(n) { return (n <= KISO ? '化学基礎：' : '') + CH[n - 1]; }
+  // コース：化学（全章）／化学基礎（第1〜3章）．記録はコースに関係なく共通
+  var COURSE = 'chem';
+  try { if ((JSON.parse(localStorage.getItem('cfc-cfg') || '{}') || {}).course === 'kiso') COURSE = 'kiso'; } catch (e) {}
+  function chIn(n) { return COURSE === 'chem' || n <= KISO; }
+  function inC(it) { return chIn(it.ch); }
   var D = window.CFC_DATA;
   var BYID = {};
   D.forEach(function (it) { BYID[it.id] = it; });
@@ -378,14 +385,15 @@
   var tabs = document.getElementById('tabs');
   var grid = document.getElementById('chgrid');
   CH.forEach(function (t, i) {
+    if (!chIn(i + 1)) return;
     var b = document.createElement('button');
-    b.type = 'button'; b.className = 'tab';
-    b.innerHTML = '<span class="tn">' + (i + 1) + '</span>' + t;
+    b.type = 'button'; b.className = 'tab'; b.dataset.ch = i + 1;
+    b.innerHTML = '<span class="tn">' + (i + 1) + '</span>' + (i < KISO && COURSE === 'chem' ? '<small class="kb2">基礎</small>' : '') + t;
     b.onclick = function () { if (searching()) { clearSearch(); if (location.hash === '#ch' + (i + 1)) { render(); return; } } location.hash = 'ch' + (i + 1); };
     tabs.appendChild(b);
     var c = document.createElement('button');
-    c.type = 'button'; c.className = 'chc';
-    c.innerHTML = '<span class="cn">' + (i + 1) + '</span><span class="ct">' + t + '</span><span class="cs"></span><span class="cb"><i class="y"></i><i class="n"></i></span>';
+    c.type = 'button'; c.className = 'chc'; c.dataset.ch = i + 1;
+    c.innerHTML = '<span class="cn">' + (i + 1) + (i < KISO ? '<small class="kb2">化学基礎</small>' : '') + '</span><span class="ct">' + t + '</span><span class="cs"></span><span class="cb"><i class="y"></i><i class="n"></i></span>';
     c.onclick = function () {
       if (searching()) { clearSearch(); if (location.hash === '#ch' + (i + 1)) { render(); jumpList(); return; } }
       if (location.hash === '#ch' + (i + 1)) jumpList(); else { pendingJump = true; location.hash = 'ch' + (i + 1); }
@@ -434,7 +442,8 @@
       b.innerHTML = b.dataset.label + '<em>' + n + '</em>';
     });
     // 章カード
-    Array.prototype.forEach.call(grid.children, function (c, i) {
+    Array.prototype.forEach.call(grid.children, function (c) {
+      var i = +c.dataset.ch - 1;
       var L = D.filter(function (it) { return it.ch === i + 1; });
       var y = L.filter(function (it) { return marks[it.id] === 'y'; }).length;
       var n = L.filter(function (it) { return marks[it.id] === 'n'; }).length;
@@ -444,7 +453,7 @@
       c.classList.toggle('on', i + 1 === ch && !searching());
     });
   }
-  function fromHash() { var m = (location.hash || '').match(/^#ch([1-6])$/); ch = m ? +m[1] : 1; }
+  function fromHash() { var m = (location.hash || '').match(/^#ch([1-8])$/); ch = m ? +m[1] : 1; if (!chIn(ch)) { ch = 1; if (m) history.replaceState(null, '', location.pathname + location.search + '#ch1'); } }
   // 一覧は最初の数問だけすぐ表示し，残りは少しずつ描画する
   var RJ = null;
   function later(f) { if (window.requestIdleCallback) requestIdleCallback(f, { timeout: 120 }); else setTimeout(f, 16); }
@@ -474,11 +483,11 @@
       fsrc = 'all';
       Array.prototype.forEach.call(document.querySelectorAll('#fsrc button'), function (y) { y.classList.toggle('on', y.dataset.f === 'all'); });
     }
-    Array.prototype.forEach.call(document.querySelectorAll('.tab'), function (t, i) { t.classList.toggle('on', i + 1 === ch); });
+    Array.prototype.forEach.call(document.querySelectorAll('.tab'), function (t) { t.classList.toggle('on', +t.dataset.ch === ch); });
     var sti = document.getElementById('stat'); if (sti) sti.style.visibility = '';
-    var on = tabs.children[ch - 1]; if (on && on.scrollIntoView) tabs.scrollLeft = on.offsetLeft - 12;
+    var on = tabs.querySelector('[data-ch="' + ch + '"]'); if (on && on.scrollIntoView) tabs.scrollLeft = on.offsetLeft - 12;
     M.innerHTML = '';
-    var h = document.createElement('div'); h.className = 'chtitle'; h.textContent = '第' + ch + '章　' + CH[ch - 1]; M.appendChild(h);
+    var h = document.createElement('div'); h.className = 'chtitle'; h.textContent = '第' + ch + '章　' + chTitle(ch); M.appendChild(h);
     var L = D.filter(function (it) { return it.ch === ch && pass(it, fsrc) && pass(it, fst); });
     if (!L.length) { var e = document.createElement('div'); e.className = 'empty'; e.textContent = '該当する問題はありません'; M.appendChild(e); }
     var g = null, gens = [];
@@ -656,6 +665,7 @@
   function searchBase() {
     var words = qtext.trim().split(/[\s　]+/).map(norm).filter(Boolean), X = words.length ? idx() : null;
     return D.filter(function (it) {
+      if (!inC(it)) return false;
       if (qtags.length && !qtags.some(function (t) { return (it.tg || []).indexOf(t) >= 0; })) return false;
       return words.every(function (w) { return X[it.id].indexOf(w) >= 0; });
     });
@@ -686,7 +696,7 @@
     L.sort(function (a, b) { return a.ch - b.ch || a.n - b.n; });
     var show = more ? L : L.slice(0, SLIM), g = null, gens = [];
     show.forEach(function (it) {
-      if (it.ch !== g) { g = it.ch; gens.push(el2('chhd', '第' + g + '章　' + CH[g - 1])); }
+      if (it.ch !== g) { g = it.ch; gens.push(el2('chhd', '第' + g + '章　' + chTitle(g))); }
       gens.push(cardGen(it));
     });
     if (show.length < L.length) gens.push(function () {
@@ -700,13 +710,14 @@
   }
   function setTags(a) { qtags = a.slice(); syncTags(); render(); }
   var TGRP = [['物質の構成', 0, 8], ['物質の変化', 8, 18], ['実験・生活', 18, 20], ['無機', 20, 26], ['有機・高分子', 26, TAGS.length]];
-  function tagCounts() { var c = TAGS.map(function () { return 0; }); D.forEach(function (it) { (it.tg || []).forEach(function (i) { c[i]++; }); }); return c; }
+  function tagCounts() { var c = TAGS.map(function () { return 0; }); D.forEach(function (it) { if (inC(it)) (it.tg || []).forEach(function (i) { c[i]++; }); }); return c; }
   (function buildTagSel() {
     var w = $('tagwrap'); if (!w) return;
     var c = tagCounts();
     w.innerHTML = TGRP.map(function (g) {
       var bs = '';
-      for (var i = g[1]; i < g[2]; i++) bs += '<button type="button" class="tg" data-t="' + i + '">' + esc(TAGS[i]) + '<em>' + c[i] + '</em></button>';
+      for (var i = g[1]; i < g[2]; i++) if (c[i]) bs += '<button type="button" class="tg" data-t="' + i + '">' + esc(TAGS[i]) + '<em>' + c[i] + '</em></button>';
+      if (!bs) return '';
       return '<div class="tgrp"><h4>' + g[0] + '</h4><div class="tgw">' + bs + '</div></div>';
     }).join('');
     w.addEventListener('click', function (e) {
@@ -720,7 +731,7 @@
     q.addEventListener('keydown', function (e) { if (e.key === 'Enter') { clearTimeout(tm); qtext = q.value; render(); q.blur(); jumpList(); } });
     $('qclr').onclick = function () { clearSearch(); render(); };
     var dt = $('dtag');
-    TAGS.forEach(function (t, i) { var o = document.createElement('option'); o.value = i; o.textContent = t + '（' + c[i] + '問）'; dt.appendChild(o); });
+    TAGS.forEach(function (t, i) { if (!c[i]) return; var o = document.createElement('option'); o.value = i; o.textContent = t + '（' + c[i] + '問）'; dt.appendChild(o); });
   })();
   function syncTags() {
     Array.prototype.forEach.call(document.querySelectorAll('#tagwrap .tg'), function (b) { b.classList.toggle('on', qtags.indexOf(+b.dataset.t) >= 0); });
@@ -793,6 +804,7 @@
     var tg = $('dtag').value;
     return STM.filter(function (o) {
       var it = o.it, r = ST[o.k];
+      if (!inC(it)) return false;
       if (chs.indexOf(it.ch) < 0 || !pass(it, src)) return false;
       if (tg !== '' && (it.tg || []).indexOf(+tg) < 0) return false;
       if (tgt === 'un') return !r;
@@ -906,7 +918,7 @@
     var t = today();
     return Object.keys(RV).filter(function (k) { return RV[k][1] <= t; }).map(function (k) {
       return k.charAt(0) === 's' ? { t: 's', k: k.slice(2) } : { t: 'q', id: k.slice(2) };
-    }).filter(function (e) { return e.t === 'q' ? BYID[e.id] : SBY[e.k]; });
+    }).filter(function (e) { return e.t === 'q' ? BYID[e.id] && inC(BYID[e.id]) : SBY[e.k] && inC(SBY[e.k].it); });
   }
   function updRev() {
     var n = $('revN'), sub = $('revSub'), b = $('goReview'); if (!n) return;
@@ -942,8 +954,10 @@
   function showStats() {
     run = null; ses = { stats: true }; clearInterval(timerId);
     document.body.classList.add('running');
-    var my = Object.keys(marks), y = my.filter(function (k) { return marks[k] === 'y'; }).length;
-    var A = acc(STM), stTried = STM.filter(function (o) { return ST[o.k]; }).length;
+    // このコースの範囲だけで集計する（解いた数・正答率・今週はコース共通）
+    var DV = D.filter(inC), STV = STM.filter(function (o) { return inC(o.it); });
+    var my = DV.filter(function (it) { return marks[it.id]; }).map(function (it) { return it.id; }), y = my.filter(function (k) { return marks[k] === 'y'; }).length;
+    var A = acc(STV), stTried = STV.filter(function (o) { return ST[o.k]; }).length;
     var t = today(), due = dueList().length, rvn = Object.keys(RV).length;
     var h = '<div class="rbar"><span class="rpos">成績</span><span class="rprog" style="visibility:hidden"></span><button type="button" class="rquit" id="sback">ホームへ</button></div>';
     var wk = CT.wk[weekStart()] || [0, 0];
@@ -954,29 +968,31 @@
       '<div class="tile"><b>' + wk[0] + '</b><span>今週の解いた数（月曜から）</span></div></div>' +
       '<p class="shint">ボタンを1回押して答え合わせするごとに数えます（解き直しも毎回数えます）．' + (PROF.nick ? '' : '設定でニックネームを登録できます．') + '</p>' +
       '<div class="tiles" style="margin-top:10px">' +
-      '<div class="tile"><b>' + my.length + '</b><span>記録した問題 / ' + D.length + '</span></div>' +
+      '<div class="tile"><b>' + my.length + '</b><span>記録した問題 / ' + DV.length + '</span></div>' +
       '<div class="tile"><b>' + y + '</b><span>○ できた問題</span></div>' +
-      '<div class="tile"><b>' + (A.p === null ? '－' : A.p + '%') + '</b><span>記述の正答率（' + stTried + ' / ' + STM.length + ' 記述）</span></div>' +
+      '<div class="tile"><b>' + (A.p === null ? '－' : A.p + '%') + '</b><span>記述の正答率（' + stTried + ' / ' + STV.length + ' 記述）</span></div>' +
       '<div class="tile"><b>' + due + '</b><span>今日の復習（予定 ' + rvn + '）</span></div></div>';
     h += '<h3>章別</h3><p class="shint">○×：問題ごとの記録　バー・右の数字：記述の ○× の正解（緑）と間違い（赤）．タップでその章へ．</p>';
     CH.forEach(function (name, i) {
+      if (!chIn(i + 1)) return;
       var L = D.filter(function (it) { return it.ch === i + 1; });
       var yy = L.filter(function (it) { return marks[it.id] === 'y'; }).length, nn = L.filter(function (it) { return marks[it.id] === 'n'; }).length;
       var a = acc(STM.filter(function (o) { return o.it.ch === i + 1; }));
-      h += srow((i + 1) + '. ' + name + '<small style="color:var(--sub)">　' + L.length + '問　○' + yy + ' ×' + nn + '</small>', a.c, a.w, a.n, a.p, 'data-ch="' + (i + 1) + '"', !a.n && !yy && !nn);
+      h += srow((i + 1) + '. ' + (i < KISO && COURSE === 'chem' ? '<small class="kb2">基礎</small>' : '') + name + '<small style="color:var(--sub)">　' + L.length + '問　○' + yy + ' ×' + nn + '</small>', a.c, a.w, a.n, a.p, 'data-ch="' + (i + 1) + '"', !a.n && !yy && !nn);
     });
     // 単元別
     var T = TAGS.map(function (name, i) {
-      var L = STM.filter(function (o) { return (o.it.tg || []).indexOf(i) >= 0; });
-      var a = acc(L); a.i = i; a.name = name; a.q = D.filter(function (it) { return (it.tg || []).indexOf(i) >= 0; }).length; return a;
+      var L = STV.filter(function (o) { return (o.it.tg || []).indexOf(i) >= 0; });
+      var a = acc(L); a.i = i; a.name = name; a.q = DV.filter(function (it) { return (it.tg || []).indexOf(i) >= 0; }).length; return a;
     });
     T.sort(function (a, b) { return (a.p === null) - (b.p === null) || (a.p - b.p) || b.n - a.n; });
     h += '<h3>単元別（苦手な順）</h3><p class="shint">タップでその単元の問題を表示します．</p>';
     T.forEach(function (a) {
+      if (!a.q) return;
       h += srow(esc(a.name) + '<small style="color:var(--sub)">　' + a.q + '問' + (a.n ? '・' + a.n + '回' : '') + '</small>', a.c, a.w, a.n, a.p, 'data-t="' + a.i + '"', !a.n);
     });
     // よく間違える記述
-    var W = STM.filter(function (o) { var r = ST[o.k]; return r && r[1]; }).sort(function (a, b) {
+    var W = STV.filter(function (o) { var r = ST[o.k]; return r && r[1]; }).sort(function (a, b) {
       var p = ST[a.k], q = ST[b.k]; return (q[1] - q[0]) - (p[1] - p[0]) || q[1] - p[1] || q[2] - p[2];
     });
     h += '<h3>よく間違える記述</h3>';
@@ -1226,6 +1242,23 @@
     window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
   }
 
+  // ================================================================ コース切り替え
+  (function setupCourse() {
+    Array.prototype.forEach.call(document.querySelectorAll('label[data-ch]'), function (l) {
+      if (!chIn(+l.dataset.ch)) { l.hidden = true; var x = l.querySelector('input'); if (x) x.checked = false; }
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('#course button'), function (b) {
+      b.classList.toggle('on', b.dataset.c === COURSE);
+      b.onclick = function () {
+        if (b.dataset.c === COURSE) return;
+        var c = ld('cfc-cfg', {}); c.course = b.dataset.c; sv('cfc-cfg', c);
+        history.replaceState(null, '', location.pathname + location.search + '#ch1');
+        location.reload();
+      };
+    });
+    document.body.classList.toggle('kiso', COURSE === 'kiso');
+    var n = $('nAll'); if (n) n.textContent = D.filter(inC).length;
+  })();
   // 書き出しのすすめ：記録が増えてきて，しばらく書き出していないとき
   function updBackupNote() {
     var b = $('bkNote'); if (!b) return;

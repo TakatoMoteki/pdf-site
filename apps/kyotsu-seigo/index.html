@@ -15,7 +15,7 @@ try{var c=JSON.parse(localStorage.getItem("cfc-cfg")||"{}")||{},d=document.docum
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>化学ファイナルチェックお試し</title>
-<link rel="stylesheet" href="katex/katex.min.css?v=202611131052">
+<link rel="stylesheet" href="katex/katex.min.css?v=202611140058">
 <style>
 :root{--navy:#13254a;--teal:#1f4e8c;--amber:#d18f1f;--ink:#1f2328;--sub:#5b6270;--line:#e3e6ea;--line2:#cfd5dc;--bg:#f6f7f9;--card:#fff;--soft:#eef1f5;--glass:rgba(255,255,255,.97);--hd:#13254a;--ok:#1a7f4b;--ng:#c0392b;--okbg:#e8f5ee;--ngbg:#fbeceb;--fz:1}
 html[data-theme="dark"]{--ink:#e6e8ee;--sub:#9aa2b2;--line:#2c3446;--line2:#3a4357;--bg:#0f1420;--card:#171d2b;--soft:#222a3b;--glass:rgba(23,29,43,.97);--hd:#cdd9f3;--ok:#3fbf7f;--ng:#ff6b5e;--okbg:#14301f;--ngbg:#3a1b1b;--teal:#5b8fd9;color-scheme:dark}
@@ -375,6 +375,18 @@ html[data-theme="dark"] .setup{background:rgba(0,0,0,.55)}
 .bknote button.sec{background:var(--soft);color:var(--ink)}
 #main > .card{content-visibility:auto;contain-intrinsic-size:auto 640px}
 .ceb{white-space:nowrap}
+
+.course{display:flex;gap:6px;margin:12px 0 0;padding:4px;border-radius:12px;background:rgba(19,37,74,.07);max-width:460px}
+html[data-theme="dark"] .course{background:var(--soft)}
+.course button{flex:1;border:0;border-radius:9px;padding:7px 8px;background:transparent;cursor:pointer;color:var(--sub);text-align:center;line-height:1.25}
+.course button b{display:block;font-size:14.5px;color:inherit}
+.course button small{display:block;font-size:10.5px;color:inherit;opacity:.85}
+.course button.on{background:var(--navy);color:#fff;box-shadow:0 1px 4px rgba(0,0,0,.18)}
+html[data-theme="dark"] .course button.on{background:#2c5394}
+.kb2{display:inline-block;font-size:9.5px;font-weight:700;line-height:1;padding:2px 4px;margin:0 4px 0 2px;border-radius:4px;background:var(--gold);color:#13254a;vertical-align:2px;letter-spacing:.02em;font-family:inherit}
+.chc .cn .kb2{font-size:10px;vertical-align:4px;margin-left:6px}
+label[hidden]{display:none!important}
+body.kiso .kb2,body.kiso .ichem{display:none}
 </style>
 </head>
 <body>
@@ -391,6 +403,7 @@ html[data-theme="dark"] .setup{background:rgba(0,0,0,.55)}
 <div class="cv-rule"></div>
 <h1>化学<small>ファイナルチェック</small></h1>
 <p class="cv-sub">共通テスト・センター試験　正誤問題の分野別整理</p>
+<div class="course" id="course" role="group" aria-label="コース"><button type="button" data-c="chem"><b>化学</b><small>化学基礎＋化学　全8章</small></button><button type="button" data-c="kiso"><b>化学基礎</b><small>化学基礎のみ　第1〜3章</small></button></div>
 <button type="button" class="go-run" id="openSetup"><span class="gi">▶</span><span class="gt"><b>演習モードではじめる</b><span>章・出典・問題数を選んでランダム出題　タイマーも使えます</span></span><span class="ga">→</span></button>
 <div class="acts">
 <button type="button" class="act" id="goDrill"><span class="ai">⚡</span><span><b>一問一答</b><small>記述を1つずつ ○×</small></span></button>
@@ -401,7 +414,7 @@ html[data-theme="dark"] .setup{background:rgba(0,0,0,.55)}
 <div class="bknote" id="bkNote" hidden><span class="bki">💾</span><span class="bkt"><b>記録のバックアップ</b><span id="bkText"></span></span><span class="bkb"><button type="button" id="bkGo">書き出す</button><button type="button" id="bkLater" class="sec">あとで</button></span></div>
 <div class="cv-band"></div>
 </div></header>
-<div class="intro"><p>化学：共通テスト 2021〜2026（本試・追試）／センター試験 2015〜2020（本試・追試），化学基礎：共通テスト 2021〜2026（本試・追試）／センター試験 2015〜2020（本試・追試）　全368問．各記述を ○× で判定してから「答え合わせ」．</p>
+<div class="intro"><p><span class="ichem">化学：共通テスト 2021〜2026（本試・追試）／センター試験 2015〜2020（本試・追試），</span>化学基礎：共通テスト 2021〜2026（本試・追試）／センター試験 2015〜2020（本試・追試）　全<span id="nAll">368</span>問．各記述を ○× で判定してから「答え合わせ」．</p>
 <details><summary>（改）とある問題について</summary>見出しに（改）とある問題は，誤りを含む記述の数が問題ごとにばらばらになるように記述を改め，各記述に ○× をつける形式にした改題です．</details></div>
 <section class="chsec"><div class="sech">分野を選ぶ</div><div class="chgrid" id="chgrid"></div></section>
 <section class="srch"><div class="sech">語句・単元で探す</div>
@@ -423,12 +436,14 @@ html[data-theme="dark"] .setup{background:rgba(0,0,0,.55)}
 <div class="sbox">
 <h2>演習モード</h2>
 <fieldset><legend>出題範囲（章）</legend><div class="opts">
-<label><input type="checkbox" name="sch" value="1" checked><span>1. 化学基礎</span></label>
-<label><input type="checkbox" name="sch" value="2" checked><span>2. 物質の構成と状態</span></label>
-<label><input type="checkbox" name="sch" value="3" checked><span>3. 物質の変化と平衡</span></label>
-<label><input type="checkbox" name="sch" value="4" checked><span>4. 無機化学</span></label>
-<label><input type="checkbox" name="sch" value="5" checked><span>5. 脂肪族と芳香族</span></label>
-<label><input type="checkbox" name="sch" value="6" checked><span>6. 高分子</span></label>
+<label data-ch="1"><input type="checkbox" name="sch" value="1" checked><span>1. <small class="kb2">基礎</small>物質の構成</span></label>
+<label data-ch="2"><input type="checkbox" name="sch" value="2" checked><span>2. <small class="kb2">基礎</small>物質の変化</span></label>
+<label data-ch="3"><input type="checkbox" name="sch" value="3" checked><span>3. <small class="kb2">基礎</small>化学と人間生活・実験</span></label>
+<label data-ch="4"><input type="checkbox" name="sch" value="4" checked><span>4. 物質の構成と状態</span></label>
+<label data-ch="5"><input type="checkbox" name="sch" value="5" checked><span>5. 物質の変化と平衡</span></label>
+<label data-ch="6"><input type="checkbox" name="sch" value="6" checked><span>6. 無機化学</span></label>
+<label data-ch="7"><input type="checkbox" name="sch" value="7" checked><span>7. 脂肪族と芳香族</span></label>
+<label data-ch="8"><input type="checkbox" name="sch" value="8" checked><span>8. 高分子</span></label>
 </div></fieldset>
 <fieldset><legend>出典</legend><div class="opts">
 <label><input type="radio" name="src" value="all" checked><span>すべて</span></label>
@@ -469,12 +484,14 @@ html[data-theme="dark"] .setup{background:rgba(0,0,0,.55)}
 <h2>一問一答</h2>
 <p class="shint" style="margin:-4px 0 10px">問題から記述を1つずつ取り出して ○× で答えます．間違えた記述は「今日の復習」に入ります．</p>
 <fieldset><legend>出題範囲（章）</legend><div class="opts">
-<label><input type="checkbox" name="dch" value="1" checked><span>1. 化学基礎</span></label>
-<label><input type="checkbox" name="dch" value="2" checked><span>2. 物質の構成と状態</span></label>
-<label><input type="checkbox" name="dch" value="3" checked><span>3. 物質の変化と平衡</span></label>
-<label><input type="checkbox" name="dch" value="4" checked><span>4. 無機化学</span></label>
-<label><input type="checkbox" name="dch" value="5" checked><span>5. 脂肪族と芳香族</span></label>
-<label><input type="checkbox" name="dch" value="6" checked><span>6. 高分子</span></label>
+<label data-ch="1"><input type="checkbox" name="dch" value="1" checked><span>1. <small class="kb2">基礎</small>物質の構成</span></label>
+<label data-ch="2"><input type="checkbox" name="dch" value="2" checked><span>2. <small class="kb2">基礎</small>物質の変化</span></label>
+<label data-ch="3"><input type="checkbox" name="dch" value="3" checked><span>3. <small class="kb2">基礎</small>化学と人間生活・実験</span></label>
+<label data-ch="4"><input type="checkbox" name="dch" value="4" checked><span>4. 物質の構成と状態</span></label>
+<label data-ch="5"><input type="checkbox" name="dch" value="5" checked><span>5. 物質の変化と平衡</span></label>
+<label data-ch="6"><input type="checkbox" name="dch" value="6" checked><span>6. 無機化学</span></label>
+<label data-ch="7"><input type="checkbox" name="dch" value="7" checked><span>7. 脂肪族と芳香族</span></label>
+<label data-ch="8"><input type="checkbox" name="dch" value="8" checked><span>8. 高分子</span></label>
 </div></fieldset>
 <fieldset><legend>出典</legend><div class="opts">
 <label><input type="radio" name="dsrc" value="all" checked><span>すべて</span></label>
@@ -540,10 +557,10 @@ html[data-theme="dark"] .setup{background:rgba(0,0,0,.55)}
 <div class="sfoot"><span class="pn"></span><button type="button" id="cfgClose">閉じる</button></div>
 </div></div>
 
-<script src="katex/katex.min.js?v=202611131052"></script>
-<script src="katex/mhchem.min.js?v=202611131052"></script>
-<script src="data.js?v=202611131052"></script>
-<script src="qrcode.js?v=202611131052" defer></script>
-<script src="app.js?v=202611131052"></script>
+<script src="katex/katex.min.js?v=202611140058"></script>
+<script src="katex/mhchem.min.js?v=202611140058"></script>
+<script src="data.js?v=202611140058"></script>
+<script src="qrcode.js?v=202611140058" defer></script>
+<script src="app.js?v=202611140058"></script>
 </body>
 </html>
