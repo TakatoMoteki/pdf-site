@@ -111,7 +111,7 @@ try{var c=JSON.parse(localStorage.getItem("cfc-cfg")||"{}")||{},d=document.docum
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>化学ファイナルチェックお試し</title>
-<link rel="stylesheet" href="katex/katex.min.css?v=202611160812">
+<link rel="stylesheet" href="katex/katex.min.css?v=202611160817">
 <style>
 :root{--navy:#13254a;--teal:#1f4e8c;--amber:#d18f1f;--ink:#1f2328;--sub:#5b6270;--line:#e3e6ea;--line2:#cfd5dc;--bg:#f6f7f9;--card:#fff;--soft:#eef1f5;--glass:rgba(255,255,255,.97);--hd:#13254a;--onGold:#13254a;--navyD:#13254a;--ok:#1a7f4b;--ng:#c0392b;--okbg:#e8f5ee;--ngbg:#fbeceb;--fz:1}
 html[data-theme="dark"]{--ink:#e6e8ee;--sub:#9aa2b2;--line:#2c3446;--line2:#3a4357;--bg:#0f1420;--card:#171d2b;--soft:#222a3b;--glass:rgba(23,29,43,.97);--hd:#cdd9f3;--ok:#3fbf7f;--ng:#ff6b5e;--okbg:#14301f;--ngbg:#3a1b1b;--teal:#5b8fd9;--navyD:#2c5394;color-scheme:dark}
@@ -753,6 +753,39 @@ html[data-skin="street"] .kpv-go,html[data-skin="street"] .kpv-ch,html[data-skin
 html[data-skin="street"] .kpv-hd b{font-family:var(--skin-latin);letter-spacing:.02em}
 html[data-skin="k2"] .kpv-card{border-radius:5px}html[data-skin="k2"] .kpv-go,html[data-skin="k2"] .kpv-ch,html[data-skin="k2"] .kpv-sb{border-radius:4px}
 html[data-skin="french"] .kpv-hd{background:repeating-linear-gradient(90deg,var(--navy) 0 10px,#2e3f7a 10px 20px)}
+
+/* ---- ホームの「今日」 */
+.today{border:1px solid var(--line2);background:var(--card);border-radius:14px;padding:10px 12px;margin:12px 0 2px}
+.td-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.td-l{font-size:12px;font-weight:800;color:var(--card);background:var(--navy);border-radius:6px;padding:2px 8px}
+.td-n{font-size:13px;color:var(--sub)}.td-n b{font-size:20px;color:var(--hd);margin-right:2px}
+.td-n select{font:inherit;font-weight:700;color:var(--hd);border:1px solid var(--line2);border-radius:6px;background:var(--card);padding:1px 2px}
+.td-s{margin-left:auto;font-size:12.5px;font-weight:800;color:var(--gold2)}
+.td-bar{height:7px;border-radius:7px;background:var(--soft);margin:7px 0 2px;overflow:hidden}
+.td-bar i{display:block;height:100%;width:0;border-radius:7px;background:var(--gold);transition:width .4s}
+.today.done .td-bar i{background:var(--ok)}
+.td-btns{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
+.td-btns:not(:has(button:not([hidden]))){display:none}
+.td-btns button{text-align:left;border:1px solid var(--line2);background:var(--soft);color:var(--ink);border-radius:10px;padding:7px 9px;cursor:pointer;min-width:0}
+.td-btns button[hidden]{display:none}
+.td-btns button b{display:block;font-size:13px;color:var(--hd)}
+.td-btns button small{display:block;font-size:11px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.td-btns button:only-child{grid-column:1/-1}
+@media (max-width:420px){.td-btns{grid-template-columns:1fr}}
+/* ---- 誤りを報告 */
+.orig .rpt{float:left;font-size:12px;color:var(--sub);text-decoration:none;padding:2px 0}
+.orig .rpt:hover{color:var(--ng)}
+/* ---- 学習カレンダー */
+.cal{display:flex;gap:4px;margin:6px 0 4px;overflow-x:auto}
+.calw{display:grid;grid-template-rows:repeat(7,13px);gap:3px;font-size:9px;color:var(--sub);line-height:13px}
+.calg{display:grid;grid-template-rows:repeat(7,13px);grid-auto-flow:column;grid-auto-columns:13px;gap:3px}
+.calg i{border-radius:3px;background:var(--soft);border:1px solid var(--line)}
+.calg i.l1{background:color-mix(in srgb,var(--navy) 22%,var(--card))}
+.calg i.l2{background:color-mix(in srgb,var(--navy) 45%,var(--card))}
+.calg i.l3{background:color-mix(in srgb,var(--navy) 72%,var(--card))}
+.calg i.l4{background:var(--navy);box-shadow:inset 0 0 0 2px var(--gold)}
+.calg i.fut{opacity:.35}
+.calg i.td{outline:1.5px solid var(--gold2);outline-offset:1px}
 </style>
 </head>
 <body>
@@ -770,6 +803,11 @@ html[data-skin="french"] .kpv-hd{background:repeating-linear-gradient(90deg,var(
 <h1>化学<small>ファイナルチェック</small></h1>
 <p class="cv-sub">共通テスト・センター試験　正誤問題の分野別整理</p>
 <div class="course" id="course" role="group" aria-label="コース"><button type="button" data-c="chem"><b>化学</b><small>化学基礎＋化学　全10章</small></button><button type="button" data-c="kiso"><b>化学基礎</b><small>化学基礎のみ　第1〜4章</small></button></div>
+<div class="today" id="todayBox">
+<div class="td-top"><span class="td-l">今日</span><span class="td-n"><b id="tdN">0</b> / <select id="tdGoalSel" aria-label="1日の目標"><option value="10">10</option><option value="20">20</option><option value="30">30</option><option value="50">50</option><option value="100">100</option></select> 問</span><span class="td-s" id="tdS"></span></div>
+<div class="td-bar"><i id="tdBar"></i></div>
+<div class="td-btns"><button type="button" id="tdCont" hidden><b>▶ 続きから</b><small id="tdContL"></small></button><button type="button" id="tdRec" hidden><b>★ 今日のおすすめ</b><small id="tdRecL"></small></button></div>
+</div>
 <button type="button" class="go-run" id="openSetup"><span class="gi">▶</span><span class="gt"><b>演習モードではじめる</b><span>章・出典・問題数を選んでランダム出題　タイマーも使えます</span></span><span class="ga">→</span></button>
 <div class="acts">
 <button type="button" class="act" id="goDrill"><span class="ai">⚡</span><span><b>一問一答</b><small>記述を1つずつ ○×</small></span></button>
@@ -970,10 +1008,10 @@ html[data-skin="french"] .kpv-hd{background:repeating-linear-gradient(90deg,var(
 <div class="sfoot"><span class="pn"></span><button type="button" id="cfgClose">閉じる</button></div>
 </div></div>
 
-<script src="katex/katex.min.js?v=202611160812"></script>
-<script src="katex/mhchem.min.js?v=202611160812"></script>
-<script src="data.js?v=202611160812"></script>
-<script src="qrcode.js?v=202611160812" defer></script>
-<script src="app.js?v=202611160812"></script>
+<script src="katex/katex.min.js?v=202611160817"></script>
+<script src="katex/mhchem.min.js?v=202611160817"></script>
+<script src="data.js?v=202611160817"></script>
+<script src="qrcode.js?v=202611160817" defer></script>
+<script src="app.js?v=202611160817"></script>
 </body>
 </html>

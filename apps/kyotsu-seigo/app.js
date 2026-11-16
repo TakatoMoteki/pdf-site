@@ -50,13 +50,23 @@
   }
   // ボタン1回ごとの解答数（ランキング用）  n:解いた数 c:正解数 wk:{週の開始日:[n,c]}
   var CT = ld('cfc-ct', { n: 0, c: 0, wk: {} });
+  if (!CT.d || typeof CT.d !== 'object') CT.d = {};   // 日ごとの解いた数 { 日: [n, c] }（連続日数・学習カレンダー用）
   function weekStart(d) { d = d === undefined ? today() : d; return d - (d + 3) % 7; }   // 月曜はじまり
   function cnt(ok) {
     askPersist();
     CT.n++; if (ok) CT.c++;
     var w = weekStart(), a = CT.wk[w] || [0, 0]; a[0]++; if (ok) a[1]++; CT.wk[w] = a;
     Object.keys(CT.wk).forEach(function (k) { if (+k < w - 56) delete CT.wk[k]; });
+    var t = today(), dd = CT.d[t] || [0, 0]; dd[0]++; if (ok) dd[1]++; CT.d[t] = dd;
+    Object.keys(CT.d).forEach(function (k) { if (+k < t - 400) delete CT.d[k]; });
     sv('cfc-ct', CT);
+    var g = goal(); if (dd[0] === g) setTimeout(function () { toast('🎉 今日の目標 ' + g + ' 問を達成しました！' + (window.CFC_OSHI && CFC_OSHI.praise() ? '　' + CFC_OSHI.praise() : '')); }, 400);
+  }
+  function goal() { var g = +((typeof CFG !== 'undefined' && CFG && CFG.goal) || 20); return g > 0 ? g : 20; }
+  function streak() {
+    var t = today(), d = CT.d || {}, k = (d[t] && d[t][0]) ? t : t - 1, n = 0;
+    while (d[k] && d[k][0] > 0) { n++; k--; }
+    return n;
   }
   var PROF = ld('cfc-prof', {});
   if (!PROF.id) { PROF.id = 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); sv('cfc-prof', PROF); }
@@ -255,7 +265,7 @@
       (!opts.run && it.tg && it.tg.length ? '<div class="tgs">' + it.tg.map(function (i) { return '<button type="button" class="tg" data-t="' + i + '">#' + TAGS[i] + '</button>'; }).join('') + '</div>' : '') +
       hint +
       '<div class="pb">' + blocks(it.P) + panel + '</div>' +
-      '<div class="orig"><button type="button" class="ob">' + (it.perm ? '紙面で見る（元の番号）' : '紙面で見る') + '</button><img class="img" alt="紙面（問題）" data-src="' + it.pi + '" style="aspect-ratio:' + (1 / it.par).toFixed(4) + '"></div>' +
+      '<div class="orig">' + (REPORT_URL ? '<a class="rpt" target="_blank" rel="noopener" href="' + esc(reportUrl(it)) + '">⚑ 誤りを報告</a>' : '') + '<button type="button" class="ob">' + (it.perm ? '紙面で見る（元の番号）' : '紙面で見る') + '</button><img class="img" alt="紙面（問題）" data-src="' + it.pi + '" style="aspect-ratio:' + (1 / it.par).toFixed(4) + '"></div>' +
       '<button type="button" class="reveal">' + ((it.ns || it.sel) ? '答え合わせ' : '解答を見る') + '</button>' +
       '<div class="ansbox">' +
       '<div class="res"></div>' +
@@ -522,6 +532,7 @@
   function el2(cls, txt) { return function () { var d = document.createElement('div'); d.className = cls; d.textContent = txt; return d; }; }
   function cardGen(it) { return function () { return card(it, { onMark: stat }); }; }
   function render(keep) {
+    if (typeof updToday === 'function') try { updToday(); } catch (e) { }
     RJ = null;
     document.body.classList.remove('running');
     ses = null;
@@ -695,6 +706,9 @@
     flushRender();
     var el = $('q-' + id); if (el) el.scrollIntoView();
   }
+  // 誤植・質問の報告：Google フォームの「事前入力したURL」の {ID} を問題の情報に置きかえる（空なら報告ボタンを出さない）
+  var REPORT_URL = '';
+  function reportUrl(it) { return REPORT_URL.replace('{ID}', encodeURIComponent(it.ch + '–' + it.n + '　' + it.y + '年度 ' + it.ex + ' ' + it.q + '（' + it.id + '）')); }
   function plain(h) { var d = document.createElement('div'); d.innerHTML = h; return d.textContent; }
 
   // ================================================================ 検索
@@ -1112,6 +1126,18 @@
       '<span class="sb2"><i class="y" style="width:' + (tot ? 100 * y / tot : 0) + '%"></i><i class="n" style="width:' + (tot ? 100 * n / tot : 0) + '%"></i></span>' +
       '<span class="sp' + (p !== null && p < 60 ? ' lo' : '') + '">' + (p === null ? '－' : p + '%') + '</span></div>';
   }
+  // 学習カレンダー：直近16週の日ごとの解いた数（濃いほど多い．目標を超えた日は印）
+  function calHTML() {
+    var t = today(), g = goal(), end = t + (6 - (t + 3) % 7), start = end - 16 * 7 + 1, cells = '', best = 0, run2 = 0, days = 0;
+    for (var k = start; k <= end; k++) {
+      var n = (CT.d[k] || [0])[0], lv = !n ? 0 : n < g / 4 ? 1 : n < g / 2 ? 2 : n < g ? 3 : 4;
+      if (n) days++;
+      cells += '<i class="l' + lv + (k > t ? ' fut' : '') + (k === t ? ' td' : '') + '" title="' + (k > t ? '' : n + '問') + '"></i>';
+    }
+    for (var j = t - 400; j <= t; j++) { if (CT.d[j] && CT.d[j][0]) { run2++; if (run2 > best) best = run2; } else run2 = 0; }
+    return '<h3>学習カレンダー</h3><div class="cal"><div class="calw">' + ['月', '', '水', '', '金', '', '日'].map(function (x) { return '<span>' + x + '</span>'; }).join('') + '</div><div class="calg">' + cells + '</div></div>' +
+      '<p class="shint">今の連続 <b>' + streak() + '</b> 日　最長 <b>' + best + '</b> 日　直近16週で勉強した日 <b>' + days + '</b> 日　1日の目標 ' + g + ' 問（ホームで変えられます）．色が濃いほどたくさん解いた日です．</p>';
+  }
   function showStats() {
     run = null; ses = { stats: true }; clearInterval(timerId);
     document.body.classList.add('running');
@@ -1128,6 +1154,7 @@
       '<div class="tile"><b>' + (CT.n ? Math.round(1000 * CT.c / CT.n) / 10 + '%' : '－') + '</b><span>正答率（' + CT.c + ' / ' + CT.n + '）</span></div>' +
       '<div class="tile"><b>' + wk[0] + '</b><span>今週の解いた数（月曜から）</span></div></div>' +
       '<p class="shint">ボタンを1回押して答え合わせするごとに数えます（解き直しも毎回数えます）．' + (PROF.nick ? '' : '設定でニックネームを登録できます．') + '</p>' +
+      calHTML() +
       '<div class="tiles" style="margin-top:10px">' +
       '<div class="tile"><b>' + my.length + '</b><span>記録した問題 / ' + DV.length + '</span></div>' +
       '<div class="tile"><b>' + y + '</b><span>○ できた問題</span></div>' +
@@ -1401,7 +1428,11 @@
       if (ok && Array.isArray(v) && v.length === 2 && nat(v[0], INT.length - 1) && nat(v[1], 1e6)) o.r[k] = [v[0], v[1]]; else bad++;
     });
     if (isObj(d.c) && nat(d.c.n) && nat(d.c.c) && d.c.c <= d.c.n) {
-      o.c = { n: d.c.n, c: d.c.c, wk: {} };
+      o.c = { n: d.c.n, c: d.c.c, wk: {}, d: {} };
+      if (isObj(d.c.d)) Object.keys(d.c.d).forEach(function (k) {
+        var v = d.c.d[k];
+        if (/^\d{1,7}$/.test(k) && Array.isArray(v) && v.length === 2 && nat(v[0]) && nat(v[1]) && v[1] <= v[0]) o.c.d[k] = [v[0], v[1]];
+      });
       if (isObj(d.c.wk)) Object.keys(d.c.wk).forEach(function (k) {
         var v = d.c.wk[k];
         if (/^\d{1,7}$/.test(k) && Array.isArray(v) && v.length === 2 && nat(v[0]) && nat(v[1]) && v[1] <= v[0]) o.c.wk[k] = [v[0], v[1]];
@@ -1422,7 +1453,7 @@
     d = cleanImport(d);
     keepBackup(mode === 'replace' ? '記録の置き換え' : '記録の読み込み');
     if (d.p && d.p.id) { PROF.id = d.p.id; if (d.p.nick) PROF.nick = d.p.nick; sv('cfc-prof', PROF); }   // 同じ人として連携
-    if (mode === 'replace') { marks = d.m || {}; ST = d.s || {}; QW = d.q || {}; RV = d.r || {}; if (d.c) CT = d.c; }
+    if (mode === 'replace') { marks = d.m || {}; ST = d.s || {}; QW = d.q || {}; RV = d.r || {}; if (d.c) CT = d.c; if (!CT.d) CT.d = {}; }
     else {
       Object.keys(d.m || {}).forEach(function (k) { if (!marks[k]) marks[k] = d.m[k]; });
       Object.keys(d.s || {}).forEach(function (k) {
@@ -1435,6 +1466,8 @@
       if (d.c) {
         if (d.c.n > CT.n) { CT.n = d.c.n; CT.c = d.c.c; }
         Object.keys(d.c.wk || {}).forEach(function (k) { var a = CT.wk[k], b = d.c.wk[k]; if (!a || b[0] > a[0]) CT.wk[k] = b; });
+        if (!CT.d) CT.d = {};
+        Object.keys(d.c.d || {}).forEach(function (k) { var a = CT.d[k], b = d.c.d[k]; if (!a || b[0] > a[0]) CT.d[k] = b; });
       }
     }
     save(); sv('cfc-st', ST); sv('cfc-qw', QW); sv('cfc-rv', RV); sv('cfc-ct', CT); syncNick();
@@ -1462,7 +1495,7 @@
     if (!bk || !bk.d) return;
     if (!confirm('「' + bk.why + '」の前の記録に戻します．よろしいですか？')) return;
     var d = cleanImport(bk.d);
-    marks = d.m; ST = d.s; QW = d.q; RV = d.r; CT = d.c || { n: 0, c: 0, wk: {} };
+    marks = d.m; ST = d.s; QW = d.q; RV = d.r; CT = d.c || { n: 0, c: 0, wk: {}, d: {} }; if (!CT.d) CT.d = {};
     save(); sv('cfc-st', ST); sv('cfc-qw', QW); sv('cfc-rv', RV); sv('cfc-ct', CT);
     try { localStorage.removeItem('cfc-bak'); } catch (e) {}
     cfg.classList.remove('on'); if (!ses) render(true); updRev(); toast('記録を元に戻しました');
@@ -1470,7 +1503,7 @@
   $('resetAll').onclick = function () {
     if (!confirm('この端末の記録（○×・記述の成績・復習の予定）をすべて消します．元に戻せません．よろしいですか？')) return;
     keepBackup('記録の消去');
-    marks = {}; ST = {}; QW = {}; RV = {}; CT = { n: 0, c: 0, wk: {} }; save(); sv('cfc-st', ST); sv('cfc-qw', QW); sv('cfc-rv', RV); sv('cfc-ct', CT);
+    marks = {}; ST = {}; QW = {}; RV = {}; CT = { n: 0, c: 0, wk: {}, d: {} }; save(); sv('cfc-st', ST); sv('cfc-qw', QW); sv('cfc-rv', RV); sv('cfc-ct', CT);
     cfg.classList.remove('on'); render(); updRev(); toast('記録を消しました');
   };
 
@@ -1513,6 +1546,66 @@
     function upd() { document.documentElement.classList.toggle('modal', !!document.querySelector('.setup.on')); }
     if (window.MutationObserver) Array.prototype.forEach.call(sheets, function (x) { new MutationObserver(upd).observe(x, { attributes: true, attributeFilter: ['class'] }); });
   })();
+  // ---------------------------------------------------------------- ホームの「今日」：目標・連続日数・続きから・今日のおすすめ
+  var LAST = ld('cfc-last', {});
+  (function saveLast() {
+    var tm = null;
+    window.addEventListener('scroll', function () {
+      if (tm) return;
+      tm = setTimeout(function () {
+        tm = null;
+        if (document.body.classList.contains('running') || searching()) return;
+        var nav = document.getElementById('nav'), top = nav ? nav.getBoundingClientRect().bottom : 0;
+        if (top > window.innerHeight * .6) return;   // まだホームの上のほう
+        var cs = document.querySelectorAll('#main > .card'), pick = null;
+        for (var i = 0; i < cs.length; i++) { var r = cs[i].getBoundingClientRect(); if (r.bottom > top + 40) { pick = cs[i]; break; } }
+        if (pick && pick.id && pick.id.slice(2) !== LAST.id) { LAST = { id: pick.id.slice(2), t: Date.now() }; sv('cfc-last', LAST); }
+      }, 500);
+    }, { passive: true });
+  })();
+  function recTag() {
+    // 苦手（正答率が低い）単元を優先し，なければまだあまり解いていない単元．日ごとに上位3つを順に出す
+    var c = [];
+    TAGS.forEach(function (name, i) {
+      var its = D.filter(function (it) { return inC(it) && (it.tg || []).indexOf(i) >= 0; }); if (!its.length) return;
+      var L = STM.filter(function (o) { return inC(o.it) && (o.it.tg || []).indexOf(i) >= 0; }), a = acc(L), tried = 0;
+      L.forEach(function (o) { var r = ST[o.k]; if (r) tried += r[0] + r[1]; });
+      var ng = its.filter(function (it) { return marks[it.id] === 'n'; }).length, un = its.filter(function (it) { return !marks[it.id]; }).length;
+      var sc, why;
+      if (tried >= 4 && a.p !== null && a.p < 75) { sc = 100 + (100 - a.p) + ng * 3; why = '正答率 ' + a.p + '%'; }
+      else if (ng) { sc = 80 + ng * 3; why = '× の問題 ' + ng + ' 問'; }
+      else if (un) { sc = 10 + 30 * un / its.length; why = 'まだ ' + un + ' 問'; }
+      else return;
+      c.push({ i: i, sc: sc, why: why, its: its });
+    });
+    if (!c.length) return null;
+    c.sort(function (x, y) { return y.sc - x.sc; });
+    return c[today() % Math.min(3, c.length)];
+  }
+  function updToday() {
+    var box = $('todayBox'); if (!box) return;
+    var g = goal(), n = (CT.d[today()] || [0])[0], s = streak();
+    $('tdN').textContent = n; $('tdGoalSel').value = String(g);
+    $('tdBar').style.width = Math.min(100, Math.round(100 * n / g)) + '%';
+    box.classList.toggle('done', n >= g);
+    $('tdS').textContent = s ? '🔥 ' + s + '日連続' : '今日から始めよう';
+    var it = LAST.id && BYID[LAST.id] && inC(BYID[LAST.id]) ? BYID[LAST.id] : null;
+    $('tdCont').hidden = !it;
+    if (it) $('tdContL').textContent = it.ch + '–' + it.n + '　' + it.y + '年度 ' + it.ex;
+    var r = recTag();
+    $('tdRec').hidden = !r;
+    if (r) { $('tdRecL').textContent = '#' + TAGS[r.i] + '（' + r.why + '）から ' + Math.min(5, r.its.length) + ' 問'; $('tdRec').dataset.t = r.i; }
+  }
+  $('tdGoalSel').onchange = function () { CFG.goal = +this.value; sv('cfc-cfg', CFG); updToday(); };
+  $('tdCont').onclick = function () { if (LAST.id && BYID[LAST.id]) { goTo(LAST.id); var el = $('q-' + LAST.id); if (el) { var nav = document.getElementById('nav'); window.scrollTo(0, el.getBoundingClientRect().top + window.pageYOffset - (nav ? nav.offsetHeight : 0) - 8); } } };
+  $('tdRec').onclick = function () {
+    var r = recTag(); if (!r) return;
+    var rank = function (it) { return marks[it.id] === 'n' ? 0 : !marks[it.id] ? 1 : 2; };
+    var ids = shuffle(r.its.slice()).sort(function (a, b) { return rank(a) - rank(b); }).slice(0, 5).map(function (it) { return it.id; });
+    startRun(shuffle(ids), 0);
+  };
+  updToday();
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) updToday(); });
   // ================================================================ コース切り替え
   (function setupCourse() {
     Array.prototype.forEach.call(document.querySelectorAll('label[data-ch]'), function (l) {
