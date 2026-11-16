@@ -15,7 +15,7 @@ try{var c=JSON.parse(localStorage.getItem("cfc-cfg")||"{}")||{},d=document.docum
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>化学ファイナルチェックお試し</title>
-<link rel="stylesheet" href="katex/katex.min.css?v=202611160115">
+<link rel="stylesheet" href="katex/katex.min.css?v=202611160254">
 <style>
 :root{--navy:#13254a;--teal:#1f4e8c;--amber:#d18f1f;--ink:#1f2328;--sub:#5b6270;--line:#e3e6ea;--line2:#cfd5dc;--bg:#f6f7f9;--card:#fff;--soft:#eef1f5;--glass:rgba(255,255,255,.97);--hd:#13254a;--ok:#1a7f4b;--ng:#c0392b;--okbg:#e8f5ee;--ngbg:#fbeceb;--fz:1}
 html[data-theme="dark"]{--ink:#e6e8ee;--sub:#9aa2b2;--line:#2c3446;--line2:#3a4357;--bg:#0f1420;--card:#171d2b;--soft:#222a3b;--glass:rgba(23,29,43,.97);--hd:#cdd9f3;--ok:#3fbf7f;--ng:#ff6b5e;--okbg:#14301f;--ngbg:#3a1b1b;--teal:#5b8fd9;color-scheme:dark}
@@ -502,6 +502,37 @@ html[data-theme="dark"]{--kr-bg:#263757;--kr-fg:#c6d6f5;--kr-bd:#3a5078;--km-bg:
 .tab.on .kb2[class*="g-"]{box-shadow:0 0 0 1px rgba(255,255,255,.55)}
 
 .rvl .dsm{font-size:12.5px;color:var(--sub);margin:3px 0 2px;line-height:1.6}
+
+/* ---- 上部の帯：章ボタン（押すと章一覧）と検索 */
+.nbar{display:flex;align-items:center;gap:8px;max-width:760px;margin:0 auto;padding:7px 12px 3px}
+.chbtn{flex:1;min-width:0;display:flex;align-items:center;gap:7px;border:1px solid var(--g-bd,var(--line2));background:var(--g-bg,var(--card));color:var(--hd);border-radius:10px;padding:5px 10px 5px 6px;cursor:pointer;font-size:14.5px;font-weight:700;text-align:left}
+.chbtn .tn{flex:none;display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;padding:0 3px;border-radius:6px;background:var(--g-bb,var(--soft));color:var(--g-ac,var(--hd));font-size:12.5px}
+.chbtn .chbt{flex:1;min-width:0;display:flex;align-items:center;gap:6px;overflow:hidden;white-space:nowrap}
+.chbtn .chf{overflow:hidden;text-overflow:ellipsis}
+.chbtn .kb2{flex:none;margin:0}
+.chbtn .cvd{flex:none;font-size:10px;color:var(--sub);transition:transform .15s}
+.chbtn[aria-expanded="true"] .cvd{transform:rotate(180deg)}
+.chbtn.srchm .tn{display:none}
+.nbar .sbtn{flex:none;padding:7px 12px 7px 10px;border-radius:10px;font-size:13px}
+.nbar .sbtn.on{background:var(--navy);border-color:var(--navy);color:#fff}
+html[data-theme="dark"] .nbar .sbtn.on{background:#2c5394;border-color:#2c5394}
+#tabs[hidden],#nsrch[hidden]{display:none!important}
+#tabs{padding:4px 12px 6px}
+.nsrch{max-width:760px;margin:0 auto;padding:4px 12px 2px}
+.nsrch .sbar input{font-size:16px}
+.nsrch .tagsel{margin:4px 0 2px}
+.nsrch #tagwrap{max-height:42vh;overflow:auto}
+.dstatic{padding:8px 0 2px}
+@media (max-width:619px){
+ .nbar{padding:6px 8px 2px;gap:6px}
+ .chbtn{font-size:14px}
+ .filters .stat{order:1;margin-left:auto}
+ .filters .fg:nth-of-type(2){order:2}
+}
+
+/* ---- 番号つきの式：番号と式が重ならないように右に場所をとる */
+.katex-display{overflow-x:auto;overflow-y:hidden;padding:2px 0}
+.katex-display>.katex>.katex-html:has(>.tag){padding-right:2.4em}
 </style>
 </head>
 <body>
@@ -532,17 +563,22 @@ html[data-theme="dark"]{--kr-bg:#263757;--kr-fg:#c6d6f5;--kr-bd:#3a5078;--km-bg:
 <div class="intro"><p><span class="ichem">化学：共通テスト 2021〜2026（本試・追試）／センター試験 2015〜2020（本試・追試），</span>化学基礎：共通テスト 2021〜2026（本試・追試）／センター試験 2015〜2020（本試・追試）　全<span id="nAll">368</span>問．各記述を ○× で判定してから「答え合わせ」．</p>
 <details><summary>（改）とある問題について</summary>見出しに（改）とある問題は，誤りを含む記述の数が問題ごとにばらばらになるように記述を改め，各記述に ○× をつける形式にした改題です．</details></div>
 <section class="chsec"><div class="sech">分野を選ぶ</div><div class="chgrid" id="chgrid"></div></section>
-<section class="srch"><div class="sech">語句・単元で探す</div>
-<div class="sbar"><input id="qbox" type="search" enterkeyhint="search" placeholder="例：緩衝液，ファンデルワールス力，NH3" autocomplete="off"><button type="button" id="qclr">クリア</button></div>
-<details class="tagsel" id="tagsel"><summary>#単元から選ぶ<em id="tagon"></em></summary><div id="tagwrap"></div></details>
-</section>
+
 <nav id="nav">
-<div class="tabs" id="tabs"></div>
+<div class="nbar">
+<button type="button" class="chbtn" id="chBtn" aria-expanded="false" aria-controls="tabs"><span class="tn" id="chBtnN">1</span><span class="chbt" id="chBtnT"></span><span class="cvd" aria-hidden="true">▼</span></button>
+<button type="button" class="sbtn" id="goSearch" aria-label="検索"><svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.6" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M12.8 12.8 L17.5 17.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg><span>検索</span></button>
+</div>
+<div class="tabs" id="tabs" hidden></div>
+<div class="nsrch" id="nsrch" hidden>
+<div class="sbar"><input id="qbox" type="search" enterkeyhint="search" placeholder="語句で探す　例：緩衝液，ファンデルワールス力，NH3" autocomplete="off"><button type="button" id="qclr">閉じる</button></div>
+<details class="tagsel" id="tagsel"><summary>#単元から選ぶ<em id="tagon"></em></summary><div id="tagwrap"></div></details>
+</div>
 <div class="filters">
 <div class="fg"><span class="fl">出典</span><div class="seg" id="fsrc"><button type="button" data-f="all" class="on">すべて</button><button type="button" data-f="kyotsu">共テ</button><button type="button" data-f="center">センター</button></div></div>
 <div class="fg"><span class="fl">表示</span><div class="seg" id="fst"><button type="button" data-f="all" class="on">すべて</button><button type="button" data-f="ng">×だけ</button><button type="button" data-f="un">未チェック</button><button type="button" data-f="w2">×2回以上</button></div></div>
 <span class="stat" id="stat"></span>
-<button type="button" class="sbtn" id="goSearch" aria-label="検索"><svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.6" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M12.8 12.8 L17.5 17.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg><span>検索</span></button>
+
 </div>
 </nav>
 <main id="main"></main>
@@ -688,10 +724,10 @@ html[data-theme="dark"]{--kr-bg:#263757;--kr-fg:#c6d6f5;--kr-bd:#3a5078;--km-bg:
 <div class="sfoot"><span class="pn"></span><button type="button" id="cfgClose">閉じる</button></div>
 </div></div>
 
-<script src="katex/katex.min.js?v=202611160115"></script>
-<script src="katex/mhchem.min.js?v=202611160115"></script>
-<script src="data.js?v=202611160115"></script>
-<script src="qrcode.js?v=202611160115" defer></script>
-<script src="app.js?v=202611160115"></script>
+<script src="katex/katex.min.js?v=202611160254"></script>
+<script src="katex/mhchem.min.js?v=202611160254"></script>
+<script src="data.js?v=202611160254"></script>
+<script src="qrcode.js?v=202611160254" defer></script>
+<script src="app.js?v=202611160254"></script>
 </body>
 </html>

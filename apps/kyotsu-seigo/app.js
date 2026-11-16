@@ -432,13 +432,17 @@
     var b = document.createElement('button');
     b.type = 'button'; b.className = 'tab g-' + GRP[i]; b.dataset.ch = i + 1;
     b.innerHTML = '<span class="tn">' + (i + 1) + '</span>' + gBadge(i + 1) + '<span class="tf">' + t + '</span><span class="ts">' + CHS[i] + '</span>';
-    b.onclick = function () { if (searching()) { clearSearch(); if (location.hash === '#ch' + (i + 1)) { render(); return; } } location.hash = 'ch' + (i + 1); };
+    b.onclick = function () {
+      closeChList();
+      if (searching() || searchOpen) { closeSearch(true); if (location.hash === '#ch' + (i + 1)) { render(); jumpList(); return; } }
+      if (location.hash === '#ch' + (i + 1)) jumpList(); else { pendingJump = true; location.hash = 'ch' + (i + 1); }
+    };
     tabs.appendChild(b);
     var c = document.createElement('button');
     c.type = 'button'; c.className = 'chc g-' + GRP[i]; c.dataset.ch = i + 1;
     c.innerHTML = '<span class="cn">' + (i + 1) + gBadge(i + 1, true) + '</span><span class="ct">' + t + '</span><span class="cs"></span><span class="cb"><i class="y"></i><i class="n"></i></span>';
     c.onclick = function () {
-      if (searching()) { clearSearch(); if (location.hash === '#ch' + (i + 1)) { render(); jumpList(); return; } }
+      if (searching() || searchOpen) { closeSearch(true); if (location.hash === '#ch' + (i + 1)) { render(); jumpList(); return; } }
       if (location.hash === '#ch' + (i + 1)) jumpList(); else { pendingJump = true; location.hash = 'ch' + (i + 1); }
     };
     grid.appendChild(c);
@@ -528,7 +532,7 @@
     }
     Array.prototype.forEach.call(document.querySelectorAll('.tab'), function (t) { t.classList.toggle('on', +t.dataset.ch === ch); });
     var sti = document.getElementById('stat'); if (sti) sti.style.visibility = '';
-    var on = tabs.querySelector('[data-ch="' + ch + '"]'); if (on && on.scrollIntoView) tabs.scrollLeft = on.offsetLeft - 12;
+    setChBtn(ch);
     M.innerHTML = '';
     var h = document.createElement('div'); h.className = 'chtitle'; h.textContent = '第' + ch + '章　' + chTitle(ch); M.appendChild(h);
     var L = D.filter(function (it) { return it.ch === ch && pass(it, fsrc) && pass(it, fst); });
@@ -743,7 +747,7 @@
     h.innerHTML = '<span>' + lab.join('　') + '：' + L.length + ' 問</span><button type="button" id="sclr">検索をやめる</button>' +
       (L.length ? '<button type="button" id="sdrill">この問題の記述で一問一答</button>' : '');
     M.appendChild(h);
-    $('sclr').onclick = function () { clearSearch(); render(); };
+    $('sclr').onclick = function () { closeSearch(); };
     if ($('sdrill')) $('sdrill').onclick = function () {
       var ids = {}; L.forEach(function (it) { ids[it.id] = 1; });
       var q = shuffle(STM.filter(function (o) { return ids[o.id]; })).slice(0, 50);
@@ -764,9 +768,9 @@
     });
     queueRender(gens);
     stat();
-    var hd = document.querySelector('#nav .chname'); if (hd) hd.textContent = '検索結果';
+    setChBtn(0);
   }
-  function setTags(a) { qtags = a.slice(); syncTags(); render(); }
+  function setTags(a) { qtags = a.slice(); syncTags(); if (!searchOpen && qtags.length) { searchOpen = true; $('nsrch').hidden = false; $('goSearch').classList.add('on'); var d = $('tagsel'); if (d) d.open = true; } render(); }
   var TGRP = [['物質の構成', 0, 8], ['物質の変化', 8, 18], ['実験・生活', 18, 20], ['無機', 20, 26], ['有機・高分子', 26, TAGS.length]];
   function tagCounts() { var c = TAGS.map(function () { return 0; }); D.forEach(function (it) { if (inC(it)) (it.tg || []).forEach(function (i) { c[i]++; }); }); return c; }
   (function buildTagSel() {
@@ -787,7 +791,7 @@
     var q = $('qbox'), tm = null;
     q.addEventListener('input', function () { clearTimeout(tm); tm = setTimeout(function () { qtext = q.value; render(); }, 250); });
     q.addEventListener('keydown', function (e) { if (e.key === 'Enter') { clearTimeout(tm); qtext = q.value; render(); q.blur(); jumpList(); } });
-    $('qclr').onclick = function () { clearSearch(); render(); };
+    $('qclr').onclick = function () { closeSearch(); };
     var dt = $('dtag');
     TAGS.forEach(function (t, i) { if (!c[i]) return; var o = document.createElement('option'); o.value = i; o.textContent = t + '（' + c[i] + '問）'; dt.appendChild(o); });
   })();
@@ -824,16 +828,14 @@
   function dcard(o, done) {
     var it = o.it, lead = leadOf(o);
     var ctx = (it.P || []).filter(function (b) { return b !== o.lst; });
-    var rv = ses && (ses.kind === 'rv' || ses.kind === 'rvp');   // 今日の復習では問題文をはじめから開いておく
     var noCtx = o.b && lead === (o.stem && o.stem.h) && ctx.length === 1;   // 見出しが問題文そのもの
-    if (rv && !noCtx) lead = '';
-    var auto = rv || !o.b || !lead || ctx.length > 1;
+    if (!noCtx) lead = '';   // 問題文をはじめから全部出すので，短い見出しは出さない
     var el = document.createElement('section');
     el.className = 'dcard';
     function dw() { var w = sW(o.id, o.s); return '<span class="wq' + (w >= 3 ? ' w3' : '') + '"' + (w ? '' : ' hidden') + '>この記述の間違い ' + w + '回</span>'; }
     el.innerHTML = '<div class="meta">' + metaHTML(it) + dw() + '</div>' +
       (lead ? '<div class="dlead">' + lead + '</div>' : '') +
-      (noCtx ? '' : '<details class="dctx"' + (auto ? ' open' : '') + '><summary>問題文' + (it.P.some(function (b) { return b.t === 'fig' || b.t === 'pf'; }) ? '・図' : '') + '</summary><div class="pb">' + blocks(ctx) + '</div></details>') +
+      (noCtx ? '' : '<div class="dctx dstatic"><div class="pb">' + blocks(ctx) + '</div></div>') +
       (o.b ? '<div class="dst"><span class="lb">' + o.l + '</span><div class="bd">' + blocks(o.b) + '</div></div>' :
         '<div class="dst"><div class="bd"><p>上の問題文・図の <b>' + o.l + '</b> は' + (o.stem && /適当/.test(o.stem.h) ? '適当？' : '正しい？') + '</p></div></div>') +
       '<div class="dbtns"><button type="button" class="dO" data-v="1">○<small>正しい</small></button><button type="button" class="dX" data-v="0">×<small>誤り</small></button></div>' +
@@ -1403,12 +1405,34 @@
     window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
   }
 
-  // ---------------------------------------------------------------- 検索ボタン（章タブの下）
-  $('goSearch').onclick = function () {
-    var sec = document.querySelector('.srch'), q = $('qbox');
-    window.scrollTo({ top: sec.getBoundingClientRect().top + window.pageYOffset - 12, behavior: 'smooth' });
-    try { q.focus({ preventScroll: true }); } catch (e) { q.focus(); }
+  // ---------------------------------------------------------------- 上部の帯：章ボタンと検索
+  function setChBtn(n) {
+    var b = $('chBtn'); if (!b) return;
+    b.className = 'chbtn' + (n ? ' g-' + GRP[n - 1] : ' srchm');
+    $('chBtnN').textContent = n || '';
+    $('chBtnT').innerHTML = n ? gBadge(n) + '<span class="chf">' + CH[n - 1] + '</span>' : '検索結果';
+  }
+  function openChList() { tabs.hidden = false; $('chBtn').setAttribute('aria-expanded', 'true'); }
+  function closeChList() { tabs.hidden = true; var b = $('chBtn'); if (b) b.setAttribute('aria-expanded', 'false'); }
+  $('chBtn').onclick = function () {
+    if (tabs.hidden) { if (document.getElementById('nav').getBoundingClientRect().top > 1) jumpList(); openChList(); } else closeChList();
   };
+  document.addEventListener('click', function (e) { if (!tabs.hidden && !e.target.closest('#tabs') && !e.target.closest('#chBtn')) closeChList(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { closeChList(); } });
+  var searchOpen = false;
+  function openSearch() {
+    searchOpen = true; closeChList();
+    $('nsrch').hidden = false; $('goSearch').classList.add('on');
+    jumpList();
+    var q = $('qbox'); try { q.focus({ preventScroll: true }); } catch (e) { q.focus(); }
+  }
+  function closeSearch(noRender) {
+    searchOpen = false;
+    $('nsrch').hidden = true; $('goSearch').classList.remove('on');
+    var was = searching(); clearSearch();
+    if (was && !noRender) render();
+  }
+  $('goSearch').onclick = function () { if (searchOpen) closeSearch(); else openSearch(); };
   // ================================================================ コース切り替え
   (function setupCourse() {
     Array.prototype.forEach.call(document.querySelectorAll('label[data-ch]'), function (l) {
