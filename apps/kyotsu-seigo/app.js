@@ -770,8 +770,13 @@
     stat();
     setChBtn(0);
   }
-  function setTags(a) { qtags = a.slice(); syncTags(); if (!searchOpen && qtags.length) { searchOpen = true; $('nsrch').hidden = false; $('goSearch').classList.add('on'); var d = $('tagsel'); if (d) d.open = true; } render(); }
-  var TGRP = [['物質の構成', 0, 8], ['物質の変化', 8, 18], ['実験・生活', 18, 20], ['無機', 20, 26], ['有機・高分子', 26, TAGS.length]];
+  function setTags(a) {
+    qtags = a.slice(); syncTags();
+    if (!searchOpen && qtags.length) { searchOpen = true; $('nsrch').hidden = false; $('goSearch').classList.add('on'); }
+    if (searchOpen && !qtags.length && !qtext) { closeSearch(true); render(); return; }
+    render();
+  }
+  var TGRP = [['物質の構成', 0, 8], ['物質の変化', 8, 18], ['実験・生活', 18, 20], ['無機', 20, 26, 'muki'], ['有機・高分子', 26, TAGS.length, 'yuki']];
   function tagCounts() { var c = TAGS.map(function () { return 0; }); D.forEach(function (it) { if (inC(it)) (it.tg || []).forEach(function (i) { c[i]++; }); }); return c; }
   (function buildTagSel() {
     var w = $('tagwrap'); if (!w) return;
@@ -780,13 +785,14 @@
       var bs = '';
       for (var i = g[1]; i < g[2]; i++) if (c[i]) bs += '<button type="button" class="tg" data-t="' + i + '">' + esc(TAGS[i]) + '<em>' + c[i] + '</em></button>';
       if (!bs) return '';
-      return '<div class="tgrp"><h4>' + g[0] + '</h4><div class="tgw">' + bs + '</div></div>';
+      var gk = g[3] || '', badge = gk ? '<small class="kb2 g-' + gk + '">' + GNM[gk] + '</small>' : '';
+      return '<div class="tgrp' + (gk ? ' t-' + gk : '') + '"><h4>' + badge + g[0] + '</h4><div class="tgw">' + bs + '</div></div>';
     }).join('');
     w.addEventListener('click', function (e) {
       var b = e.target.closest('.tg'); if (!b) return;
       var t = +b.dataset.t, k = qtags.indexOf(t);
       if (k >= 0) qtags.splice(k, 1); else qtags.push(t);
-      syncTags(); render();
+      setTags(qtags); if (qtags.length) jumpList();
     });
     var q = $('qbox'), tm = null;
     q.addEventListener('input', function () { clearTimeout(tm); tm = setTimeout(function () { qtext = q.value; render(); }, 250); });
@@ -797,8 +803,16 @@
   })();
   function syncTags() {
     Array.prototype.forEach.call(document.querySelectorAll('#tagwrap .tg'), function (b) { b.classList.toggle('on', qtags.indexOf(+b.dataset.t) >= 0); });
-    var on = $('tagon'); if (on) on.textContent = qtags.length ? qtags.length + ' 個選択中' : '';
+    // 帯の中に，選んでいる単元を出す（× で外せる）
+    var on = $('tagon2'); if (!on) return;
+    on.hidden = !qtags.length;
+    on.innerHTML = qtags.length ? '<span>単元：</span>' + qtags.map(function (t) { return '<button type="button" class="tg" data-t="' + t + '">#' + esc(TAGS[t]) + '<b>✕</b></button>'; }).join('') + '<a id="tagmore">単元を選び直す</a>' : '';
   }
+  $('tagon2').addEventListener('click', function (e) {
+    var b = e.target.closest('.tg');
+    if (b) { var k = qtags.indexOf(+b.dataset.t); if (k >= 0) qtags.splice(k, 1); setTags(qtags); return; }
+    if (e.target.id === 'tagmore') { var t = $('tsec'); window.scrollTo({ top: t.getBoundingClientRect().top + window.pageYOffset - 8, behavior: 'smooth' }); }
+  });
   M.addEventListener('click', function (e) {
     var b = e.target.closest('.tgs .tg'); if (!b) return;
     var q = $('qbox'); qtext = ''; if (q) q.value = '';
