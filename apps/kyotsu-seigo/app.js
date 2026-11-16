@@ -1197,6 +1197,7 @@
     if (th === 'auto') th = window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     de.setAttribute('data-theme', th);
     var mt = document.querySelector('meta[name="theme-color"]'); if (mt) mt.content = th === 'dark' ? '#0f1420' : '#13254a';
+    if (window.CFC_OSHI) CFC_OSHI.apply(CFG);
   }
   if (window.matchMedia) { var mq = matchMedia('(prefers-color-scheme: dark)'); if (mq.addEventListener) mq.addEventListener('change', applyCfg); }
   applyCfg();
@@ -1234,6 +1235,44 @@
     toast(v ? 'ニックネームを「' + v + '」にしました' : 'ニックネームを消しました');
   });
   $('cfgClose').onclick = function () { cfg.classList.remove('on'); };
+
+  // ---------------------------------------------------------------- 着せ替え（推し色・差し色）
+  (function oshiUI() {
+    var O = window.CFC_OSHI; if (!O) return;
+    var bm = $('oshiM'), ba = $('oshiA');
+    function cur() { var m = O.MAIN[CFG.oc] ? CFG.oc : 'navy'; return { m: m, a: O.ACC[CFG.ac] ? CFG.ac : O.MAIN[m][2] }; }
+    function sync() {
+      var c = cur();
+      Array.prototype.forEach.call(bm.children, function (b) { b.classList.toggle('on', b.dataset.k === c.m); });
+      Array.prototype.forEach.call(ba.children, function (b) { b.classList.toggle('on', b.dataset.k === c.a); b.classList.toggle('rec', b.dataset.k === O.MAIN[c.m][2]); });
+      $('oshiN1').textContent = O.MAIN[c.m][0];
+      $('oshiN2').textContent = O.ACC[c.a][0] + (c.a === O.MAIN[c.m][2] ? '（おすすめ）' : '');
+    }
+    function save() { sv('cfc-cfg', CFG); applyCfg(); sync(); }
+    Object.keys(O.MAIN).forEach(function (k) {
+      var b = document.createElement('button'); b.type = 'button'; b.dataset.k = k; b.style.background = O.MAIN[k][1];
+      b.setAttribute('aria-label', '推し色 ' + O.MAIN[k][0]); b.title = O.MAIN[k][0];
+      b.onclick = function () { CFG.oc = k; delete CFG.ac; save(); };
+      bm.appendChild(b);
+    });
+    Object.keys(O.ACC).forEach(function (k) {
+      var b = document.createElement('button'); b.type = 'button'; b.dataset.k = k; b.style.background = O.ACC[k][1];
+      b.setAttribute('aria-label', '差し色 ' + O.ACC[k][0]); b.title = O.ACC[k][0];
+      b.onclick = function () { CFG.ac = k; save(); };
+      ba.appendChild(b);
+    });
+    $('oshiReset').onclick = function () { delete CFG.oc; delete CFG.ac; save(); };
+    sync();
+    // お知らせ（はじめて開いたとき）
+    var NEWS = 'oshi1', nn = $('newsNote');
+    var seen = ''; try { seen = localStorage.getItem('cfc-news') || ''; } catch (e) { }
+    function done() { try { localStorage.setItem('cfc-news', NEWS); } catch (e) { } nn.hidden = true; }
+    if (nn && seen !== NEWS) {
+      nn.hidden = false;
+      $('newsX').onclick = done;
+      $('newsGo').onclick = function () { done(); openCfg(); setTimeout(function () { var o = $('oshiSet'); if (o) o.scrollIntoView({ block: 'start', behavior: 'smooth' }); }, 60); };
+    }
+  })();
   cfg.addEventListener('click', function (e) { if (e.target === cfg) cfg.classList.remove('on'); });
   cfg.addEventListener('change', function (e) {
     if (e.target.name === 'fz') { CFG.fz = +e.target.value; sv('cfc-cfg', CFG); applyCfg(); }

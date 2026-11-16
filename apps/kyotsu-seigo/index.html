@@ -2,8 +2,69 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
+<script>/* 推し色・差し色の着せ替え．紺（今の色）以外を選んだときだけ，色の変数を上書きする */
+(function () {
+  var MAIN = { navy: ['紺', '#13254a', 'gold'], red: ['赤', '#c8323f', 'champ'], orange: ['オレンジ', '#e07a1f', 'teal'], yellow: ['黄', '#e8b923', 'navy'],
+    green: ['緑', '#1f9461', 'coral'], sky: ['水色', '#2a9fd6', 'lemon'], blue: ['青', '#2f5fc8', 'orange'], purple: ['紫', '#7b4fc8', 'mint'],
+    pink: ['ピンク', '#e05592', 'sky'], black: ['黒', '#1f1f22', 'rose'] };
+  var ACC = { gold: ['金', '#c49a45'], champ: ['シャンパン', '#c8ad84'], silver: ['シルバー', '#9aa4b2'], rose: ['ローズ', '#d9778a'], coral: ['コーラル', '#e8896b'],
+    orange: ['オレンジ', '#e99a3c'], lemon: ['レモン', '#e3c548'], mint: ['ミント', '#5fbfa4'], teal: ['ティール', '#2f948b'], sky: ['スカイ', '#6fb3dc'],
+    navy: ['ネイビー', '#2f3d66'], lavender: ['ラベンダー', '#9d8ad6'], pink: ['ピンク', '#e994b8'] };
+  function rgb(h) { h = h.replace('#', ''); return [0, 2, 4].map(function (i) { return parseInt(h.substr(i, 2), 16); }); }
+  function hex(a) { return '#' + a.map(function (v) { v = Math.max(0, Math.min(255, Math.round(v))); return (v < 16 ? '0' : '') + v.toString(16); }).join(''); }
+  function mix(a, b, k) { var x = rgb(a), y = rgb(b); return hex(x.map(function (v, i) { return v * (1 - k) + y[i] * k; })); }
+  function lum(h) { return rgb(h).map(function (v) { v /= 255; return v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); }).reduce(function (s, v, i) { return s + v * [.2126, .7152, .0722][i]; }, 0); }
+  function cr(a, b) { var x = lum(a), y = lum(b); return (Math.max(x, y) + .05) / (Math.min(x, y) + .05); }
+  function darkTo(h, bg, r) { var c = h, n = 0; while (cr(c, bg) < r && n < 20) { c = mix(c, '#000000', .1); n++; } return c; }
+  function lightTo(h, bg, r) { var c = h, n = 0; while (cr(c, bg) < r && n < 20) { c = mix(c, '#ffffff', .1); n++; } return c; }
+  function dist(a, b) { var x = rgb(a), y = rgb(b); return Math.sqrt(x.reduce(function (s, v, i) { return s + (v - y[i]) * (v - y[i]); }, 0)); }
+  var KEYS = ['--navy', '--navy2', '--navy3', '--navyD', '--hd', '--teal', '--soft', '--gold', '--gold2', '--onGold', '--gc-bg', '--gc-bd', '--gc-ac', '--gc-bb', '--gc-bt',
+    '--kr-bg', '--kr-fg', '--kr-bd', '--km-bg', '--km-fg', '--km-bd', '--ky-bg', '--ky-fg', '--ky-bd', '--pt-riron', '--pt-muki', '--pt-yuki'];
+  function enc(h) { return '%23' + h.slice(1); }
+  window.CFC_OSHI = { MAIN: MAIN, ACC: ACC,
+    apply: function (cfg) {
+      var de = document.documentElement, st = de.style;
+      var mk = cfg && MAIN[cfg.oc] ? cfg.oc : 'navy', ak = cfg && ACC[cfg.ac] ? cfg.ac : MAIN[mk][2];
+      KEYS.forEach(function (k) { st.removeProperty(k); });
+      var dark = de.getAttribute('data-theme') === 'dark';
+      var mt = document.querySelector('meta[name="theme-color"]');
+      if (mk === 'navy' && ak === 'gold') { if (mt) mt.content = dark ? '#0f1420' : '#13254a'; return; }
+      var P = MAIN[mk][1], A = ACC[ak][1];
+      var Pp = darkTo(P, '#ffffff', 3.4);                       // 白い文字がのる推し色
+      var hdL = darkTo(P, '#ffffff', 8);                        // 見出しの文字（ライト）
+      // 差し色が推し色と近いときは，明るさをずらして見分けられるようにする
+      if (dist(A, Pp) < 110) A = lum(Pp) < .2 ? mix(A, '#ffffff', .55) : mix(A, '#000000', .45);
+      if (dist(A, Pp) < 90) A = lum(Pp) < .2 ? '#e8d3a0' : '#2f3d66';
+      var onA = lum(A) > .4 ? darkTo(hdL, A, 4.5) : '#ffffff';
+      var v = { '--navy': Pp, '--navy2': mix(Pp, '#ffffff', .15), '--navy3': darkTo(mix(Pp, '#ffffff', .28), '#ffffff', 2.6), '--teal': Pp, '--gold': A, '--gold2': darkTo(A, '#ffffff', 3), '--onGold': onA };
+      var pat = function (k, col, op) {
+        var s = getComputedStyle(de).getPropertyValue('--ptL-' + k); if (!s) return null;
+        return s.split('%231d3566').join(enc(col)).replace(/stroke-opacity%3D%220\.17%22/g, 'stroke-opacity%3D%22' + op + '%22').replace(/fill-opacity%3D%220\.\d+%22/g, 'fill-opacity%3D%22' + op + '%22');
+      };
+      if (!dark) {
+        v['--hd'] = hdL; v['--soft'] = mix(P, '#f2f3f5', .92); v['--navyD'] = Pp;
+        v['--gc-bg'] = mix(P, '#ffffff', .91); v['--gc-bd'] = mix(P, '#ffffff', .76); v['--gc-ac'] = hdL; v['--gc-bb'] = mix(P, '#ffffff', .83); v['--gc-bt'] = hdL;
+        v['--kr-bg'] = mix(P, '#ffffff', .85); v['--kr-fg'] = hdL; v['--kr-bd'] = mix(P, '#ffffff', .68);
+        var km = darkTo(mix(Pp, '#ffffff', .3), '#ffffff', 3); v['--km-bg'] = km; v['--km-fg'] = '#ffffff'; v['--km-bd'] = km;
+        v['--ky-bg'] = hdL; v['--ky-fg'] = lightTo(mix(A, '#ffffff', .25), hdL, 4.5); v['--ky-bd'] = hdL;
+        ['riron', 'muki', 'yuki'].forEach(function (k) { var s = pat(k, hdL, '0.17'); if (s) v['--pt-' + k] = s; });
+      } else {
+        var bgD = '#151b28', hdD = lightTo(mix(P, '#ffffff', .55), '#171d2b', 8);
+        var nD = Pp; var n = 0; while (lum(nD) < .09 && n < 8) { nD = mix(nD, '#ffffff', .1); n++; } nD = darkTo(nD, '#ffffff', 3);
+        v['--navy'] = nD; v['--hd'] = hdD; v['--soft'] = mix(P, '#222a3b', .86); v['--navyD'] = nD;
+        v['--gc-bg'] = mix(P, bgD, .84); v['--gc-bd'] = mix(P, bgD, .62); v['--gc-ac'] = hdD; v['--gc-bb'] = mix(P, bgD, .66); v['--gc-bt'] = hdD;
+        v['--kr-bg'] = mix(P, bgD, .66); v['--kr-fg'] = hdD; v['--kr-bd'] = mix(P, bgD, .5);
+        v['--km-bg'] = nD; v['--km-fg'] = '#ffffff'; v['--km-bd'] = nD;
+        v['--ky-bg'] = hdD; v['--ky-fg'] = darkTo(P, hdD, 5); v['--ky-bd'] = hdD;
+        ['riron', 'muki', 'yuki'].forEach(function (k) { var s = pat(k, mix(P, '#ffffff', .8), '0.13'); if (s) v['--pt-' + k] = s; });
+      }
+      Object.keys(v).forEach(function (k) { st.setProperty(k, v[k]); });
+      if (mt) mt.content = dark ? '#0f1420' : Pp;
+    } };
+})();
+</script>
 <script>(function(){var ok=false;try{ok=sessionStorage.getItem("pw_化学")==="ok";}catch(e){}try{if(ok)localStorage.setItem("cfc-auth","ok");else ok=localStorage.getItem("cfc-auth")==="ok";}catch(e){}if(!ok){location.replace("/pdf-site/");return;}
-try{var c=JSON.parse(localStorage.getItem("cfc-cfg")||"{}")||{},d=document.documentElement,t=c.th||"light";if(t==="auto")t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";d.setAttribute("data-theme",t);if(c.fz)d.style.setProperty("--fz",c.fz);}catch(e){}})();</script>
+try{var c=JSON.parse(localStorage.getItem("cfc-cfg")||"{}")||{},d=document.documentElement,t=c.th||"light";if(t==="auto")t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";d.setAttribute("data-theme",t);if(c.fz)d.style.setProperty("--fz",c.fz);if(window.CFC_OSHI)CFC_OSHI.apply(c);}catch(e){}})();</script>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#13254a">
 <link rel="apple-touch-icon" href="icon-180.png">
@@ -15,15 +76,15 @@ try{var c=JSON.parse(localStorage.getItem("cfc-cfg")||"{}")||{},d=document.docum
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>化学ファイナルチェックお試し</title>
-<link rel="stylesheet" href="katex/katex.min.css?v=202611160430">
+<link rel="stylesheet" href="katex/katex.min.css?v=202611160728">
 <style>
-:root{--navy:#13254a;--teal:#1f4e8c;--amber:#d18f1f;--ink:#1f2328;--sub:#5b6270;--line:#e3e6ea;--line2:#cfd5dc;--bg:#f6f7f9;--card:#fff;--soft:#eef1f5;--glass:rgba(255,255,255,.97);--hd:#13254a;--ok:#1a7f4b;--ng:#c0392b;--okbg:#e8f5ee;--ngbg:#fbeceb;--fz:1}
-html[data-theme="dark"]{--ink:#e6e8ee;--sub:#9aa2b2;--line:#2c3446;--line2:#3a4357;--bg:#0f1420;--card:#171d2b;--soft:#222a3b;--glass:rgba(23,29,43,.97);--hd:#cdd9f3;--ok:#3fbf7f;--ng:#ff6b5e;--okbg:#14301f;--ngbg:#3a1b1b;--teal:#5b8fd9;color-scheme:dark}
+:root{--navy:#13254a;--teal:#1f4e8c;--amber:#d18f1f;--ink:#1f2328;--sub:#5b6270;--line:#e3e6ea;--line2:#cfd5dc;--bg:#f6f7f9;--card:#fff;--soft:#eef1f5;--glass:rgba(255,255,255,.97);--hd:#13254a;--onGold:#13254a;--navyD:#13254a;--ok:#1a7f4b;--ng:#c0392b;--okbg:#e8f5ee;--ngbg:#fbeceb;--fz:1}
+html[data-theme="dark"]{--ink:#e6e8ee;--sub:#9aa2b2;--line:#2c3446;--line2:#3a4357;--bg:#0f1420;--card:#171d2b;--soft:#222a3b;--glass:rgba(23,29,43,.97);--hd:#cdd9f3;--ok:#3fbf7f;--ng:#ff6b5e;--okbg:#14301f;--ngbg:#3a1b1b;--teal:#5b8fd9;--navyD:#2c5394;color-scheme:dark}
 html[data-theme="dark"] .fig,html[data-theme="dark"] .ifig{filter:invert(.92) hue-rotate(180deg)}
 html[data-theme="dark"] .orig img{background:#fff}
 html[data-theme="dark"] header.cover::before{opacity:.18}
 html[data-theme="dark"] .cv-el span{background:transparent;border-color:var(--hd);color:var(--hd)}
-html[data-theme="dark"] .cv-el span.c{background:var(--gold);color:#13254a;border-color:var(--gold)}
+html[data-theme="dark"] .cv-el span.c{background:var(--gold);color:var(--onGold);border-color:var(--gold)}
 html[data-theme="dark"] .cv-series{color:var(--sub);border-color:var(--line2)}
 html[data-theme="dark"] .cv-sub{color:var(--sub)}
 html[data-theme="dark"] .cv-en{color:var(--hd)}
@@ -66,9 +127,9 @@ header.cover::before{content:"";position:absolute;inset:0;background-image:url("
 .intro summary{cursor:pointer;color:var(--hd);font-weight:700}
 /* 演習モードボタン */
 .go-run{display:flex;align-items:center;gap:14px;width:100%;margin:14px 0 6px;border:0;border-radius:14px;cursor:pointer;text-align:left;
-  background:linear-gradient(120deg,var(--navy) 0%,var(--navy2) 70%,#284a8a 100%);color:#fff;padding:14px 16px;box-shadow:0 6px 18px rgba(19,37,74,.28);position:relative;overflow:hidden}
+  background:linear-gradient(120deg,var(--navy) 0%,var(--navy2) 70%,var(--navy3,#284a8a) 100%);color:#fff;padding:14px 16px;box-shadow:0 6px 18px rgba(19,37,74,.28);position:relative;overflow:hidden}
 .go-run::after{content:"";position:absolute;right:-30px;top:-30px;width:120px;height:120px;border:10px solid rgba(196,154,69,.22);border-radius:50%}
-.go-run .gi{flex:none;width:46px;height:46px;border-radius:12px;background:var(--gold);color:var(--hd);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:900}
+.go-run .gi{flex:none;width:46px;height:46px;border-radius:12px;background:var(--gold);color:var(--onGold);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:900}
 .go-run .gt{flex:1;min-width:0}
 .go-run .gt b{display:block;font-size:18px;letter-spacing:.04em}
 .go-run .gt span{display:block;font-size:12px;opacity:.85;margin-top:2px}
@@ -280,8 +341,8 @@ table.tb td{border:1px solid #888;padding:3px 8px}
 .tgw{display:flex;flex-wrap:wrap;gap:6px}
 .tg{border:1px solid var(--line2);background:var(--card);color:var(--ink);border-radius:999px;padding:4px 10px;font-size:12.5px;cursor:pointer}
 .tg em{font-style:normal;font-size:10.5px;color:var(--sub);margin-left:3px}
-.tg.on{background:var(--gold);border-color:var(--gold);color:#13254a;font-weight:700}
-.tg.on em{color:#13254a}
+.tg.on{background:var(--gold);border-color:var(--gold);color:var(--onGold);font-weight:700}
+.tg.on em{color:var(--onGold)}
 .tgs{display:flex;flex-wrap:wrap;gap:4px;padding:6px 12px 0}
 .tgs .tg{font-size:11px;padding:2px 8px;color:var(--sub)}
 .sinfo{display:flex;align-items:center;gap:8px;margin:10px 6px 8px;font-size:14px;color:var(--hd);font-weight:700;flex-wrap:wrap}
@@ -364,7 +425,7 @@ table.tb td{border:1px solid #888;padding:3px 8px}
 .dfoot:empty{display:none}
 body{padding-bottom:env(safe-area-inset-bottom)}
 html[data-theme="dark"] .opts input:checked+span{background:#1d3358;color:#cfe0ff;border-color:#5b8fd9}
-html[data-theme="dark"] .dnext,html[data-theme="dark"] .bline button:not(.sec),html[data-theme="dark"] .cfgb .row button.pri,html[data-theme="dark"] .reveal,html[data-theme="dark"] .top{background:#2c5394;border-color:#2c5394}
+html[data-theme="dark"] .dnext,html[data-theme="dark"] .bline button:not(.sec),html[data-theme="dark"] .cfgb .row button.pri,html[data-theme="dark"] .reveal,html[data-theme="dark"] .top{background:var(--navyD);border-color:var(--navyD)}
 html[data-theme="dark"] .setup{background:rgba(0,0,0,.55)}
 
 .bknote{display:flex;gap:10px;align-items:center;flex-wrap:wrap;border:1px solid var(--gold);background:var(--card);border-radius:12px;padding:10px 12px;margin:2px 0 8px;font-size:12.5px;line-height:1.6;color:var(--ink)}
@@ -383,8 +444,8 @@ html[data-theme="dark"] .course{background:var(--soft)}
 .course button b{display:block;font-size:14.5px;color:inherit}
 .course button small{display:block;font-size:10.5px;color:inherit;opacity:.85}
 .course button.on{background:var(--navy);color:#fff;box-shadow:0 1px 4px rgba(0,0,0,.18)}
-html[data-theme="dark"] .course button.on{background:#2c5394}
-.kb2{display:inline-block;font-size:9.5px;font-weight:700;line-height:1;padding:2px 4px;margin:0 4px 0 2px;border-radius:4px;background:var(--gold);color:#13254a;vertical-align:2px;letter-spacing:.02em;font-family:inherit}
+html[data-theme="dark"] .course button.on{background:var(--navyD)}
+.kb2{display:inline-block;font-size:9.5px;font-weight:700;line-height:1;padding:2px 4px;margin:0 4px 0 2px;border-radius:4px;background:var(--gold);color:var(--onGold);vertical-align:2px;letter-spacing:.02em;font-family:inherit}
 .chc .cn .kb2{font-size:10px;vertical-align:4px;margin-left:6px}
 label[hidden]{display:none!important}
 body.kiso .kb2,body.kiso .ichem{display:none}
@@ -399,7 +460,7 @@ body.kiso .kb2,body.kiso .ichem{display:none}
 
 /* ---- 章の色分け：化学基礎＝淡い黄色，化学＝淡い紺．化学は理論（グラフ）・無機（結晶格子）・有機（ベンゼン環）の模様 */
 :root{--gk-bg:#fdf8e5;--gk-bd:#eee0ad;--gk-ac:#9c7a1b;--gk-bb:#f6e9b9;--gk-bt:#7a5d10;
---gc-bg:#edf1f9;--gc-bd:#cfd8eb;--gc-ac:#1d3566;--gc-bb:#dde4f2;--gc-bt:#1d3566;--pt-riron:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 92 74%22%3E%3Cg stroke=%22%231d3566%22 stroke-opacity=%220.17%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.7%22%3E%3Cpath d=%22M33 3H41V40H33Z%22/%3E%3Cpath d=%22M37 40V46%22/%3E%3Cpath d=%22M31 43H43%22/%3E%3Cpath d=%22M37 46L36 51%22/%3E%3Cpath d=%22M70 72V5%22/%3E%3Cpath d=%22M41 12H70%22/%3E%3Cpath d=%22M58 72H84%22/%3E%3Cpath d=%22M30 55H44%22/%3E%3Cpath d=%22M32 55V60L19 72H55L42 60V55%22/%3E%3C/g%3E%3Cg stroke=%22%231d3566%22 stroke-opacity=%220.17%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.1%22%3E%3Cpath d=%22M33 9H38%22/%3E%3Cpath d=%22M33 14H36%22/%3E%3Cpath d=%22M33 19H38%22/%3E%3Cpath d=%22M33 24H36%22/%3E%3Cpath d=%22M33 29H38%22/%3E%3Cpath d=%22M33 34H36%22/%3E%3C/g%3E%3Cpath d=%22M24 67H50L55 72H19Z%22 fill=%22%231d3566%22 fill-opacity=%220.09%22 stroke=%22none%22/%3E%3Cpath d=%22M34 24H40V40H34Z%22 fill=%22%231d3566%22 fill-opacity=%220.09%22 stroke=%22none%22/%3E%3C/svg%3E");--pt-muki:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 92 74%22%3E%3Cg stroke=%22%231d3566%22 stroke-opacity=%220.17%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.7%22%3E%3Cpath d=%22M46.0 30.0L46.0 11.0%22/%3E%3Cpath d=%22M46.0 44.0L46.0 63.0%22/%3E%3Cpath d=%22M39.1 37.9L19.0 40.5%22/%3E%3Cpath d=%22M52.9 36.1L73.0 33.5%22/%3E%3Cpath d=%22M41.5 42.4L33.6 51.9%22/%3E%3Cpath d=%22M12.0 44.0L9.0 56.0L19.0 63.0L27.5 57.5%22/%3E%3C/g%3E%3Cg stroke=%22%231d3566%22 stroke-opacity=%220.17%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.5%22%3E%3Cpath d=%22M50.5 31.6L58.4 22.1%22 stroke-dasharray=%223 3%22/%3E%3C/g%3E%3Ccircle cx=%2246%22 cy=%2237%22 r=%227%22 stroke=%22%231d3566%22 stroke-opacity=%220.17%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%222%22/%3E%3Cg fill=%22%231d3566%22 fill-opacity=%220.22%22%3E%3Ccircle cx=%2246%22 cy=%227%22 r=%223.8%22/%3E%3Ccircle cx=%2246%22 cy=%2267%22 r=%223.8%22/%3E%3Ccircle cx=%2215%22 cy=%2241%22 r=%223.8%22/%3E%3Ccircle cx=%2277%22 cy=%2233%22 r=%223.8%22/%3E%3Ccircle cx=%2231%22 cy=%2255%22 r=%223.8%22/%3E%3Ccircle cx=%2261%22 cy=%2219%22 r=%223.8%22/%3E%3Ccircle cx=%2246%22 cy=%2237%22 r=%223.2%22/%3E%3C/g%3E%3C/svg%3E");--pt-yuki:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 92 70%22%3E%3Cg stroke=%22%231d3566%22 stroke-opacity=%220.17%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.8%22%3E%3Cpath d=%22M40.0 16.0 L19.2 28.0 L19.2 52.0 L40.0 64.0 L60.8 52.0 L60.8 28.0Z%22/%3E%3Cpath d=%22M38.8 22.5L25.5 30.2%22/%3E%3Cpath d=%22M25.5 49.8L38.8 57.5%22/%3E%3Cpath d=%22M55.8 47.7L55.8 32.3%22/%3E%3Cpath d=%22M40.0 16.0V2%22/%3E%3Cpath d=%22M60.8 52.0L75.8 60.5L89.8 52.0%22/%3E%3C/g%3E%3C/svg%3E");--pt-riron-on:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 92 74%22%3E%3Cg stroke=%22%23ffffff%22 stroke-opacity=%220.22%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.7%22%3E%3Cpath d=%22M33 3H41V40H33Z%22/%3E%3Cpath d=%22M37 40V46%22/%3E%3Cpath d=%22M31 43H43%22/%3E%3Cpath d=%22M37 46L36 51%22/%3E%3Cpath d=%22M70 72V5%22/%3E%3Cpath d=%22M41 12H70%22/%3E%3Cpath d=%22M58 72H84%22/%3E%3Cpath d=%22M30 55H44%22/%3E%3Cpath d=%22M32 55V60L19 72H55L42 60V55%22/%3E%3C/g%3E%3Cg stroke=%22%23ffffff%22 stroke-opacity=%220.22%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.1%22%3E%3Cpath d=%22M33 9H38%22/%3E%3Cpath d=%22M33 14H36%22/%3E%3Cpath d=%22M33 19H38%22/%3E%3Cpath d=%22M33 24H36%22/%3E%3Cpath d=%22M33 29H38%22/%3E%3Cpath d=%22M33 34H36%22/%3E%3C/g%3E%3Cpath d=%22M24 67H50L55 72H19Z%22 fill=%22%23ffffff%22 fill-opacity=%220.12%22 stroke=%22none%22/%3E%3Cpath d=%22M34 24H40V40H34Z%22 fill=%22%23ffffff%22 fill-opacity=%220.12%22 stroke=%22none%22/%3E%3C/svg%3E");--pt-muki-on:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 92 74%22%3E%3Cg stroke=%22%23ffffff%22 stroke-opacity=%220.22%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.7%22%3E%3Cpath d=%22M46.0 30.0L46.0 11.0%22/%3E%3Cpath d=%22M46.0 44.0L46.0 63.0%22/%3E%3Cpath d=%22M39.1 37.9L19.0 40.5%22/%3E%3Cpath d=%22M52.9 36.1L73.0 33.5%22/%3E%3Cpath d=%22M41.5 42.4L33.6 51.9%22/%3E%3Cpath d=%22M12.0 44.0L9.0 56.0L19.0 63.0L27.5 57.5%22/%3E%3C/g%3E%3Cg stroke=%22%23ffffff%22 stroke-opacity=%220.22%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.5%22%3E%3Cpath d=%22M50.5 31.6L58.4 22.1%22 stroke-dasharray=%223 3%22/%3E%3C/g%3E%3Ccircle cx=%2246%22 cy=%2237%22 r=%227%22 stroke=%22%23ffffff%22 stroke-opacity=%220.22%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%222%22/%3E%3Cg fill=%22%23ffffff%22 fill-opacity=%220.29%22%3E%3Ccircle cx=%2246%22 cy=%227%22 r=%223.8%22/%3E%3Ccircle cx=%2246%22 cy=%2267%22 r=%223.8%22/%3E%3Ccircle cx=%2215%22 cy=%2241%22 r=%223.8%22/%3E%3Ccircle cx=%2277%22 cy=%2233%22 r=%223.8%22/%3E%3Ccircle cx=%2231%22 cy=%2255%22 r=%223.8%22/%3E%3Ccircle cx=%2261%22 cy=%2219%22 r=%223.8%22/%3E%3Ccircle cx=%2246%22 cy=%2237%22 r=%223.2%22/%3E%3C/g%3E%3C/svg%3E");--pt-yuki-on:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 92 70%22%3E%3Cg stroke=%22%23ffffff%22 stroke-opacity=%220.22%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.8%22%3E%3Cpath d=%22M40.0 16.0 L19.2 28.0 L19.2 52.0 L40.0 64.0 L60.8 52.0 L60.8 28.0Z%22/%3E%3Cpath d=%22M38.8 22.5L25.5 30.2%22/%3E%3Cpath d=%22M25.5 49.8L38.8 57.5%22/%3E%3Cpath d=%22M55.8 47.7L55.8 32.3%22/%3E%3Cpath d=%22M40.0 16.0V2%22/%3E%3Cpath d=%22M60.8 52.0L75.8 60.5L89.8 52.0%22/%3E%3C/g%3E%3C/svg%3E")}
+--gc-bg:#edf1f9;--gc-bd:#cfd8eb;--gc-ac:#1d3566;--gc-bb:#dde4f2;--gc-bt:#1d3566;--pt-riron:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 92 74%22%3E%3Cg stroke=%22%231d3566%22 stroke-opacity=%220.17%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.7%22%3E%3Cpath d=%22M33 3H41V40H33Z%22/%3E%3Cpath d=%22M37 40V46%22/%3E%3Cpath d=%22M31 43H43%22/%3E%3Cpath d=%22M37 46L36 51%22/%3E%3Cpath d=%22M70 72V5%22/%3E%3Cpath d=%22M41 12H70%22/%3E%3Cpath d=%22M58 72H84%22/%3E%3Cpath d=%22M30 55H44%22/%3E%3Cpath d=%22M32 55V60L19 72H55L42 60V55%22/%3E%3C/g%3E%3Cg stroke=%22%231d3566%22 stroke-opacity=%220.17%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.1%22%3E%3Cpath d=%22M33 9H38%22/%3E%3Cpath d=%22M33 14H36%22/%3E%3Cpath d=%22M33 19H38%22/%3E%3Cpath d=%22M33 24H36%22/%3E%3Cpath d=%22M33 29H38%22/%3E%3Cpath d=%22M33 34H36%22/%3E%3C/g%3E%3Cpath d=%22M24 67H50L55 72H19Z%22 fill=%22%231d3566%22 fill-opacity=%220.09%22 stroke=%22none%22/%3E%3Cpath d=%22M34 24H40V40H34Z%22 fill=%22%231d3566%22 fill-opacity=%220.09%22 stroke=%22none%22/%3E%3C/svg%3E");--pt-muki:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 92 74%22%3E%3Cg stroke=%22%231d3566%22 stroke-opacity=%220.17%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.7%22%3E%3Cpath d=%22M46.0 30.0L46.0 11.0%22/%3E%3Cpath d=%22M46.0 44.0L46.0 63.0%22/%3E%3Cpath d=%22M39.1 37.9L19.0 40.5%22/%3E%3Cpath d=%22M52.9 36.1L73.0 33.5%22/%3E%3Cpath d=%22M41.5 42.4L33.6 51.9%22/%3E%3Cpath d=%22M12.0 44.0L9.0 56.0L19.0 63.0L27.5 57.5%22/%3E%3C/g%3E%3Cg stroke=%22%231d3566%22 stroke-opacity=%220.17%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.5%22%3E%3Cpath d=%22M50.5 31.6L58.4 22.1%22 stroke-dasharray=%223 3%22/%3E%3C/g%3E%3Ccircle cx=%2246%22 cy=%2237%22 r=%227%22 stroke=%22%231d3566%22 stroke-opacity=%220.17%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%222%22/%3E%3Cg fill=%22%231d3566%22 fill-opacity=%220.22%22%3E%3Ccircle cx=%2246%22 cy=%227%22 r=%223.8%22/%3E%3Ccircle cx=%2246%22 cy=%2267%22 r=%223.8%22/%3E%3Ccircle cx=%2215%22 cy=%2241%22 r=%223.8%22/%3E%3Ccircle cx=%2277%22 cy=%2233%22 r=%223.8%22/%3E%3Ccircle cx=%2231%22 cy=%2255%22 r=%223.8%22/%3E%3Ccircle cx=%2261%22 cy=%2219%22 r=%223.8%22/%3E%3Ccircle cx=%2246%22 cy=%2237%22 r=%223.2%22/%3E%3C/g%3E%3C/svg%3E");--pt-yuki:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 92 70%22%3E%3Cg stroke=%22%231d3566%22 stroke-opacity=%220.17%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.8%22%3E%3Cpath d=%22M40.0 16.0 L19.2 28.0 L19.2 52.0 L40.0 64.0 L60.8 52.0 L60.8 28.0Z%22/%3E%3Cpath d=%22M38.8 22.5L25.5 30.2%22/%3E%3Cpath d=%22M25.5 49.8L38.8 57.5%22/%3E%3Cpath d=%22M55.8 47.7L55.8 32.3%22/%3E%3Cpath d=%22M40.0 16.0V2%22/%3E%3Cpath d=%22M60.8 52.0L75.8 60.5L89.8 52.0%22/%3E%3C/g%3E%3C/svg%3E");--pt-riron-on:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 92 74%22%3E%3Cg stroke=%22%23ffffff%22 stroke-opacity=%220.22%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.7%22%3E%3Cpath d=%22M33 3H41V40H33Z%22/%3E%3Cpath d=%22M37 40V46%22/%3E%3Cpath d=%22M31 43H43%22/%3E%3Cpath d=%22M37 46L36 51%22/%3E%3Cpath d=%22M70 72V5%22/%3E%3Cpath d=%22M41 12H70%22/%3E%3Cpath d=%22M58 72H84%22/%3E%3Cpath d=%22M30 55H44%22/%3E%3Cpath d=%22M32 55V60L19 72H55L42 60V55%22/%3E%3C/g%3E%3Cg stroke=%22%23ffffff%22 stroke-opacity=%220.22%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.1%22%3E%3Cpath d=%22M33 9H38%22/%3E%3Cpath d=%22M33 14H36%22/%3E%3Cpath d=%22M33 19H38%22/%3E%3Cpath d=%22M33 24H36%22/%3E%3Cpath d=%22M33 29H38%22/%3E%3Cpath d=%22M33 34H36%22/%3E%3C/g%3E%3Cpath d=%22M24 67H50L55 72H19Z%22 fill=%22%23ffffff%22 fill-opacity=%220.12%22 stroke=%22none%22/%3E%3Cpath d=%22M34 24H40V40H34Z%22 fill=%22%23ffffff%22 fill-opacity=%220.12%22 stroke=%22none%22/%3E%3C/svg%3E");--pt-muki-on:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 92 74%22%3E%3Cg stroke=%22%23ffffff%22 stroke-opacity=%220.22%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.7%22%3E%3Cpath d=%22M46.0 30.0L46.0 11.0%22/%3E%3Cpath d=%22M46.0 44.0L46.0 63.0%22/%3E%3Cpath d=%22M39.1 37.9L19.0 40.5%22/%3E%3Cpath d=%22M52.9 36.1L73.0 33.5%22/%3E%3Cpath d=%22M41.5 42.4L33.6 51.9%22/%3E%3Cpath d=%22M12.0 44.0L9.0 56.0L19.0 63.0L27.5 57.5%22/%3E%3C/g%3E%3Cg stroke=%22%23ffffff%22 stroke-opacity=%220.22%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.5%22%3E%3Cpath d=%22M50.5 31.6L58.4 22.1%22 stroke-dasharray=%223 3%22/%3E%3C/g%3E%3Ccircle cx=%2246%22 cy=%2237%22 r=%227%22 stroke=%22%23ffffff%22 stroke-opacity=%220.22%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%222%22/%3E%3Cg fill=%22%23ffffff%22 fill-opacity=%220.29%22%3E%3Ccircle cx=%2246%22 cy=%227%22 r=%223.8%22/%3E%3Ccircle cx=%2246%22 cy=%2267%22 r=%223.8%22/%3E%3Ccircle cx=%2215%22 cy=%2241%22 r=%223.8%22/%3E%3Ccircle cx=%2277%22 cy=%2233%22 r=%223.8%22/%3E%3Ccircle cx=%2231%22 cy=%2255%22 r=%223.8%22/%3E%3Ccircle cx=%2261%22 cy=%2219%22 r=%223.8%22/%3E%3Ccircle cx=%2246%22 cy=%2237%22 r=%223.2%22/%3E%3C/g%3E%3C/svg%3E");--pt-yuki-on:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 92 70%22%3E%3Cg stroke=%22%23ffffff%22 stroke-opacity=%220.22%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.8%22%3E%3Cpath d=%22M40.0 16.0 L19.2 28.0 L19.2 52.0 L40.0 64.0 L60.8 52.0 L60.8 28.0Z%22/%3E%3Cpath d=%22M38.8 22.5L25.5 30.2%22/%3E%3Cpath d=%22M25.5 49.8L38.8 57.5%22/%3E%3Cpath d=%22M55.8 47.7L55.8 32.3%22/%3E%3Cpath d=%22M40.0 16.0V2%22/%3E%3Cpath d=%22M60.8 52.0L75.8 60.5L89.8 52.0%22/%3E%3C/g%3E%3C/svg%3E");--ptL-riron:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 92 74%22%3E%3Cg stroke=%22%231d3566%22 stroke-opacity=%220.17%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.7%22%3E%3Cpath d=%22M33 3H41V40H33Z%22/%3E%3Cpath d=%22M37 40V46%22/%3E%3Cpath d=%22M31 43H43%22/%3E%3Cpath d=%22M37 46L36 51%22/%3E%3Cpath d=%22M70 72V5%22/%3E%3Cpath d=%22M41 12H70%22/%3E%3Cpath d=%22M58 72H84%22/%3E%3Cpath d=%22M30 55H44%22/%3E%3Cpath d=%22M32 55V60L19 72H55L42 60V55%22/%3E%3C/g%3E%3Cg stroke=%22%231d3566%22 stroke-opacity=%220.17%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.1%22%3E%3Cpath d=%22M33 9H38%22/%3E%3Cpath d=%22M33 14H36%22/%3E%3Cpath d=%22M33 19H38%22/%3E%3Cpath d=%22M33 24H36%22/%3E%3Cpath d=%22M33 29H38%22/%3E%3Cpath d=%22M33 34H36%22/%3E%3C/g%3E%3Cpath d=%22M24 67H50L55 72H19Z%22 fill=%22%231d3566%22 fill-opacity=%220.09%22 stroke=%22none%22/%3E%3Cpath d=%22M34 24H40V40H34Z%22 fill=%22%231d3566%22 fill-opacity=%220.09%22 stroke=%22none%22/%3E%3C/svg%3E");--ptL-muki:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 92 74%22%3E%3Cg stroke=%22%231d3566%22 stroke-opacity=%220.17%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.7%22%3E%3Cpath d=%22M46.0 30.0L46.0 11.0%22/%3E%3Cpath d=%22M46.0 44.0L46.0 63.0%22/%3E%3Cpath d=%22M39.1 37.9L19.0 40.5%22/%3E%3Cpath d=%22M52.9 36.1L73.0 33.5%22/%3E%3Cpath d=%22M41.5 42.4L33.6 51.9%22/%3E%3Cpath d=%22M12.0 44.0L9.0 56.0L19.0 63.0L27.5 57.5%22/%3E%3C/g%3E%3Cg stroke=%22%231d3566%22 stroke-opacity=%220.17%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.5%22%3E%3Cpath d=%22M50.5 31.6L58.4 22.1%22 stroke-dasharray=%223 3%22/%3E%3C/g%3E%3Ccircle cx=%2246%22 cy=%2237%22 r=%227%22 stroke=%22%231d3566%22 stroke-opacity=%220.17%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%222%22/%3E%3Cg fill=%22%231d3566%22 fill-opacity=%220.22%22%3E%3Ccircle cx=%2246%22 cy=%227%22 r=%223.8%22/%3E%3Ccircle cx=%2246%22 cy=%2267%22 r=%223.8%22/%3E%3Ccircle cx=%2215%22 cy=%2241%22 r=%223.8%22/%3E%3Ccircle cx=%2277%22 cy=%2233%22 r=%223.8%22/%3E%3Ccircle cx=%2231%22 cy=%2255%22 r=%223.8%22/%3E%3Ccircle cx=%2261%22 cy=%2219%22 r=%223.8%22/%3E%3Ccircle cx=%2246%22 cy=%2237%22 r=%223.2%22/%3E%3C/g%3E%3C/svg%3E");--ptL-yuki:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 92 70%22%3E%3Cg stroke=%22%231d3566%22 stroke-opacity=%220.17%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.8%22%3E%3Cpath d=%22M40.0 16.0 L19.2 28.0 L19.2 52.0 L40.0 64.0 L60.8 52.0 L60.8 28.0Z%22/%3E%3Cpath d=%22M38.8 22.5L25.5 30.2%22/%3E%3Cpath d=%22M25.5 49.8L38.8 57.5%22/%3E%3Cpath d=%22M55.8 47.7L55.8 32.3%22/%3E%3Cpath d=%22M40.0 16.0V2%22/%3E%3Cpath d=%22M60.8 52.0L75.8 60.5L89.8 52.0%22/%3E%3C/g%3E%3C/svg%3E")}
 html[data-theme="dark"]{--gk-bg:#25220f;--gk-bd:#4b4320;--gk-ac:#e3c675;--gk-bb:#4a4019;--gk-bt:#f0d68e;
 --gc-bg:#192236;--gc-bd:#2e3d5c;--gc-ac:#a9c1ef;--gc-bb:#263757;--gc-bt:#c6d6f5;--pt-riron:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 92 74%22%3E%3Cg stroke=%22%23cdd9f3%22 stroke-opacity=%220.13%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.7%22%3E%3Cpath d=%22M33 3H41V40H33Z%22/%3E%3Cpath d=%22M37 40V46%22/%3E%3Cpath d=%22M31 43H43%22/%3E%3Cpath d=%22M37 46L36 51%22/%3E%3Cpath d=%22M70 72V5%22/%3E%3Cpath d=%22M41 12H70%22/%3E%3Cpath d=%22M58 72H84%22/%3E%3Cpath d=%22M30 55H44%22/%3E%3Cpath d=%22M32 55V60L19 72H55L42 60V55%22/%3E%3C/g%3E%3Cg stroke=%22%23cdd9f3%22 stroke-opacity=%220.13%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.1%22%3E%3Cpath d=%22M33 9H38%22/%3E%3Cpath d=%22M33 14H36%22/%3E%3Cpath d=%22M33 19H38%22/%3E%3Cpath d=%22M33 24H36%22/%3E%3Cpath d=%22M33 29H38%22/%3E%3Cpath d=%22M33 34H36%22/%3E%3C/g%3E%3Cpath d=%22M24 67H50L55 72H19Z%22 fill=%22%23cdd9f3%22 fill-opacity=%220.07%22 stroke=%22none%22/%3E%3Cpath d=%22M34 24H40V40H34Z%22 fill=%22%23cdd9f3%22 fill-opacity=%220.07%22 stroke=%22none%22/%3E%3C/svg%3E");--pt-muki:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 92 74%22%3E%3Cg stroke=%22%23cdd9f3%22 stroke-opacity=%220.13%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.7%22%3E%3Cpath d=%22M46.0 30.0L46.0 11.0%22/%3E%3Cpath d=%22M46.0 44.0L46.0 63.0%22/%3E%3Cpath d=%22M39.1 37.9L19.0 40.5%22/%3E%3Cpath d=%22M52.9 36.1L73.0 33.5%22/%3E%3Cpath d=%22M41.5 42.4L33.6 51.9%22/%3E%3Cpath d=%22M12.0 44.0L9.0 56.0L19.0 63.0L27.5 57.5%22/%3E%3C/g%3E%3Cg stroke=%22%23cdd9f3%22 stroke-opacity=%220.13%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.5%22%3E%3Cpath d=%22M50.5 31.6L58.4 22.1%22 stroke-dasharray=%223 3%22/%3E%3C/g%3E%3Ccircle cx=%2246%22 cy=%2237%22 r=%227%22 stroke=%22%23cdd9f3%22 stroke-opacity=%220.13%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%222%22/%3E%3Cg fill=%22%23cdd9f3%22 fill-opacity=%220.17%22%3E%3Ccircle cx=%2246%22 cy=%227%22 r=%223.8%22/%3E%3Ccircle cx=%2246%22 cy=%2267%22 r=%223.8%22/%3E%3Ccircle cx=%2215%22 cy=%2241%22 r=%223.8%22/%3E%3Ccircle cx=%2277%22 cy=%2233%22 r=%223.8%22/%3E%3Ccircle cx=%2231%22 cy=%2255%22 r=%223.8%22/%3E%3Ccircle cx=%2261%22 cy=%2219%22 r=%223.8%22/%3E%3Ccircle cx=%2246%22 cy=%2237%22 r=%223.2%22/%3E%3C/g%3E%3C/svg%3E");--pt-yuki:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 92 70%22%3E%3Cg stroke=%22%23cdd9f3%22 stroke-opacity=%220.13%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.8%22%3E%3Cpath d=%22M40.0 16.0 L19.2 28.0 L19.2 52.0 L40.0 64.0 L60.8 52.0 L60.8 28.0Z%22/%3E%3Cpath d=%22M38.8 22.5L25.5 30.2%22/%3E%3Cpath d=%22M25.5 49.8L38.8 57.5%22/%3E%3Cpath d=%22M55.8 47.7L55.8 32.3%22/%3E%3Cpath d=%22M40.0 16.0V2%22/%3E%3Cpath d=%22M60.8 52.0L75.8 60.5L89.8 52.0%22/%3E%3C/g%3E%3C/svg%3E")}
 .g-kiso{--g-bg:var(--gk-bg);--g-bd:var(--gk-bd);--g-ac:var(--gk-ac);--g-bb:var(--gk-bb);--g-bt:var(--gk-bt);--g-pt:none;--g-pton:none}
@@ -423,8 +484,8 @@ html[data-theme="dark"] .chc.on[class*="g-"]{border-color:#8fb2ea;box-shadow:0 0
 .tab .kb2{margin:0}
 .tab.on[class*="g-"]{background:var(--g-pton) no-repeat right 5px center/auto 78%,var(--navy);border-color:var(--navy);color:#fff}
 .tab.on[class*="g-"] .tn{background:var(--gold);color:var(--hd)}
-html[data-theme="dark"] .tab.on[class*="g-"]{background:var(--g-pton) no-repeat right 5px center/auto 78%,#2c5394;border-color:#2c5394}
-html[data-theme="dark"] .tab.on[class*="g-"] .tn{color:#13254a}
+html[data-theme="dark"] .tab.on[class*="g-"]{background:var(--g-pton) no-repeat right 5px center/auto 78%,var(--navyD);border-color:var(--navyD)}
+html[data-theme="dark"] .tab.on[class*="g-"] .tn{color:var(--onGold)}
 @media (max-width:619px){
  .tabs{padding:6px 8px 3px;gap:3px}
  .tab{font-size:12px;padding:4px 5px 4px 4px;gap:4px;border-radius:8px}
@@ -515,7 +576,7 @@ html[data-theme="dark"]{--kr-bg:#263757;--kr-fg:#c6d6f5;--kr-bd:#3a5078;--km-bg:
 .chbtn.srchm .tn{display:none}
 .nbar .sbtn{flex:none;padding:7px 12px 7px 10px;border-radius:10px;font-size:13px}
 .nbar .sbtn.on{background:var(--navy);border-color:var(--navy);color:#fff}
-html[data-theme="dark"] .nbar .sbtn.on{background:#2c5394;border-color:#2c5394}
+html[data-theme="dark"] .nbar .sbtn.on{background:var(--navyD);border-color:var(--navyD)}
 #tabs[hidden],#nsrch[hidden]{display:none!important}
 #tabs{padding:4px 12px 6px}
 .nsrch{max-width:760px;margin:0 auto;padding:4px 12px 2px}
@@ -542,8 +603,8 @@ html[data-theme="dark"] .nbar .sbtn.on{background:#2c5394;border-color:#2c5394}
 .tsec .tgrp h4{display:flex;align-items:center;gap:6px;margin:0 0 7px;font-size:13px;color:var(--hd);letter-spacing:.02em}
 .tsec .tgrp h4 .kb2{margin:0}
 .tsec .tgrp.t-kiso{--gt:#d9a92e}
-.tsec .tgrp.t-muki{--gt:#6a80b0}
-.tsec .tgrp.t-yuki{--gt:#1d3566}
+.tsec .tgrp.t-muki{--gt:var(--km-bg)}
+.tsec .tgrp.t-yuki{--gt:var(--ky-bg)}
 .tsec .tgw{display:flex;flex-wrap:wrap;gap:6px}
 .tsec .tg{font-size:13px;padding:5px 11px;border-color:#c9d3e6;background:var(--soft);color:var(--hd);font-weight:600}
 .tsec .tg::before{content:"#";color:var(--gold2,#b08a2e);margin-right:1px;font-weight:700}
@@ -551,17 +612,27 @@ html[data-theme="dark"] .nbar .sbtn.on{background:#2c5394;border-color:#2c5394}
 .tsec .tg.on{background:var(--navy);border-color:var(--navy);color:#fff}
 .tsec .tg.on::before,.tsec .tg.on em{color:#f0d68e}
 html[data-theme="dark"] .tsec .tg{border-color:#3a4a6a}
-html[data-theme="dark"] .tsec .tg.on{background:#2c5394;border-color:#2c5394}
+html[data-theme="dark"] .tsec .tg.on{background:var(--navyD);border-color:var(--navyD)}
 @media (max-width:619px){.tsec #tagwrap{grid-template-columns:1fr}.tsec .tg{font-size:12.5px;padding:4px 9px}}
 /* 帯の中：選んでいる単元 */
 .tagon2{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:5px 0 2px;font-size:12px;color:var(--sub)}
 .tagon2[hidden]{display:none}
 .tagon2 .tg{font-size:12px;padding:3px 9px;background:var(--navy);border-color:var(--navy);color:#fff;font-weight:600}
 .tagon2 .tg b{margin-left:5px;font-weight:400;opacity:.8}
-.tagon2 a{color:var(--link,#2c5394);cursor:pointer;text-decoration:underline}
+.tagon2 a{color:var(--link,var(--navyD));cursor:pointer;text-decoration:underline}
 
 .chsec .sech{font-size:14.5px;color:var(--hd);letter-spacing:.04em;padding-left:9px;border-left:4px solid var(--gold);line-height:1.35;margin:10px 2px 8px}
 .chsec .sech small{letter-spacing:0}
+
+/* ---- 着せ替え（推し色・差し色） */
+.oslb{font-size:12.5px;color:var(--sub);margin:8px 0 5px}.oslb b{color:var(--ink)}
+.osw{display:flex;flex-wrap:wrap;gap:8px}
+.osw button{width:32px;height:32px;border-radius:50%;padding:0;border:1px solid rgba(0,0,0,.15);cursor:pointer;position:relative}
+.osw button.on{outline:2.5px solid var(--ink);outline-offset:2px}
+.osw button.rec::after,.osrec{display:inline-block;width:9px;height:9px;border-radius:50%;background:#f5b400;border:1.5px solid var(--card)}
+.osw button.rec::after{content:"";position:absolute;right:-3px;top:-3px}
+.bknote.news{border-color:var(--navy);background:linear-gradient(90deg,var(--soft),var(--card))}
+.cv-hex g{stroke:var(--gold)}
 </style>
 </head>
 <body>
@@ -586,6 +657,7 @@ html[data-theme="dark"] .tsec .tg.on{background:#2c5394;border-color:#2c5394}
 <button type="button" class="act" id="goStats"><span class="ai">📊</span><span><b>成績</b><small>章別・単元別</small></span></button>
 <button type="button" class="act" id="goCfg"><span class="ai">⚙️</span><span><b>設定</b><small>文字・画面・引き継ぎ</small></span></button>
 </div>
+<div class="bknote news" id="newsNote" hidden><span class="bki">🎨</span><span class="bkt"><b>NEW　推し色の着せ替え</b>設定で「推し色」と「差し色」を選ぶと，サイト全体の色を好きな色に変えられます．</span><span class="bkb"><button type="button" id="newsGo">選んでみる</button><button type="button" id="newsX" class="sec">閉じる</button></span></div>
 <div class="bknote" id="bkNote" hidden><span class="bki">💾</span><span class="bkt"><b>記録のバックアップ</b><span id="bkText"></span></span><span class="bkb"><button type="button" id="bkGo">書き出す</button><button type="button" id="bkLater" class="sec">あとで</button></span></div>
 <div class="cv-band"></div>
 </div></header>
@@ -725,6 +797,12 @@ html[data-theme="dark"] .tsec .tg.on{background:#2c5394;border-color:#2c5394}
 <label><input type="radio" name="th" value="auto"><span>端末に合わせる</span></label>
 <label><input type="radio" name="th" value="dark"><span>ダーク</span></label>
 </div></fieldset>
+<fieldset id="oshiSet"><legend>着せ替え（推し色・差し色）</legend>
+<p class="note2" style="margin:2px 0 6px">推し色を選ぶと，合う差し色が自動で入ります（<span class="osrec"></span> がおすすめ）．差し色だけ変えることもできます．</p>
+<div class="oslb">推し色　<b id="oshiN1"></b></div><div class="osw" id="oshiM"></div>
+<div class="oslb">差し色　<b id="oshiN2"></b></div><div class="osw" id="oshiA"></div>
+<div class="row" style="margin-top:8px"><button type="button" id="oshiReset">元の色（紺 × 金）に戻す</button></div>
+</fieldset>
 <h3>ニックネーム</h3>
 <input id="nick" type="text" maxlength="12" placeholder="12文字まで" autocomplete="off" style="width:100%;border:1px solid var(--line2);border-radius:8px;padding:9px 11px;font-size:15px;background:var(--card);color:var(--ink);font-family:inherit">
 <p class="note2">成績画面に表示されます（ランキングは準備中）．下の「記録の引き継ぎ」で別の端末に移すと，ニックネームも同じ人として引き継がれます．本名は使わないでください．</p>
@@ -754,10 +832,10 @@ html[data-theme="dark"] .tsec .tg.on{background:#2c5394;border-color:#2c5394}
 <div class="sfoot"><span class="pn"></span><button type="button" id="cfgClose">閉じる</button></div>
 </div></div>
 
-<script src="katex/katex.min.js?v=202611160430"></script>
-<script src="katex/mhchem.min.js?v=202611160430"></script>
-<script src="data.js?v=202611160430"></script>
-<script src="qrcode.js?v=202611160430" defer></script>
-<script src="app.js?v=202611160430"></script>
+<script src="katex/katex.min.js?v=202611160728"></script>
+<script src="katex/mhchem.min.js?v=202611160728"></script>
+<script src="data.js?v=202611160728"></script>
+<script src="qrcode.js?v=202611160728" defer></script>
+<script src="app.js?v=202611160728"></script>
 </body>
 </html>
