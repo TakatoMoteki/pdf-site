@@ -776,7 +776,7 @@
     if (searchOpen && !qtags.length && !qtext) { closeSearch(true); render(); return; }
     render();
   }
-  var TGRP = [['物質の構成', 0, 8], ['物質の変化', 8, 18], ['実験・生活', 18, 20], ['無機', 20, 26, 'muki'], ['有機・高分子', 26, TAGS.length, 'yuki']];
+  var TGRP = [['物質の構成・状態', 0, 12], ['物質の変化', 12, 20], ['無機', 20, 26, 'muki'], ['有機・高分子', 26, TAGS.length, 'yuki']];
   function tagCounts() { var c = TAGS.map(function () { return 0; }); D.forEach(function (it) { if (inC(it)) (it.tg || []).forEach(function (i) { c[i]++; }); }); return c; }
   (function buildTagSel() {
     var w = $('tagwrap'); if (!w) return;
