@@ -1245,16 +1245,26 @@
     function cur() { var m = O.MAIN[CFG.oc] ? CFG.oc : 'navy'; return { m: m, a: O.ACC[CFG.ac] ? CFG.ac : O.MAIN[m][2] }; }
     function sync() {
       var c = cur(), sk = O.SKINS[CFG.sk] ? CFG.sk : '';
+      if (mode === null) mode = sk ? 'sty' : 'std';
       Array.prototype.forEach.call(bs.children, function (b) { b.classList.toggle('on', b.dataset.k === sk); });
-      $('oshiRows').hidden = !!sk;
-      $('skinNote').hidden = !sk;
+      Array.prototype.forEach.call($('kMode').children, function (b) { b.classList.toggle('on', b.dataset.m === mode); });
+      $('kStd').hidden = mode !== 'std'; $('kSty').hidden = mode !== 'sty';
+      Array.prototype.forEach.call(bm.children, function (b) { b.style.opacity = sk ? .45 : 1; });
+      var pz = O.praise(); $('kpvPz').textContent = pz ? '　' + pz : '';
       Array.prototype.forEach.call(bm.children, function (b) { b.classList.toggle('on', b.dataset.k === c.m); });
       Array.prototype.forEach.call(ba.children, function (b) { b.classList.toggle('on', b.dataset.k === c.a); b.classList.toggle('rec', b.dataset.k === O.MAIN[c.m][2]); });
       $('oshiN1').textContent = O.MAIN[c.m][0];
       $('oshiN2').textContent = O.ACC[c.a][0] + (c.a === O.MAIN[c.m][2] ? '（おすすめ）' : '');
     }
     function save() { sv('cfc-cfg', CFG); applyCfg(); sync(); }
-    [['', 'スタンダード', '#13254a', '#c49a45', '#f6f7f9']].concat(Object.keys(O.SKINS).map(function (k) { var x = O.SKINS[k]; return [k, x.name, x.P, x.A, x.bg]; })).forEach(function (x) {
+    var mode = null;
+    Array.prototype.forEach.call($('kMode').children, function (b) {
+      b.onclick = function () {
+        mode = b.dataset.m;
+        if (mode === 'std' && CFG.sk) { delete CFG.sk; save(); } else sync();   // スタンダードに切り替えたら，選んでいた推し色に戻す
+      };
+    });
+    Object.keys(O.SKINS).map(function (k) { var x = O.SKINS[k]; return [k, x.name, x.P, x.A, x.bg]; }).forEach(function (x) {
       var b = document.createElement('button'); b.type = 'button'; b.dataset.k = x[0];
       b.innerHTML = '<span class="skp" style="background:' + x[4] + '"><i style="background:' + x[2] + '"></i><i style="background:' + x[3] + '"></i></span>' + x[1];
       b.onclick = function () { if (x[0]) CFG.sk = x[0]; else delete CFG.sk; save(); };
@@ -1263,16 +1273,16 @@
     Object.keys(O.MAIN).forEach(function (k) {
       var b = document.createElement('button'); b.type = 'button'; b.dataset.k = k; b.style.background = O.MAIN[k][1];
       b.setAttribute('aria-label', '推し色 ' + O.MAIN[k][0]); b.title = O.MAIN[k][0];
-      b.onclick = function () { CFG.oc = k; delete CFG.ac; save(); };
+      b.onclick = function () { CFG.oc = k; delete CFG.ac; delete CFG.sk; save(); };
       bm.appendChild(b);
     });
     Object.keys(O.ACC).forEach(function (k) {
       var b = document.createElement('button'); b.type = 'button'; b.dataset.k = k; b.style.background = O.ACC[k][1];
       b.setAttribute('aria-label', '差し色 ' + O.ACC[k][0]); b.title = O.ACC[k][0];
-      b.onclick = function () { CFG.ac = k; save(); };
+      b.onclick = function () { CFG.ac = k; delete CFG.sk; save(); };
       ba.appendChild(b);
     });
-    $('oshiReset').onclick = function () { delete CFG.oc; delete CFG.ac; delete CFG.sk; save(); };
+    $('oshiReset').onclick = function () { delete CFG.oc; delete CFG.ac; delete CFG.sk; mode = 'std'; save(); };
     sync();
     // お知らせ（はじめて開いたとき）
     var NEWS = 'kisekae1', nn = $('newsNote');
@@ -1497,6 +1507,12 @@
     if (was && !noRender) render();
   }
   $('goSearch').onclick = function () { if (searchOpen) closeSearch(); else openSearch(); };
+  // ---------------------------------------------------------------- 設定などのシートを開いている間は，後ろのページがスクロールしないようにする
+  (function lockBehindSheets() {
+    var sheets = document.querySelectorAll('.setup');
+    function upd() { document.documentElement.classList.toggle('modal', !!document.querySelector('.setup.on')); }
+    if (window.MutationObserver) Array.prototype.forEach.call(sheets, function (x) { new MutationObserver(upd).observe(x, { attributes: true, attributeFilter: ['class'] }); });
+  })();
   // ================================================================ コース切り替え
   (function setupCourse() {
     Array.prototype.forEach.call(document.querySelectorAll('label[data-ch]'), function (l) {
