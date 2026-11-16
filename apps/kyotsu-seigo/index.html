@@ -10,6 +10,24 @@
   var ACC = { gold: ['金', '#c49a45'], champ: ['シャンパン', '#c8ad84'], silver: ['シルバー', '#9aa4b2'], rose: ['ローズ', '#d9778a'], coral: ['コーラル', '#e8896b'],
     orange: ['オレンジ', '#e99a3c'], lemon: ['レモン', '#e3c548'], mint: ['ミント', '#5fbfa4'], teal: ['ティール', '#2f948b'], sky: ['スカイ', '#6fb3dc'],
     navy: ['ネイビー', '#2f3d66'], lavender: ['ラベンダー', '#9d8ad6'], pink: ['ピンク', '#e994b8'] };
+  // スタイル（スキン）：色に加えて，背景・カード・文字の雰囲気を変える．ライト画面専用
+  var SKINS = {
+    yume: { name: 'ゆめかわ', P: '#e0659f', A: '#a98fe0', bg: '#fff4fa', card: '#ffffff', soft: '#fdeaf4', line: '#f6d9e8', line2: '#efc6dc', ink: '#5d4668', sub: '#9a7ea6',
+      font: '"Zen Maru Gothic","Hiragino Maru Gothic ProN","Hiragino Sans",sans-serif', fontUrl: 'Zen+Maru+Gothic:wght@500;700;900',
+      praise: ['正解〜！天才すぎ ✧', 'えらすぎ♡', 'かわいいのに強い ✦', '神ってる ✧˖°'] },
+    street: { name: 'ストリート', P: '#141414', A: '#ff2e88', bg: '#fbfbfa', card: '#ffffff', soft: '#f1f1f0', line: '#d9d9d7', line2: '#141414', ink: '#141414', sub: '#5f5f5c',
+      font: '"Zen Kaku Gothic New","Hiragino Sans",sans-serif', latin: '"Anton","Impact",sans-serif', fontUrl: 'Anton&family=Zen+Kaku+Gothic+New:wght@500;700;900',
+      praise: ['NICE. 正解，強すぎ', 'BOOM. 余裕', 'ガチ正解', 'さすがすぎる'] },
+    k1: { name: '韓国文具', P: '#4f7fb8', A: '#d9b98c', bg: '#fbf8f2', card: '#ffffff', soft: '#eef3fa', line: '#e2e9f3', line2: '#cddbec', ink: '#4d5a6b', sub: '#8494a8',
+      font: '"Zen Kaku Gothic New","Hiragino Sans",sans-serif', latin: '"Poppins",sans-serif', fontUrl: 'Poppins:wght@500;600&family=Zen+Kaku+Gothic+New:wght@500;700&family=Noto+Sans+KR:wght@500',
+      praise: ['正解 ✓ 최고!', '잘했어! よくできました', '오늘도 화이팅 ☁︎', '대박! 正解'] },
+    k2: { name: '韓国カフェ', P: '#2b2926', A: '#b39a78', bg: '#eeebe6', card: '#f8f6f2', soft: '#e6e1d9', line: '#dcd7cf', line2: '#c3bcb1', ink: '#36332f', sub: '#7f786e',
+      font: '"Zen Kaku Gothic New","Hiragino Sans",sans-serif', latin: '"Poppins",sans-serif', fontUrl: 'Poppins:wght@500;600&family=Zen+Kaku+Gothic+New:wght@500;700',
+      praise: ['good. その調子', 'nice. 正解', 'perfect. いい感じ'] },
+    french: { name: 'フレンチガーリー', P: '#24346b', A: '#c94f63', bg: '#fbf7ef', card: '#ffffff', soft: '#f3eee4', line: '#e7e0d1', line2: '#d6ccb8', ink: '#2d3350', sub: '#7d7f96',
+      font: '"Zen Kaku Gothic New","Hiragino Sans",sans-serif', latin: '"DM Serif Display",Georgia,serif', fontUrl: 'DM+Serif+Display:ital@0;1&family=Zen+Kaku+Gothic+New:wght@500;700',
+      praise: ['Très bien. とても良い', 'Parfait. 完璧', 'Bravo. さすが'] }
+  };
   function rgb(h) { h = h.replace('#', ''); return [0, 2, 4].map(function (i) { return parseInt(h.substr(i, 2), 16); }); }
   function hex(a) { return '#' + a.map(function (v) { v = Math.max(0, Math.min(255, Math.round(v))); return (v < 16 ? '0' : '') + v.toString(16); }).join(''); }
   function mix(a, b, k) { var x = rgb(a), y = rgb(b); return hex(x.map(function (v, i) { return v * (1 - k) + y[i] * k; })); }
@@ -18,18 +36,28 @@
   function darkTo(h, bg, r) { var c = h, n = 0; while (cr(c, bg) < r && n < 20) { c = mix(c, '#000000', .1); n++; } return c; }
   function lightTo(h, bg, r) { var c = h, n = 0; while (cr(c, bg) < r && n < 20) { c = mix(c, '#ffffff', .1); n++; } return c; }
   function dist(a, b) { var x = rgb(a), y = rgb(b); return Math.sqrt(x.reduce(function (s, v, i) { return s + (v - y[i]) * (v - y[i]); }, 0)); }
-  var KEYS = ['--navy', '--navy2', '--navy3', '--navyD', '--hd', '--teal', '--soft', '--gold', '--gold2', '--onGold', '--gc-bg', '--gc-bd', '--gc-ac', '--gc-bb', '--gc-bt',
+  var KEYS = ['--bg', '--card', '--line', '--line2', '--ink', '--sub', '--glass', '--skin-font', '--skin-latin', '--navy', '--navy2', '--navy3', '--navyD', '--hd', '--teal', '--soft', '--gold', '--gold2', '--onGold', '--gc-bg', '--gc-bd', '--gc-ac', '--gc-bb', '--gc-bt',
     '--kr-bg', '--kr-fg', '--kr-bd', '--km-bg', '--km-fg', '--km-bd', '--ky-bg', '--ky-fg', '--ky-bd', '--pt-riron', '--pt-muki', '--pt-yuki'];
   function enc(h) { return '%23' + h.slice(1); }
-  window.CFC_OSHI = { MAIN: MAIN, ACC: ACC,
+  function loadFont(q) {
+    if (!q || document.getElementById('skinFont')) return;
+    var l = document.createElement('link'); l.id = 'skinFont'; l.rel = 'stylesheet';
+    l.href = 'https://fonts.googleapis.com/css2?family=' + q + '&display=swap';
+    (document.head || document.documentElement).appendChild(l);
+  }
+  window.CFC_OSHI = { MAIN: MAIN, ACC: ACC, SKINS: SKINS,
+    praise: function () { var k = document.documentElement.getAttribute('data-skin'), sk = SKINS[k]; return sk ? sk.praise[Math.floor(Math.random() * sk.praise.length)] : ''; },
     apply: function (cfg) {
       var de = document.documentElement, st = de.style;
+      var sk = cfg && SKINS[cfg.sk] ? SKINS[cfg.sk] : null;
       var mk = cfg && MAIN[cfg.oc] ? cfg.oc : 'navy', ak = cfg && ACC[cfg.ac] ? cfg.ac : MAIN[mk][2];
       KEYS.forEach(function (k) { st.removeProperty(k); });
+      if (sk) { de.setAttribute('data-skin', cfg.sk); de.setAttribute('data-theme', 'light'); loadFont(sk.fontUrl); var old = document.getElementById('skinFont'); if (old && old.href.indexOf(sk.fontUrl) < 0) { old.remove(); loadFont(sk.fontUrl); } }
+      else de.removeAttribute('data-skin');
       var dark = de.getAttribute('data-theme') === 'dark';
       var mt = document.querySelector('meta[name="theme-color"]');
-      if (mk === 'navy' && ak === 'gold') { if (mt) mt.content = dark ? '#0f1420' : '#13254a'; return; }
-      var P = MAIN[mk][1], A = ACC[ak][1];
+      if (!sk && mk === 'navy' && ak === 'gold') { if (mt) mt.content = dark ? '#0f1420' : '#13254a'; return; }
+      var P = sk ? sk.P : MAIN[mk][1], A = sk ? sk.A : ACC[ak][1];
       var Pp = darkTo(P, '#ffffff', 3.4);                       // 白い文字がのる推し色
       var hdL = darkTo(P, '#ffffff', 8);                        // 見出しの文字（ライト）
       // 差し色が推し色と近いときは，明るさをずらして見分けられるようにする
@@ -58,8 +86,13 @@
         v['--ky-bg'] = hdD; v['--ky-fg'] = darkTo(P, hdD, 5); v['--ky-bd'] = hdD;
         ['riron', 'muki', 'yuki'].forEach(function (k) { var s = pat(k, mix(P, '#ffffff', .8), '0.13'); if (s) v['--pt-' + k] = s; });
       }
+      if (sk) {
+        v['--bg'] = sk.bg; v['--card'] = sk.card; v['--soft'] = sk.soft; v['--line'] = sk.line; v['--line2'] = sk.line2; v['--ink'] = sk.ink; v['--sub'] = sk.sub;
+        v['--glass'] = sk.card; v['--skin-font'] = sk.font; v['--skin-latin'] = sk.latin || sk.font;
+        if (P === '#141414' || P === '#2b2926') { v['--hd'] = P; v['--gc-ac'] = P; v['--gc-bt'] = P; v['--kr-fg'] = P; v['--ky-bg'] = P; v['--ky-bd'] = P; }
+      }
       Object.keys(v).forEach(function (k) { st.setProperty(k, v[k]); });
-      if (mt) mt.content = dark ? '#0f1420' : Pp;
+      if (mt) mt.content = dark ? '#0f1420' : (sk ? sk.bg : Pp);
     } };
 })();
 </script>
@@ -76,7 +109,7 @@ try{var c=JSON.parse(localStorage.getItem("cfc-cfg")||"{}")||{},d=document.docum
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>化学ファイナルチェックお試し</title>
-<link rel="stylesheet" href="katex/katex.min.css?v=202611160728">
+<link rel="stylesheet" href="katex/katex.min.css?v=202611160735">
 <style>
 :root{--navy:#13254a;--teal:#1f4e8c;--amber:#d18f1f;--ink:#1f2328;--sub:#5b6270;--line:#e3e6ea;--line2:#cfd5dc;--bg:#f6f7f9;--card:#fff;--soft:#eef1f5;--glass:rgba(255,255,255,.97);--hd:#13254a;--onGold:#13254a;--navyD:#13254a;--ok:#1a7f4b;--ng:#c0392b;--okbg:#e8f5ee;--ngbg:#fbeceb;--fz:1}
 html[data-theme="dark"]{--ink:#e6e8ee;--sub:#9aa2b2;--line:#2c3446;--line2:#3a4357;--bg:#0f1420;--card:#171d2b;--soft:#222a3b;--glass:rgba(23,29,43,.97);--hd:#cdd9f3;--ok:#3fbf7f;--ng:#ff6b5e;--okbg:#14301f;--ngbg:#3a1b1b;--teal:#5b8fd9;--navyD:#2c5394;color-scheme:dark}
@@ -633,6 +666,51 @@ html[data-theme="dark"] .tsec .tg.on{background:var(--navyD);border-color:var(--
 .osw button.rec::after{content:"";position:absolute;right:-3px;top:-3px}
 .bknote.news{border-color:var(--navy);background:linear-gradient(90deg,var(--soft),var(--card))}
 .cv-hex g{stroke:var(--gold)}
+
+/* ---- スタイル選び */
+.sksel{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px}
+.sksel button{display:flex;align-items:center;gap:7px;border:1px solid var(--line2);background:var(--card);color:var(--ink);border-radius:10px;padding:6px 8px;font-size:12.5px;font-weight:700;cursor:pointer;text-align:left}
+.sksel button.on{outline:2.5px solid var(--ink);outline-offset:1px}
+.sksel .skp{flex:none;display:inline-flex;gap:2px;padding:4px;border-radius:7px;border:1px solid rgba(0,0,0,.08)}
+.sksel .skp i{width:10px;height:16px;border-radius:3px}
+#oshiRows[hidden]{display:none}
+.praise{display:inline-block;margin-left:8px;font-weight:800;color:var(--gold2)}
+.dv .praise{font-size:13px}
+/* ---- スタイル共通 */
+html[data-skin] body{font-family:var(--skin-font)}
+html[data-skin] .cv-en{font-family:var(--skin-latin)}
+/* ゆめかわ */
+html[data-skin="yume"] body{background-color:var(--bg);background-image:radial-gradient(#f7c6df 1.2px,transparent 1.5px),radial-gradient(#d9ccf6 1.2px,transparent 1.5px);background-size:26px 26px,26px 26px;background-position:0 0,13px 13px}
+html[data-skin="yume"] .card,html[data-skin="yume"] .chc,html[data-skin="yume"] .act,html[data-skin="yume"] .tsec .tgrp,html[data-skin="yume"] .dcard,html[data-skin="yume"] .result{border-radius:20px;border-width:1.5px}
+html[data-skin="yume"] .reveal,html[data-skin="yume"] .dnext,html[data-skin="yume"] .go-run,html[data-skin="yume"] .chbtn,html[data-skin="yume"] .nbar .sbtn{border-radius:999px}
+html[data-skin="yume"] .seg{border-radius:999px}
+html[data-skin="yume"] .chsec .sech::after{content:" ✦";color:var(--gold)}
+html[data-skin="yume"] .cv h1,html[data-skin="yume"] .cv-en{color:var(--navy)}
+/* ストリート */
+html[data-skin="street"] .card,html[data-skin="street"] .chc,html[data-skin="street"] .act,html[data-skin="street"] .tsec .tgrp,html[data-skin="street"] .dcard,html[data-skin="street"] .result{border:1.5px solid #141414;border-radius:3px;box-shadow:4px 4px 0 var(--gold)}
+html[data-skin="street"] .chc.on{box-shadow:4px 4px 0 #141414}
+html[data-skin="street"] .reveal,html[data-skin="street"] .dnext,html[data-skin="street"] .seg,html[data-skin="street"] .chbtn,html[data-skin="street"] .nbar .sbtn,html[data-skin="street"] .go-run{border-radius:3px}
+html[data-skin="street"] .cv-en{text-transform:uppercase;letter-spacing:.02em;font-size:40px;line-height:.95}
+html[data-skin="street"] .cv-en em{font-family:var(--skin-latin);color:var(--gold)}
+html[data-skin="street"] .chsec .sech{display:inline-block;background:#141414;color:#fff;border:0;padding:3px 12px;transform:rotate(-1.5deg);margin-left:4px}
+html[data-skin="street"] .chsec .sech small{color:#ddd}
+/* 韓国文具 */
+html[data-skin="k1"] body{background-color:var(--bg);background-image:linear-gradient(90deg,rgba(168,200,232,.2) 50%,transparent 50%),linear-gradient(rgba(168,200,232,.2) 50%,transparent 50%);background-size:22px 22px}
+html[data-skin="k1"] .card,html[data-skin="k1"] .chc,html[data-skin="k1"] .act,html[data-skin="k1"] .tsec .tgrp,html[data-skin="k1"] .dcard,html[data-skin="k1"] .result{border-radius:18px}
+html[data-skin="k1"] .reveal,html[data-skin="k1"] .dnext,html[data-skin="k1"] .seg,html[data-skin="k1"] .chbtn,html[data-skin="k1"] .nbar .sbtn{border-radius:999px}
+html[data-skin="k1"] .cv-en{font-weight:600;text-transform:lowercase;letter-spacing:-.01em}
+html[data-skin="k1"] .chsec .sech::after{content:" ☁︎";color:var(--navy)}
+/* 韓国カフェ */
+html[data-skin="k2"] .card,html[data-skin="k2"] .chc,html[data-skin="k2"] .act,html[data-skin="k2"] .tsec .tgrp,html[data-skin="k2"] .dcard,html[data-skin="k2"] .result{border-radius:6px;box-shadow:none}
+html[data-skin="k2"] .reveal,html[data-skin="k2"] .dnext,html[data-skin="k2"] .seg,html[data-skin="k2"] .chbtn,html[data-skin="k2"] .nbar .sbtn,html[data-skin="k2"] .go-run{border-radius:4px}
+html[data-skin="k2"] .cv-en{font-weight:600;text-transform:uppercase;letter-spacing:.08em;font-size:28px}
+html[data-skin="k2"] .chsec .sech{border-left:2px solid var(--ink);letter-spacing:.12em}
+/* フレンチガーリー */
+html[data-skin="french"] header.cover::after{content:"";position:absolute;left:0;right:0;top:0;height:9px;background:repeating-linear-gradient(90deg,var(--navy) 0 12px,var(--bg) 12px 24px);z-index:1}
+html[data-skin="french"] .cv-en{font-style:italic}
+html[data-skin="french"] .cv-en em{font-family:var(--skin-latin);font-style:italic;color:var(--gold)}
+html[data-skin="french"] .card,html[data-skin="french"] .chc,html[data-skin="french"] .act,html[data-skin="french"] .tsec .tgrp{border-radius:10px}
+html[data-skin="french"] .chsec .sech::before{content:"❦ ";color:var(--gold)}
 </style>
 </head>
 <body>
@@ -657,7 +735,7 @@ html[data-theme="dark"] .tsec .tg.on{background:var(--navyD);border-color:var(--
 <button type="button" class="act" id="goStats"><span class="ai">📊</span><span><b>成績</b><small>章別・単元別</small></span></button>
 <button type="button" class="act" id="goCfg"><span class="ai">⚙️</span><span><b>設定</b><small>文字・画面・引き継ぎ</small></span></button>
 </div>
-<div class="bknote news" id="newsNote" hidden><span class="bki">🎨</span><span class="bkt"><b>NEW　推し色の着せ替え</b>設定で「推し色」と「差し色」を選ぶと，サイト全体の色を好きな色に変えられます．</span><span class="bkb"><button type="button" id="newsGo">選んでみる</button><button type="button" id="newsX" class="sec">閉じる</button></span></div>
+<div class="bknote news" id="newsNote" hidden><span class="bki">🎨</span><span class="bkt"><b>NEW　着せ替え</b>設定で「ゆめかわ」「韓国文具」などのスタイルや，好きな推し色・差し色を選んで，サイトの見た目を変えられます．</span><span class="bkb"><button type="button" id="newsGo">選んでみる</button><button type="button" id="newsX" class="sec">閉じる</button></span></div>
 <div class="bknote" id="bkNote" hidden><span class="bki">💾</span><span class="bkt"><b>記録のバックアップ</b><span id="bkText"></span></span><span class="bkb"><button type="button" id="bkGo">書き出す</button><button type="button" id="bkLater" class="sec">あとで</button></span></div>
 <div class="cv-band"></div>
 </div></header>
@@ -797,11 +875,15 @@ html[data-theme="dark"] .tsec .tg.on{background:var(--navyD);border-color:var(--
 <label><input type="radio" name="th" value="auto"><span>端末に合わせる</span></label>
 <label><input type="radio" name="th" value="dark"><span>ダーク</span></label>
 </div></fieldset>
-<fieldset id="oshiSet"><legend>着せ替え（推し色・差し色）</legend>
-<p class="note2" style="margin:2px 0 6px">推し色を選ぶと，合う差し色が自動で入ります（<span class="osrec"></span> がおすすめ）．差し色だけ変えることもできます．</p>
+<fieldset id="oshiSet"><legend>着せ替え</legend>
+<div class="oslb">スタイル</div><div class="sksel" id="skinSel"></div>
+<p class="note2" id="skinNote" hidden style="margin:6px 0 0">スタイルを選んでいる間は，画面はライトになり，推し色は使いません．問題や記録はそのままです．</p>
+<div id="oshiRows">
+<p class="note2" style="margin:8px 0 4px">スタンダードでは，推し色を選ぶと合う差し色が自動で入ります（<span class="osrec"></span> がおすすめ）．差し色だけ変えることもできます．</p>
 <div class="oslb">推し色　<b id="oshiN1"></b></div><div class="osw" id="oshiM"></div>
 <div class="oslb">差し色　<b id="oshiN2"></b></div><div class="osw" id="oshiA"></div>
-<div class="row" style="margin-top:8px"><button type="button" id="oshiReset">元の色（紺 × 金）に戻す</button></div>
+</div>
+<div class="row" style="margin-top:8px"><button type="button" id="oshiReset">元の見た目（スタンダード・紺 × 金）に戻す</button></div>
 </fieldset>
 <h3>ニックネーム</h3>
 <input id="nick" type="text" maxlength="12" placeholder="12文字まで" autocomplete="off" style="width:100%;border:1px solid var(--line2);border-radius:8px;padding:9px 11px;font-size:15px;background:var(--card);color:var(--ink);font-family:inherit">
@@ -832,10 +914,10 @@ html[data-theme="dark"] .tsec .tg.on{background:var(--navyD);border-color:var(--
 <div class="sfoot"><span class="pn"></span><button type="button" id="cfgClose">閉じる</button></div>
 </div></div>
 
-<script src="katex/katex.min.js?v=202611160728"></script>
-<script src="katex/mhchem.min.js?v=202611160728"></script>
-<script src="data.js?v=202611160728"></script>
-<script src="qrcode.js?v=202611160728" defer></script>
-<script src="app.js?v=202611160728"></script>
+<script src="katex/katex.min.js?v=202611160735"></script>
+<script src="katex/mhchem.min.js?v=202611160735"></script>
+<script src="data.js?v=202611160735"></script>
+<script src="qrcode.js?v=202611160735" defer></script>
+<script src="app.js?v=202611160735"></script>
 </body>
 </html>

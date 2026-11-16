@@ -383,6 +383,7 @@
           setMark(it.id, mark);
           syncMark();
           res.innerHTML += '<span class="auto">　→ ' + (mark === 'y' ? '○' : '×') + ' で記録しました</span>';
+          var pz = mark === 'y' && window.CFC_OSHI ? CFC_OSHI.praise() : ''; if (pz) res.innerHTML += '<span class="praise">' + esc(pz) + '</span>';
         }
       } else {
         res.innerHTML = ''; res.className = 'res';
@@ -865,7 +866,8 @@
         Array.prototype.forEach.call(el.querySelectorAll('.dbtns button'), function (x) { x.disabled = true; x.classList.toggle('pick', x === b); });
         var dv = el.querySelector('.dv');
         dv.className = 'dv ' + (ok ? 'ok' : 'ng');
-        dv.innerHTML = (ok ? '○ 正解' : '× 不正解') + '<small>この記述は' + (o.v ? '正しい' : '誤り') + '</small>';
+        var pz = ok && window.CFC_OSHI ? CFC_OSHI.praise() : '';
+        dv.innerHTML = (ok ? '○ 正解' : '× 不正解') + (pz ? '<span class="praise">' + esc(pz) + '</span>' : '') + '<small>この記述は' + (o.v ? '正しい' : '誤り') + '</small>';
         var h = hexp(it, o.l);
         el.querySelector('.dex').innerHTML = h ? blocks(h.b) : '<p>正解：' + it.a + '</p>';
         el.classList.add('done');
@@ -1239,16 +1241,25 @@
   // ---------------------------------------------------------------- 着せ替え（推し色・差し色）
   (function oshiUI() {
     var O = window.CFC_OSHI; if (!O) return;
-    var bm = $('oshiM'), ba = $('oshiA');
+    var bm = $('oshiM'), ba = $('oshiA'), bs = $('skinSel');
     function cur() { var m = O.MAIN[CFG.oc] ? CFG.oc : 'navy'; return { m: m, a: O.ACC[CFG.ac] ? CFG.ac : O.MAIN[m][2] }; }
     function sync() {
-      var c = cur();
+      var c = cur(), sk = O.SKINS[CFG.sk] ? CFG.sk : '';
+      Array.prototype.forEach.call(bs.children, function (b) { b.classList.toggle('on', b.dataset.k === sk); });
+      $('oshiRows').hidden = !!sk;
+      $('skinNote').hidden = !sk;
       Array.prototype.forEach.call(bm.children, function (b) { b.classList.toggle('on', b.dataset.k === c.m); });
       Array.prototype.forEach.call(ba.children, function (b) { b.classList.toggle('on', b.dataset.k === c.a); b.classList.toggle('rec', b.dataset.k === O.MAIN[c.m][2]); });
       $('oshiN1').textContent = O.MAIN[c.m][0];
       $('oshiN2').textContent = O.ACC[c.a][0] + (c.a === O.MAIN[c.m][2] ? '（おすすめ）' : '');
     }
     function save() { sv('cfc-cfg', CFG); applyCfg(); sync(); }
+    [['', 'スタンダード', '#13254a', '#c49a45', '#f6f7f9']].concat(Object.keys(O.SKINS).map(function (k) { var x = O.SKINS[k]; return [k, x.name, x.P, x.A, x.bg]; })).forEach(function (x) {
+      var b = document.createElement('button'); b.type = 'button'; b.dataset.k = x[0];
+      b.innerHTML = '<span class="skp" style="background:' + x[4] + '"><i style="background:' + x[2] + '"></i><i style="background:' + x[3] + '"></i></span>' + x[1];
+      b.onclick = function () { if (x[0]) CFG.sk = x[0]; else delete CFG.sk; save(); };
+      bs.appendChild(b);
+    });
     Object.keys(O.MAIN).forEach(function (k) {
       var b = document.createElement('button'); b.type = 'button'; b.dataset.k = k; b.style.background = O.MAIN[k][1];
       b.setAttribute('aria-label', '推し色 ' + O.MAIN[k][0]); b.title = O.MAIN[k][0];
@@ -1261,10 +1272,10 @@
       b.onclick = function () { CFG.ac = k; save(); };
       ba.appendChild(b);
     });
-    $('oshiReset').onclick = function () { delete CFG.oc; delete CFG.ac; save(); };
+    $('oshiReset').onclick = function () { delete CFG.oc; delete CFG.ac; delete CFG.sk; save(); };
     sync();
     // お知らせ（はじめて開いたとき）
-    var NEWS = 'oshi1', nn = $('newsNote');
+    var NEWS = 'kisekae1', nn = $('newsNote');
     var seen = ''; try { seen = localStorage.getItem('cfc-news') || ''; } catch (e) { }
     function done() { try { localStorage.setItem('cfc-news', NEWS); } catch (e) { } nn.hidden = true; }
     if (nn && seen !== NEWS) {
