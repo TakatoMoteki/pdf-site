@@ -15,7 +15,7 @@ try{var c=JSON.parse(localStorage.getItem("cfc-cfg")||"{}")||{},d=document.docum
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>化学ファイナルチェックお試し</title>
-<link rel="stylesheet" href="katex/katex.min.css?v=202611140437">
+<link rel="stylesheet" href="katex/katex.min.css?v=202611160115">
 <style>
 :root{--navy:#13254a;--teal:#1f4e8c;--amber:#d18f1f;--ink:#1f2328;--sub:#5b6270;--line:#e3e6ea;--line2:#cfd5dc;--bg:#f6f7f9;--card:#fff;--soft:#eef1f5;--glass:rgba(255,255,255,.97);--hd:#13254a;--ok:#1a7f4b;--ng:#c0392b;--okbg:#e8f5ee;--ngbg:#fbeceb;--fz:1}
 html[data-theme="dark"]{--ink:#e6e8ee;--sub:#9aa2b2;--line:#2c3446;--line2:#3a4357;--bg:#0f1420;--card:#171d2b;--soft:#222a3b;--glass:rgba(23,29,43,.97);--hd:#cdd9f3;--ok:#3fbf7f;--ng:#ff6b5e;--okbg:#14301f;--ngbg:#3a1b1b;--teal:#5b8fd9;color-scheme:dark}
@@ -391,7 +391,9 @@ body.kiso .kb2,body.kiso .ichem{display:none}
 
 .wq{display:inline-block;font-size:11.5px;font-weight:700;color:var(--ng);background:var(--ngbg);border-radius:10px;padding:1px 8px;line-height:1.6;white-space:nowrap}
 .wq.w3{background:var(--ng);color:#fff}
-.wq[hidden],.wc[hidden]{display:none!important}
+.wq[hidden]{display:none!important}
+.wc[hidden]{display:inline-block;visibility:hidden}
+.card:not(.haswc) .wc{display:none}
 .wc{font-size:11px;font-weight:700;color:var(--ng);min-width:22px;text-align:left;white-space:nowrap}
 .dcard .meta .wq{margin-left:auto}
 
@@ -435,17 +437,34 @@ html[data-theme="dark"] .tab.on[class*="g-"] .tn{color:#13254a}
 .sbtn:hover{border-color:var(--navy)}
 .stat+.sbtn{margin-left:4px}
 
-/* ---- 分野カード：スマホでも3列（化学基礎1段＋化学2段） */
+/* ---- 分野カード：化学基礎は4枚で1段，化学は理論・無機・有機ごとに2枚で1段（スマホは基礎2列×2段） */
+.chgrid{grid-template-columns:repeat(4,minmax(0,1fr))}
+.chc.g-riron,.chc.g-muki,.chc.g-yuki{grid-column:span 2}
 @media (max-width:619px){
- .chgrid{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
- .chc{padding:8px 8px 8px;min-height:0;border-radius:10px;gap:3px}
- .chc .cn{font-size:18px;display:flex;align-items:center;flex-wrap:wrap;gap:2px}
- .chc .cn .kb2{font-size:9.5px;margin-left:4px;vertical-align:0}
- .chc .ct{font-size:12.5px}
- .chc .cs{font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ .chgrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+ .chc.g-riron,.chc.g-muki,.chc.g-yuki{grid-column:span 1}
+ .chc{padding:10px 10px 9px;min-height:0;border-radius:10px;gap:3px}
+ .chc .cn{font-size:19px;display:flex;align-items:center;flex-wrap:wrap;gap:2px}
+ .chc .cn .kb2{font-size:10px;margin-left:5px;vertical-align:0}
+ .chc .ct{font-size:13.5px}
+ .chc .cs{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
  .chc.on::after{display:none}
- .chc[class*="g-"],.chc.on[class*="g-"]{background-position:right 6px top 7px;background-size:auto 34px}
+ .chc[class*="g-"],.chc.on[class*="g-"]{background-position:right 8px top 8px;background-size:auto 38px}
 }
+/* ---- 章タブ：化学基礎4つで1段，化学3つずつ2段 */
+.tabs{grid-template-columns:repeat(12,minmax(0,1fr))}
+.tab{grid-column:span 4}
+.tab.g-kiso{grid-column:span 3}
+.tab.g-kiso .kb2{display:none}
+@media (max-width:619px){
+ .tab{font-size:11.5px;padding:4px 4px 4px 3px;gap:3px}
+ .tab.g-kiso .tn{width:17px;height:17px;font-size:10.5px}
+}
+/* ---- 試験名の札：化学基礎は頭に「基」 */
+.exk{display:inline-flex;align-items:stretch;border-radius:4px;overflow:hidden;line-height:1.5}
+.exk i{font-style:normal;font-size:11px;font-weight:700;padding:1px 5px;background:#efbf4a;color:#3d2c05}
+.exk .badge{border-radius:0}
+html[data-theme="dark"] .exk i{background:#c99a2e;color:#1e1603}
 @media (min-width:620px){
  .sbtn span{display:none}
  .sbtn{padding:5px 7px;border-radius:50%}
@@ -481,6 +500,8 @@ html[data-theme="dark"]{--kr-bg:#263757;--kr-fg:#c6d6f5;--kr-bd:#3a5078;--km-bg:
 .kb2.g-muki{--g-bb:var(--km-bg);--g-bt:var(--km-fg)}
 .kb2.g-yuki{--g-bb:var(--ky-bg);--g-bt:var(--ky-fg)}
 .tab.on .kb2[class*="g-"]{box-shadow:0 0 0 1px rgba(255,255,255,.55)}
+
+.rvl .dsm{font-size:12.5px;color:var(--sub);margin:3px 0 2px;line-height:1.6}
 </style>
 </head>
 <body>
@@ -497,7 +518,7 @@ html[data-theme="dark"]{--kr-bg:#263757;--kr-fg:#c6d6f5;--kr-bd:#3a5078;--km-bg:
 <div class="cv-rule"></div>
 <h1>化学<small>ファイナルチェック</small></h1>
 <p class="cv-sub">共通テスト・センター試験　正誤問題の分野別整理</p>
-<div class="course" id="course" role="group" aria-label="コース"><button type="button" data-c="chem"><b>化学</b><small>化学基礎＋化学　全9章</small></button><button type="button" data-c="kiso"><b>化学基礎</b><small>化学基礎のみ　第1〜3章</small></button></div>
+<div class="course" id="course" role="group" aria-label="コース"><button type="button" data-c="chem"><b>化学</b><small>化学基礎＋化学　全10章</small></button><button type="button" data-c="kiso"><b>化学基礎</b><small>化学基礎のみ　第1〜4章</small></button></div>
 <button type="button" class="go-run" id="openSetup"><span class="gi">▶</span><span class="gt"><b>演習モードではじめる</b><span>章・出典・問題数を選んでランダム出題　タイマーも使えます</span></span><span class="ga">→</span></button>
 <div class="acts">
 <button type="button" class="act" id="goDrill"><span class="ai">⚡</span><span><b>一問一答</b><small>記述を1つずつ ○×</small></span></button>
@@ -513,7 +534,7 @@ html[data-theme="dark"]{--kr-bg:#263757;--kr-fg:#c6d6f5;--kr-bd:#3a5078;--km-bg:
 <section class="chsec"><div class="sech">分野を選ぶ</div><div class="chgrid" id="chgrid"></div></section>
 <section class="srch"><div class="sech">語句・単元で探す</div>
 <div class="sbar"><input id="qbox" type="search" enterkeyhint="search" placeholder="例：緩衝液，ファンデルワールス力，NH3" autocomplete="off"><button type="button" id="qclr">クリア</button></div>
-<details class="tagsel" id="tagsel"><summary>単元から選ぶ<em id="tagon"></em></summary><div id="tagwrap"></div></details>
+<details class="tagsel" id="tagsel"><summary>#単元から選ぶ<em id="tagon"></em></summary><div id="tagwrap"></div></details>
 </section>
 <nav id="nav">
 <div class="tabs" id="tabs"></div>
@@ -531,15 +552,16 @@ html[data-theme="dark"]{--kr-bg:#263757;--kr-fg:#c6d6f5;--kr-bd:#3a5078;--km-bg:
 <div class="sbox">
 <h2>演習モード</h2>
 <fieldset><legend>出題範囲（章）</legend><div class="opts">
-<label data-ch="1"><input type="checkbox" name="sch" value="1" checked><span>1. <small class="kb2 g-kiso">基礎</small>物質の構成</span></label>
-<label data-ch="2"><input type="checkbox" name="sch" value="2" checked><span>2. <small class="kb2 g-kiso">基礎</small>物質の変化</span></label>
-<label data-ch="3"><input type="checkbox" name="sch" value="3" checked><span>3. <small class="kb2 g-kiso">基礎</small>化学と人間生活・実験</span></label>
-<label data-ch="4"><input type="checkbox" name="sch" value="4" checked><span>4. <small class="kb2 g-riron">理論</small>物質の構成と状態</span></label>
-<label data-ch="5"><input type="checkbox" name="sch" value="5" checked><span>5. <small class="kb2 g-riron">理論</small>物質の変化と平衡</span></label>
-<label data-ch="6"><input type="checkbox" name="sch" value="6" checked><span>6. <small class="kb2 g-muki">無機</small>非金属元素</span></label>
-<label data-ch="7"><input type="checkbox" name="sch" value="7" checked><span>7. <small class="kb2 g-muki">無機</small>金属元素</span></label>
-<label data-ch="8"><input type="checkbox" name="sch" value="8" checked><span>8. <small class="kb2 g-yuki">有機</small>脂肪族と芳香族</span></label>
-<label data-ch="9"><input type="checkbox" name="sch" value="9" checked><span>9. <small class="kb2 g-yuki">有機</small>高分子化合物</span></label>
+<label data-ch="1"><input type="checkbox" name="sch" value="1" checked><span>1. <small class="kb2 g-kiso">基礎</small>物質の成分と構成粒子</span></label>
+<label data-ch="2"><input type="checkbox" name="sch" value="2" checked><span>2. <small class="kb2 g-kiso">基礎</small>化学結合と物質の状態</span></label>
+<label data-ch="3"><input type="checkbox" name="sch" value="3" checked><span>3. <small class="kb2 g-kiso">基礎</small>物質の変化</span></label>
+<label data-ch="4"><input type="checkbox" name="sch" value="4" checked><span>4. <small class="kb2 g-kiso">基礎</small>化学と人間生活・実験</span></label>
+<label data-ch="5"><input type="checkbox" name="sch" value="5" checked><span>5. <small class="kb2 g-riron">理論</small>物質の構成と状態</span></label>
+<label data-ch="6"><input type="checkbox" name="sch" value="6" checked><span>6. <small class="kb2 g-riron">理論</small>物質の変化と平衡</span></label>
+<label data-ch="7"><input type="checkbox" name="sch" value="7" checked><span>7. <small class="kb2 g-muki">無機</small>非金属元素</span></label>
+<label data-ch="8"><input type="checkbox" name="sch" value="8" checked><span>8. <small class="kb2 g-muki">無機</small>金属元素</span></label>
+<label data-ch="9"><input type="checkbox" name="sch" value="9" checked><span>9. <small class="kb2 g-yuki">有機</small>脂肪族と芳香族</span></label>
+<label data-ch="10"><input type="checkbox" name="sch" value="10" checked><span>10. <small class="kb2 g-yuki">有機</small>高分子化合物</span></label>
 </div></fieldset>
 <fieldset><legend>出典</legend><div class="opts">
 <label><input type="radio" name="src" value="all" checked><span>すべて</span></label>
@@ -590,15 +612,16 @@ html[data-theme="dark"]{--kr-bg:#263757;--kr-fg:#c6d6f5;--kr-bd:#3a5078;--km-bg:
 <h2>一問一答</h2>
 <p class="shint" style="margin:-4px 0 10px">問題から記述を1つずつ取り出して ○× で答えます．間違えた記述は「今日の復習」に入ります．</p>
 <fieldset><legend>出題範囲（章）</legend><div class="opts">
-<label data-ch="1"><input type="checkbox" name="dch" value="1" checked><span>1. <small class="kb2 g-kiso">基礎</small>物質の構成</span></label>
-<label data-ch="2"><input type="checkbox" name="dch" value="2" checked><span>2. <small class="kb2 g-kiso">基礎</small>物質の変化</span></label>
-<label data-ch="3"><input type="checkbox" name="dch" value="3" checked><span>3. <small class="kb2 g-kiso">基礎</small>化学と人間生活・実験</span></label>
-<label data-ch="4"><input type="checkbox" name="dch" value="4" checked><span>4. <small class="kb2 g-riron">理論</small>物質の構成と状態</span></label>
-<label data-ch="5"><input type="checkbox" name="dch" value="5" checked><span>5. <small class="kb2 g-riron">理論</small>物質の変化と平衡</span></label>
-<label data-ch="6"><input type="checkbox" name="dch" value="6" checked><span>6. <small class="kb2 g-muki">無機</small>非金属元素</span></label>
-<label data-ch="7"><input type="checkbox" name="dch" value="7" checked><span>7. <small class="kb2 g-muki">無機</small>金属元素</span></label>
-<label data-ch="8"><input type="checkbox" name="dch" value="8" checked><span>8. <small class="kb2 g-yuki">有機</small>脂肪族と芳香族</span></label>
-<label data-ch="9"><input type="checkbox" name="dch" value="9" checked><span>9. <small class="kb2 g-yuki">有機</small>高分子化合物</span></label>
+<label data-ch="1"><input type="checkbox" name="dch" value="1" checked><span>1. <small class="kb2 g-kiso">基礎</small>物質の成分と構成粒子</span></label>
+<label data-ch="2"><input type="checkbox" name="dch" value="2" checked><span>2. <small class="kb2 g-kiso">基礎</small>化学結合と物質の状態</span></label>
+<label data-ch="3"><input type="checkbox" name="dch" value="3" checked><span>3. <small class="kb2 g-kiso">基礎</small>物質の変化</span></label>
+<label data-ch="4"><input type="checkbox" name="dch" value="4" checked><span>4. <small class="kb2 g-kiso">基礎</small>化学と人間生活・実験</span></label>
+<label data-ch="5"><input type="checkbox" name="dch" value="5" checked><span>5. <small class="kb2 g-riron">理論</small>物質の構成と状態</span></label>
+<label data-ch="6"><input type="checkbox" name="dch" value="6" checked><span>6. <small class="kb2 g-riron">理論</small>物質の変化と平衡</span></label>
+<label data-ch="7"><input type="checkbox" name="dch" value="7" checked><span>7. <small class="kb2 g-muki">無機</small>非金属元素</span></label>
+<label data-ch="8"><input type="checkbox" name="dch" value="8" checked><span>8. <small class="kb2 g-muki">無機</small>金属元素</span></label>
+<label data-ch="9"><input type="checkbox" name="dch" value="9" checked><span>9. <small class="kb2 g-yuki">有機</small>脂肪族と芳香族</span></label>
+<label data-ch="10"><input type="checkbox" name="dch" value="10" checked><span>10. <small class="kb2 g-yuki">有機</small>高分子化合物</span></label>
 </div></fieldset>
 <fieldset><legend>出典</legend><div class="opts">
 <label><input type="radio" name="dsrc" value="all" checked><span>すべて</span></label>
@@ -665,10 +688,10 @@ html[data-theme="dark"]{--kr-bg:#263757;--kr-fg:#c6d6f5;--kr-bd:#3a5078;--km-bg:
 <div class="sfoot"><span class="pn"></span><button type="button" id="cfgClose">閉じる</button></div>
 </div></div>
 
-<script src="katex/katex.min.js?v=202611140437"></script>
-<script src="katex/mhchem.min.js?v=202611140437"></script>
-<script src="data.js?v=202611140437"></script>
-<script src="qrcode.js?v=202611140437" defer></script>
-<script src="app.js?v=202611140437"></script>
+<script src="katex/katex.min.js?v=202611160115"></script>
+<script src="katex/mhchem.min.js?v=202611160115"></script>
+<script src="data.js?v=202611160115"></script>
+<script src="qrcode.js?v=202611160115" defer></script>
+<script src="app.js?v=202611160115"></script>
 </body>
 </html>

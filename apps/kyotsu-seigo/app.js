@@ -1,10 +1,10 @@
 /* 化学ファイナルチェックお試し：過去問 正誤問題（記述ごとの○×判定・演習モード） */
 (function () {
   'use strict';
-  var CH = ['物質の構成', '物質の変化', '化学と人間生活・実験', '物質の構成と状態', '物質の変化と平衡', '非金属元素', '金属元素', '脂肪族と芳香族', '高分子化合物'];
-  var CHS = ['物質の構成', '物質の変化', '人間生活・実験', '構成と状態', '変化と平衡', '非金属元素', '金属元素', '脂肪族・芳香族', '高分子化合物'];   // 狭い画面の章タブ用
-  var KISO = 3;   // 第1〜3章が化学基礎
-  var GRP = ['kiso', 'kiso', 'kiso', 'riron', 'riron', 'muki', 'muki', 'yuki', 'yuki'];   // 化学基礎・理論・無機・有機
+  var CH = ['物質の成分と構成粒子', '化学結合と物質の状態', '物質の変化', '化学と人間生活・実験', '物質の構成と状態', '物質の変化と平衡', '非金属元素', '金属元素', '脂肪族と芳香族', '高分子化合物'];
+  var CHS = ['成分と粒子', '結合と状態', '物質の変化', '生活・実験', '構成と状態', '変化と平衡', '非金属元素', '金属元素', '脂肪族・芳香族', '高分子化合物'];   // 狭い画面の章タブ用
+  var KISO = 4;   // 第1〜4章が化学基礎
+  var GRP = ['kiso', 'kiso', 'kiso', 'kiso', 'riron', 'riron', 'muki', 'muki', 'yuki', 'yuki'];   // 化学基礎・理論・無機・有機
   var GNM = { kiso: '基礎', riron: '理論', muki: '無機', yuki: '有機' };
   function gBadge(n, long) { var g = GRP[n - 1]; return '<small class="kb2 g-' + g + '">' + (long && g === 'kiso' ? '化学基礎' : GNM[g]) + '</small>'; }
   function chTitle(n) { return GNM[GRP[n - 1]] + '：' + CH[n - 1]; }
@@ -221,7 +221,12 @@
     return m === 'y' ? '<span class="mark ok">○ できた</span>' : m === 'n' ? '<span class="mark ng">× まちがえた</span>' : '<span class="mark"></span>';
   }
   function metaHTML(it) {
-    return '<span class="no">' + it.ch + '–' + it.n + '</span><span>' + it.y + '年度</span><span class="badge ' + (it.c ? 'c' : '') + '">' + it.ex + '</span><span>' + it.q + '</span>';
+    return '<span class="no">' + it.ch + '–' + it.n + '</span><span>' + it.y + '年度</span>' + exBadge(it) + '<span>' + it.q + '</span>';
+  }
+  // 試験名の札．化学基礎は頭に「基」をつける
+  function exBadge(it) {
+    var b = '<span class="badge ' + (it.c ? 'c' : '') + '">' + it.ex + '</span>';
+    return it.ch <= KISO ? '<span class="exk" title="化学基礎"><i>基</i>' + b + '</span>' : b;
   }
 
   /* opts.onDone(result) … 答え合わせ後に呼ぶ（演習モード用）．result = {id, judged, right, total, mark} */
@@ -267,7 +272,9 @@
     function updW() {
       var q = el.querySelector('.wq'); if (q) q.outerHTML = wqHTML(it.id);
       Array.prototype.forEach.call(el.querySelectorAll('.jg'), function (g) { var c = g.querySelector('.wc'); if (c) c.outerHTML = wcHTML(it.id, g.dataset.s); });
+      el.classList.toggle('haswc', !!el.querySelector('.wc:not([hidden])'));
     }
+    el.classList.toggle('haswc', !!el.querySelector('.wc:not([hidden])'));
     var qrec = false, qrecM = null;   // この回の答え合わせを問題の記録に入れたか（自己採点は付け替えられる）
     var opened = false;
     var jgs = el.querySelectorAll('.jg');
@@ -489,7 +496,7 @@
       c.classList.toggle('on', i + 1 === ch && !searching());
     });
   }
-  function fromHash() { var m = (location.hash || '').match(/^#ch([1-9])$/); ch = m ? +m[1] : 1; if (!chIn(ch)) { ch = 1; if (m) history.replaceState(null, '', location.pathname + location.search + '#ch1'); } }
+  function fromHash() { var m = (location.hash || '').match(/^#ch(\d{1,2})$/); ch = m ? +m[1] : 1; if (ch < 1 || ch > CH.length) ch = 1; if (!chIn(ch)) { ch = 1; if (m) history.replaceState(null, '', location.pathname + location.search + '#ch1'); } }
   // 一覧は最初の数問だけすぐ表示し，残りは少しずつ描画する
   var RJ = null;
   function later(f) { if (window.requestIdleCallback) requestIdleCallback(f, { timeout: 120 }); else setTimeout(f, 16); }
@@ -817,8 +824,10 @@
   function dcard(o, done) {
     var it = o.it, lead = leadOf(o);
     var ctx = (it.P || []).filter(function (b) { return b !== o.lst; });
-    var auto = !o.b || !lead || ctx.length > 1;
+    var rv = ses && (ses.kind === 'rv' || ses.kind === 'rvp');   // 今日の復習では問題文をはじめから開いておく
     var noCtx = o.b && lead === (o.stem && o.stem.h) && ctx.length === 1;   // 見出しが問題文そのもの
+    if (rv && !noCtx) lead = '';
+    var auto = rv || !o.b || !lead || ctx.length > 1;
     var el = document.createElement('section');
     el.className = 'dcard';
     function dw() { var w = sW(o.id, o.s); return '<span class="wq' + (w >= 3 ? ' w3' : '') + '"' + (w ? '' : ' hidden') + '>この記述の間違い ' + w + '回</span>'; }
@@ -1020,7 +1029,8 @@
     var ic = x[2] === 1 ? '<span class="ri ok">○</span>' : x[2] === 0 ? '<span class="ri ng">×</span>' : '<span class="ri un">？</span>';
     if (x[0] === 's') {
       var o = SBY[x[1]]; if (!o) return '';
-      return '<li data-id="' + o.id + '"><div class="dm">' + ic + ' ' + o.it.ch + '–' + o.it.n + '　' + o.it.y + '年度 ' + o.it.ex + '　→ この記述は' + (o.v ? '正しい' : '誤り') + '</div><div class="dt"><b>' + o.l + '</b> ' + (o.b ? blocks(o.b) : '（問題文・図を参照）') + '</div></li>';
+      var st = o.stem ? '<div class="dsm">' + o.stem.h + '</div>' : '';
+      return '<li data-id="' + o.id + '"><div class="dm">' + ic + ' ' + o.it.ch + '–' + o.it.n + '　' + o.it.y + '年度 ' + o.it.ex + '　→ この記述は' + (o.v ? '正しい' : '誤り') + '</div>' + st + '<div class="dt"><b>' + o.l + '</b> ' + (o.b ? blocks(o.b) : '（問題文・図を参照）') + '</div></li>';
     }
     var it = BYID[x[1]]; if (!it) return '';
     return '<li data-id="' + it.id + '"><div class="dm">' + ic + ' 問題　' + it.ch + '–' + it.n + '　' + it.y + '年度 ' + it.ex + '</div><div class="dt">' + esc(it.q) + '</div></li>';
