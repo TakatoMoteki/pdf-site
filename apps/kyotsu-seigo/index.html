@@ -14,7 +14,17 @@
   var SKINS = {
     yume: { name: 'ゆめかわ', P: '#e0659f', A: '#a98fe0', bg: '#fff4fa', card: '#ffffff', soft: '#fdeaf4', line: '#f6d9e8', line2: '#efc6dc', ink: '#5d4668', sub: '#9a7ea6',
       font: '"Zen Maru Gothic","Hiragino Maru Gothic ProN","Hiragino Sans",sans-serif', fontUrl: 'Zen+Maru+Gothic:wght@500;700;900',
-      praise: ['正解〜！天才すぎ ✧', 'えらすぎ♡', 'かわいいのに強い ✦', '神ってる ✧˖°'] },
+      praise: ['正解〜！天才すぎ ✧', 'えらすぎ♡', 'かわいいのに強い ✦', '神ってる ✧˖°', 'その調子♡ 化学に愛されてる', 'ちゃんと覚えてるのえらい ☁︎', 'さすが〜！ときめいた♡', '完璧すぎて泣ける 🫧', '頭の中きらきらしてる ✧', '合格に一歩近づいた♡'],
+      // 前に間違えた記述を正解したとき
+      back: ['前は間違えてたのに…成長えらすぎ♡', '苦手克服 ✧ やればできる子', 'リベンジ成功〜！🫧', 'ちゃんと復習した証拠 ☁︎ えらい'],
+      // 連続正解
+      combo: { 3: '3問連続正解 ✧ ノッてるね♡', 5: '5連続！今日のあなた最強 ✧˖°', 10: '10連続…！もう化学の妖精 🧚', 20: '20連続！？伝説のゆめかわ ✧' },
+      // 不正解（励まし・ちょっと厳しめ）
+      ng: ['だいじょぶ，ここで間違えてよかった♡', 'ドンマイ☁︎ 解説読めば覚えられる', '惜しい〜！次はいける ✧', '間違えたとこが伸びしろ 🫧', '今覚えれば本番は勝ち♡', 'ちょっと待って？問題文もう一回読も？☁︎', 'その記述，ちゃんと最後まで読んだ…？🥺'],
+      // 同じ記述を2回以上間違えたとき（厳しめ）
+      hard: ['また同じとこ…！今日こそ覚えよ？', 'これ前も間違えたよね？ メモしよ ✍︎', 'ゆめかわでも見逃せないやつ…！解説もう一回♡', '本番でやったら泣くやつ 🥲 ここで止めよ', '次も間違えたら…わかってるよね？♡（圧）'],
+      // 3問以上続けて不正解のとき
+      down: ['いったん深呼吸しよ☁︎ 解説ゆっくり読も', '連続ミスはつかれてるサインかも 🫧 ひと休みもあり', '落ち込まないで♡ 間違えた数だけ強くなる'] },
     street: { name: 'ストリート', P: '#141414', A: '#ff2e88', bg: '#fbfbfa', card: '#ffffff', soft: '#f1f1f0', line: '#d9d9d7', line2: '#141414', ink: '#141414', sub: '#5f5f5c',
       font: '"Zen Kaku Gothic New","Hiragino Sans",sans-serif', latin: '"Anton","Impact",sans-serif', fontUrl: 'Anton&family=Zen+Kaku+Gothic+New:wght@500;700;900',
       praise: ['NICE. 正解，強すぎ', 'BOOM. 余裕', 'ガチ正解', 'さすがすぎる'] },
@@ -47,6 +57,21 @@
     (document.head || document.documentElement).appendChild(l);
   }
   window.CFC_OSHI = { MAIN: MAIN, ACC: ACC, SKINS: SKINS,
+    // 正解・不正解のひとこと．c = { streak: 連続正解数, down: 連続不正解数, again: 同じ記述を2回以上間違えた, back: 前に間違えた記述を正解 }
+    say: function (ok, c) {
+      var k = document.documentElement.getAttribute('data-skin'), sk = SKINS[k]; c = c || {};
+      if (!sk) return '';
+      function pick(a) { return a && a.length ? a[Math.floor(Math.random() * a.length)] : ''; }
+      if (ok) {
+        if (sk.combo && c.streak >= 3) { var cm = sk.combo[c.streak]; if (!cm && c.streak > 20 && c.streak % 10 === 0) cm = c.streak + '連続 ✧ もう止まらない♡'; if (cm) return cm; }
+        if (sk.back && c.back) return pick(sk.back);
+        return pick(sk.praise);
+      }
+      if (!sk.ng) return '';
+      if (c.again && sk.hard) return pick(sk.hard);
+      if (c.down >= 3 && sk.down && c.down % 3 === 0) return pick(sk.down);
+      return pick(sk.ng);
+    },
     praise: function () { var k = document.documentElement.getAttribute('data-skin'), sk = SKINS[k]; return sk ? sk.praise[Math.floor(Math.random() * sk.praise.length)] : ''; },
     apply: function (cfg) {
       var de = document.documentElement, st = de.style;
@@ -111,7 +136,7 @@ try{var c=JSON.parse(localStorage.getItem("cfc-cfg")||"{}")||{},d=document.docum
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>化学ファイナルチェックお試し</title>
-<link rel="stylesheet" href="katex/katex.min.css?v=202611180116">
+<link rel="stylesheet" href="katex/katex.min.css?v=202611180356">
 <style>
 :root{--navy:#13254a;--teal:#1f4e8c;--amber:#d18f1f;--ink:#1f2328;--sub:#5b6270;--line:#e3e6ea;--line2:#cfd5dc;--bg:#f6f7f9;--card:#fff;--soft:#eef1f5;--glass:rgba(255,255,255,.97);--hd:#13254a;--onGold:#13254a;--navyD:#13254a;--ok:#1a7f4b;--ng:#c0392b;--okbg:#e8f5ee;--ngbg:#fbeceb;--fz:1}
 html[data-theme="dark"]{--ink:#e6e8ee;--sub:#9aa2b2;--line:#2c3446;--line2:#3a4357;--bg:#0f1420;--card:#171d2b;--soft:#222a3b;--glass:rgba(23,29,43,.97);--hd:#cdd9f3;--ok:#3fbf7f;--ng:#ff6b5e;--okbg:#14301f;--ngbg:#3a1b1b;--teal:#5b8fd9;--navyD:#2c5394;color-scheme:dark}
@@ -683,6 +708,10 @@ html[data-theme="dark"] .tsec .tg.on{background:var(--navyD);border-color:var(--
 #kStd[hidden],#kSty[hidden]{display:none}
 .praise{display:inline-block;margin-left:8px;font-weight:800;color:var(--gold2)}
 .dv .praise{font-size:13px}
+.praise.ngp{color:var(--hd)}
+.dv .praise{display:table;margin:6px 0 0}
+html[data-skin="yume"] .praise{background:var(--card);border:1px solid var(--line2);border-radius:999px;padding:3px 12px;font-size:13px;line-height:1.5}
+html[data-skin="yume"] .res .praise{display:table;margin:6px 0 0}
 /* ---- スタイル共通 */
 html[data-skin] body{font-family:var(--skin-font)}
 html[data-skin] .cv-en{font-family:var(--skin-latin)}
@@ -1067,10 +1096,10 @@ html[data-theme="dark"] .gnav button:not(.sec),html[data-theme="dark"] .gdots i.
 <div class="gnav"><button type="button" id="gSkip" class="sec">スキップ</button><button type="button" id="gPrev" class="sec" hidden>← 戻る</button><button type="button" id="gNext">次へ →</button></div>
 </div></div>
 
-<script src="katex/katex.min.js?v=202611180116"></script>
-<script src="katex/mhchem.min.js?v=202611180116"></script>
-<script src="data.js?v=202611180116"></script>
-<script src="qrcode.js?v=202611180116" defer></script>
-<script src="app.js?v=202611180116"></script>
+<script src="katex/katex.min.js?v=202611180356"></script>
+<script src="katex/mhchem.min.js?v=202611180356"></script>
+<script src="data.js?v=202611180356"></script>
+<script src="qrcode.js?v=202611180356" defer></script>
+<script src="app.js?v=202611180356"></script>
 </body>
 </html>

@@ -91,14 +91,24 @@
     return w;
   }
   // 取り消し：答える直前の記録をまるごと覚えておき，押し間違えたら戻す
-  function snap() { return JSON.stringify({ st: ST, qw: QW, rv: RV, ct: CT, mk: marks, rl: RVL }); }
+  function snap() { return JSON.stringify({ st: ST, qw: QW, rv: RV, ct: CT, mk: marks, rl: RVL, sk: STK }); }
   function restore(x) {
     var o = JSON.parse(x);
-    ST = o.st; QW = o.qw; RV = o.rv; CT = o.ct; marks = o.mk; RVL = o.rl;
+    ST = o.st; QW = o.qw; RV = o.rv; CT = o.ct; marks = o.mk; RVL = o.rl; STK = o.sk;
     sv('cfc-st', ST); sv('cfc-qw', QW); sv('cfc-rv', RV); sv('cfc-ct', CT); save(); sv('cfc-rvlog', RVL);
     updRev(); try { updToday(); } catch (e) { }
   }
   function undoBtnHTML() { return '<button type="button" class="undo" title="押し間違えたときに，この答えの記録を取り消します">↩ 取り消す</button>'; }
+  // 正解・不正解のひとこと（ゆめかわなど，スタイルに台詞があるときだけ）
+  var STK = { ok: 0, ng: 0 };
+  function sayLine(ok, keys) {
+    if (ok) { STK.ok++; STK.ng = 0; } else { STK.ng++; STK.ok = 0; }
+    if (!window.CFC_OSHI || !CFC_OSHI.say) return '';
+    var again = false, back = false;
+    (keys || []).forEach(function (k) { var r = ST[k]; if (!r) return; if (!ok && r[1] >= 2) again = true; if (ok && r[1] >= 1) back = true; });
+    var t = CFC_OSHI.say(ok, { streak: STK.ok, down: STK.ng, again: again, back: back });
+    return t ? '<span class="praise' + (ok ? '' : ' ngp') + '">' + esc(t) + '</span>' : '';
+  }
   function wqHTML(id) { var w = qW(id); return '<span class="wq' + (w >= 3 ? ' w3' : '') + '"' + (w ? '' : ' hidden') + ' title="間違えた回数">間違い ' + w + '回</span>'; }
   function wcHTML(id, s) { var w = sW(id, s); return '<span class="wc"' + (w ? '' : ' hidden') + ' title="この記述を間違えた回数">×' + w + '</span>'; }
   var TAGS = window.CFC_TAGS || [];
@@ -405,7 +415,8 @@
           setMark(it.id, mark);
           syncMark();
           res.innerHTML += '<span class="auto">　→ ' + (mark === 'y' ? '○' : '×') + ' で記録しました</span>';
-          var pz = mark === 'y' && window.CFC_OSHI ? CFC_OSHI.praise() : ''; if (pz) res.innerHTML += '<span class="praise">' + esc(pz) + '</span>';
+          var jk = []; Array.prototype.forEach.call(jgs, function (g) { if (g.classList.contains(mark === 'y' ? 'ok' : 'ng')) jk.push(it.id + '#' + g.dataset.s); });
+          res.innerHTML += sayLine(mark === 'y', jk);
         }
       } else {
         res.innerHTML = ''; res.className = 'res';
@@ -924,8 +935,8 @@
         Array.prototype.forEach.call(el.querySelectorAll('.dbtns button'), function (x) { x.disabled = true; x.classList.toggle('pick', x === b); });
         var dv = el.querySelector('.dv');
         dv.className = 'dv ' + (ok ? 'ok' : 'ng');
-        var pz = ok && window.CFC_OSHI ? CFC_OSHI.praise() : '';
-        dv.innerHTML = (ok ? '○ 正解' : '× 不正解') + (pz ? '<span class="praise">' + esc(pz) + '</span>' : '') + '<small>この記述は' + (o.v ? '正しい' : '誤り') + '</small>';
+        var pz = sayLine(ok, [o.id + '#' + o.s]);
+        dv.innerHTML = (ok ? '○ 正解' : '× 不正解') + '<small>この記述は' + (o.v ? '正しい' : '誤り') + '</small>' + pz;
         var h = hexp(it, o.l);
         el.querySelector('.dex').innerHTML = h ? blocks(h.b) : '<p>正解：' + it.a + '</p>';
         el.classList.add('done');
