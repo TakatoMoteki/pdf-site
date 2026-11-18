@@ -90,6 +90,15 @@
     for (var i = 0; i < ss.length; i++) w = Math.max(w, sW(id, ss[i]));
     return w;
   }
+  // 取り消し：答える直前の記録をまるごと覚えておき，押し間違えたら戻す
+  function snap() { return JSON.stringify({ st: ST, qw: QW, rv: RV, ct: CT, mk: marks, rl: RVL }); }
+  function restore(x) {
+    var o = JSON.parse(x);
+    ST = o.st; QW = o.qw; RV = o.rv; CT = o.ct; marks = o.mk; RVL = o.rl;
+    sv('cfc-st', ST); sv('cfc-qw', QW); sv('cfc-rv', RV); sv('cfc-ct', CT); save(); sv('cfc-rvlog', RVL);
+    updRev(); try { updToday(); } catch (e) { }
+  }
+  function undoBtnHTML() { return '<button type="button" class="undo" title="押し間違えたときに，この答えの記録を取り消します">↩ 取り消す</button>'; }
   function wqHTML(id) { var w = qW(id); return '<span class="wq' + (w >= 3 ? ' w3' : '') + '"' + (w ? '' : ' hidden') + ' title="間違えた回数">間違い ' + w + '回</span>'; }
   function wcHTML(id, s) { var w = sW(id, s); return '<span class="wc"' + (w ? '' : ' hidden') + ' title="この記述を間違えた回数">×' + w + '</span>'; }
   var TAGS = window.CFC_TAGS || [];
@@ -346,7 +355,9 @@
     syncMark();
 
     var kbDone = false;
+    var before = null, prevLJ = 0;
     function open() {
+      before = snap(); prevLJ = lastJudged;
       opened = true;
       if (!kbDone) { var kb = el.querySelector('.kb'); kb.innerHTML = blocks(it.K); typeset(kb); kbDone = true; }   // 解説は答え合わせのときに組み立てる
       el.classList.add('open');
@@ -383,7 +394,8 @@
       else if (judged && judged === total) { recQ(it.id, true); qrec = true; }
       updW();
       var res = el.querySelector('.res');
-      var mark = null;
+      var mark = null, ngs = [];
+      Array.prototype.forEach.call(jgs, function (g) { if (g.classList.contains('ng')) ngs.push(g.dataset.s); });
       if (judged) {
         res.innerHTML = (it.sel ? '解答：' : '記述の判定：') + '<b>' + right + '</b> / ' + total + ' 正解' + (judged < total ? '（' + (total - judged) + ' 個は未' + (it.sel ? '解答' : '判定') + '）' : '');
         res.className = 'res ' + (right === total ? 'ok' : 'ng');
@@ -400,10 +412,30 @@
       }
       lastJudged = judged;
       rb.textContent = 'もう一度解く';
-      if (opts.onDone) opts.onDone({ id: it.id, judged: judged, right: right, total: total, mark: mark });
+      el.cfc.undo = judged ? undo : null;
+      var af = el.querySelector('.after');
+      if (!opts.run) { af.innerHTML = judged ? '<div class="ubar hm">' + undoBtnHTML() + '<span class="uhint">押し間違えたときは，記録を戻して判定し直せます</span></div>' : ''; bindUndo(af, el.cfc.undo); }
+      if (opts.onDone) opts.onDone({ id: it.id, judged: judged, right: right, total: total, mark: mark, ngs: ngs });
+    }
+    // 答え合わせを取り消す：記録を戻し，選んだ ○× はそのままで判定前に戻る
+    function undo() {
+      if (!opened || !before) return;
+      restore(before); before = null;
+      opened = false; qrec = false; qrecM = null; lastJudged = prevLJ;
+      el.classList.remove('open');
+      Array.prototype.forEach.call(jgs, function (g) { g.classList.remove('shown', 'ok', 'ng'); });
+      Array.prototype.forEach.call(sprs, function (r) { r.classList.remove('shown', 'ok', 'ng'); Array.prototype.forEach.call(r.querySelectorAll('.sb'), function (x) { x.classList.remove('ans'); }); });
+      var res = el.querySelector('.res'); res.innerHTML = ''; res.className = 'res';
+      rb.textContent = (it.ns || it.sel) ? '答え合わせ' : '解答を見る';
+      el.querySelector('.after').innerHTML = ''; el.cfc.undo = null;
+      updW(); syncMark();
+      if (opts.onUndo) opts.onUndo();
+      toast('取り消しました．判定し直してから答え合わせしてください');
+      var r0 = el.getBoundingClientRect(); if (r0.top < 0 || r0.top > window.innerHeight) el.scrollIntoView({ block: 'start', behavior: 'smooth' });
     }
     function reset() {
-      opened = false; qrec = false; qrecM = null;
+      opened = false; qrec = false; qrecM = null; before = null;
+      el.querySelector('.after').innerHTML = ''; el.cfc.undo = null;
       el.classList.remove('open');
       pick = {};
       Array.prototype.forEach.call(jgs, function (g) {
@@ -429,9 +461,10 @@
         b.textContent = on ? '紙面を閉じる' : ((o.classList.contains('k') ? '解説を紙面で見る' : '紙面で見る') + (it.perm ? '（元の番号）' : ''));
       };
     });
-    el.cfc = { open: open, after: el.querySelector('.after') };
+    el.cfc = { open: open, after: el.querySelector('.after'), undo: null };
     return el;
   }
+  function bindUndo(box, fn) { var u = box.querySelector('.undo'); if (u) u.onclick = function () { if (fn) fn(); }; }
 
   // ---------------------------------------------------------------- 一覧
   var ch = 1, fsrc = 'all', fst = 'all';
@@ -635,6 +668,7 @@
     var c = card(it, {
       run: true,
       onDone: function (r) { run.res[id] = r; if (run.qt[id] === undefined) run.qt[id] = Date.now() - run.qs; clocks(); nextBtn(c); },
+      onUndo: function () { delete run.res[id]; delete run.qt[id]; clocks(); },
       onMark: function () { var r = run.res[id]; if (r) r.mark = marks[id] || null; }
     });
     M.appendChild(c);
@@ -645,7 +679,8 @@
   }
   function nextBtn(c) {
     var last = run.k === run.ids.length - 1;
-    c.cfc.after.innerHTML = '<button type="button" class="next">' + (last ? '結果を見る' : '次の問題へ →') + '</button>';
+    c.cfc.after.innerHTML = '<div class="ubar">' + (c.cfc.undo ? undoBtnHTML() : '') + '<button type="button" class="next">' + (last ? '結果を見る' : '次の問題へ →') + '</button></div>';
+    bindUndo(c.cfc.after, c.cfc.undo);
     c.cfc.after.querySelector('.next').onclick = function () {
       if (last) { clearInterval(timerId); showResult(); }
       else { run.k++; showRun(); }
@@ -665,17 +700,25 @@
       return '<li data-id="' + id + '">' + ic + '<span class="rm">' + metaHTML(it) + '</span>' + det + (qt !== undefined ? '<span class="rq">' + fmt(sec(qt)) + '</span>' : '') + '</li>';
     }).join('');
     var wrong = ids.filter(function (id) { var r = run.res[id]; return !r || (r.mark || marks[id]) !== 'y'; });
+    // 間違えた記述（記述ごとに判定したもの）
+    var wst = [];
+    ids.forEach(function (id) { var r = run.res[id]; if (r && r.ngs) r.ngs.forEach(function (s2) { var k = id + '#' + s2; if (SBY[k]) wst.push(k); }); });
     M.innerHTML = '<div class="result"><h2>結果' + (run.over ? '（時間切れ）' : '') + '</h2>' +
       '<div class="score"><b>' + ok + '</b> / ' + ids.length + ' 問 正解</div>' +
       (st ? '<div class="sub">記述ごとの判定：' + sr + ' / ' + st + '（' + Math.round(100 * sr / st) + '%）</div>' : '') +
       '<div class="sub">○ ' + ok + '　× ' + ng + '　未解答・未記録 ' + un + '</div>' +
       '<div class="sub rtm">⏱ かかった時間 <b>' + fmt(sec(run.end - run.t0)) + '</b>' + (nq ? '　1問あたり平均 <b>' + fmt(Math.round(tq / nq / 1000)) + '</b>' : '') + '</div>' +
       '<ul class="rlist">' + rows + '</ul>' +
-      '<div class="rbtns">' + (wrong.length ? '<button type="button" id="again">○以外の ' + wrong.length + ' 問をもう一度</button>' : '') +
-      '<button type="button" id="back" class="sec">一覧に戻る</button></div></div>';
+      '<div class="rbtns">' + (wst.length ? '<button type="button" id="wstGo">間違えた記述 ' + wst.length + ' 個を一問一答で</button>' : '') +
+      (wrong.length ? '<button type="button" id="again"' + (wst.length ? ' class="sec"' : '') + '>○以外の ' + wrong.length + ' 問をもう一度</button>' : '') +
+      '<button type="button" id="back" class="sec">一覧に戻る</button></div>' +
+      (wst.length ? '<h3 class="wsth">間違えた記述（' + wst.length + ' 個・タップで問題へ）</h3><ul class="dlist">' + wst.map(function (k) { return sLi(SBY[k]); }).join('') + '</ul>' : '') +
+      '</div>';
     typeset(M);
     var per = run.per;
     if (wrong.length) document.getElementById('again').onclick = function () { startRun(wrong.slice(), per); };
+    if (wst.length) $('wstGo').onclick = function () { startSes(wst.map(function (k) { return { t: 's', k: k }; }), '演習の間違い直し'); };
+    Array.prototype.forEach.call(M.querySelectorAll('.result .dlist li'), function (li) { li.onclick = function () { goTo(li.dataset.id); }; });
     document.getElementById('back').onclick = function () { run = null; fromHash(); render(); window.scrollTo(0, 0); updRev(); };
     Array.prototype.forEach.call(M.querySelectorAll('.rlist li'), function (li) {
       li.onclick = function () { goTo(li.dataset.id); };
@@ -875,6 +918,7 @@
       b.onclick = function () {
         if (answered) return; answered = true;
         var v = +b.dataset.v, ok = v === o.v;
+        var before = snap();
         recS(o.id, o.s, ok);
         var wq = el.querySelector('.meta .wq'); if (wq) wq.outerHTML = dw();
         Array.prototype.forEach.call(el.querySelectorAll('.dbtns button'), function (x) { x.disabled = true; x.classList.toggle('pick', x === b); });
@@ -886,7 +930,7 @@
         el.querySelector('.dex').innerHTML = h ? blocks(h.b) : '<p>正解：' + it.a + '</p>';
         el.classList.add('done');
         typeset(el);
-        if (done) done(ok, el);
+        if (done) done(ok, el, before);
       };
     });
     return el;
@@ -936,9 +980,10 @@
       '<span class="rsc">' + esc(ses.title) + '</span>' +
       '<button type="button" class="rquit" id="rquit">終了</button></div>';
   }
-  function sesNext(box) {
+  function sesNext(box, undo) {
     var last = ses.k === ses.q.length - 1;
-    box.innerHTML = '<button type="button" class="dnext">' + (last ? '結果を見る' : '次へ →') + '</button>';
+    box.innerHTML = '<div class="ubar">' + (undo ? undoBtnHTML() : '') + '<button type="button" class="dnext">' + (last ? '結果を見る' : '次へ →') + '</button></div>';
+    bindUndo(box, undo);
     var b = box.querySelector('.dnext');
     b.onclick = function () { if (last) sesResult(); else { ses.k++; showSes(); } };
     return b;
@@ -949,10 +994,13 @@
     $('rquit').onclick = function () { if (!my.res.length || confirm('ここで終了して結果を表示しますか？')) sesResult(); };
     if (e.t === 's') {
       var o = SBY[e.k];
-      var c = dcard(o, function (ok, el) {
+      var c = dcard(o, function (ok, el, before) {
         my.res[my.k] = { e: e, ok: ok };
         if (my.kind === 'rv') logRv(e, ok);
-        var b = sesNext(el.querySelector('.dfoot'));
+        var b = sesNext(el.querySelector('.dfoot'), function () {
+          if (ses !== my) return;
+          restore(before); my.res[my.k] = undefined; showSes(); toast('取り消しました．もう一度選んでください');
+        });
         try { b.focus({ preventScroll: true }); } catch (x) {}
         var r = el.querySelector('.dres').getBoundingClientRect();
         if (r.bottom > window.innerHeight) window.scrollBy({ top: Math.min(r.top - 60, r.bottom - window.innerHeight + 16), behavior: 'smooth' });
@@ -965,8 +1013,9 @@
         onDone: function (r) {
           my.res[my.k] = { e: e, ok: r.mark ? r.mark === 'y' : null };
           if (my.kind === 'rv') logRv(e, my.res[my.k].ok);
-          var box = cc.cfc.after; box.style.padding = '0 12px 14px'; sesNext(box);
+          var box = cc.cfc.after; box.style.padding = '0 12px 14px'; sesNext(box, cc.cfc.undo);
         },
+        onUndo: function () { my.res[my.k] = undefined; cc.cfc.after.style.padding = ''; },
         onMark: function () { var r = my.res[my.k]; if (r) { r.ok = marks[e.id] ? marks[e.id] === 'y' : null; if (my.kind === 'rv') logRv(e, r.ok); } }
       });
       M.appendChild(cc);
@@ -978,7 +1027,11 @@
     var k = ev.key.toLowerCase();
     if (k === 'o' || k === '1') { var b = M.querySelector('.dcard:not(.done) .dO'); if (b) b.click(); }
     else if (k === 'x' || k === '2') { var c = M.querySelector('.dcard:not(.done) .dX'); if (c) c.click(); }
+    else if (k === 'z' || k === 'backspace') { var u = M.querySelector('.ubar .undo'); if (u) { ev.preventDefault(); u.click(); } }
   });
+  function sLi(o) {
+    return '<li data-id="' + o.id + '"><div class="dm">' + o.it.ch + '–' + o.it.n + '　' + o.it.y + '年度 ' + o.it.ex + '　→ この記述は' + (o.v ? '正しい' : '誤り') + '</div><div class="dt"><b>' + o.l + '</b> ' + (o.b ? blocks(o.b) : '（問題文・図を参照）') + '</div></li>';
+  }
   function sesResult() {
     var my = ses, R = my.res.filter(Boolean);
     var sR = R.filter(function (r) { return r.e.t === 's'; }), qR = R.filter(function (r) { return r.e.t === 'q'; });
@@ -986,10 +1039,7 @@
     var wrong = R.filter(function (r) { return r.ok === false; });
     var rest = my.q.length - R.length;
     var li = wrong.map(function (r) {
-      if (r.e.t === 's') {
-        var o = SBY[r.e.k];
-        return '<li data-id="' + o.id + '"><div class="dm">' + o.it.ch + '–' + o.it.n + '　' + o.it.y + '年度 ' + o.it.ex + '　→ この記述は' + (o.v ? '正しい' : '誤り') + '</div><div class="dt"><b>' + o.l + '</b> ' + (o.b ? blocks(o.b) : '（問題文・図を参照）') + '</div></li>';
-      }
+      if (r.e.t === 's') return sLi(SBY[r.e.k]);
       var it = BYID[r.e.id];
       return '<li data-id="' + it.id + '"><div class="dm">問題　' + it.ch + '–' + it.n + '　' + it.y + '年度 ' + it.ex + '</div><div class="dt">' + esc(it.q) + '</div></li>';
     }).join('');
@@ -1595,6 +1645,32 @@
     var r = recTag();
     $('tdRec').hidden = !r;
     if (r) { $('tdRecL').textContent = '#' + TAGS[r.i] + '（' + r.why + '）から ' + Math.min(5, r.its.length) + ' 問'; $('tdRec').dataset.t = r.i; }
+    var w = weakList();
+    $('tdWeak').hidden = !w.length;
+    if (w.length) $('tdWeakL').textContent = w.length + ' 個' + (w.length > 20 ? 'から間違いの多い順に 20 個' : '');
+    var k = kyotsuLeft(), kb = $('tdK');
+    kb.hidden = !k;
+    if (k) kb.innerHTML = k.d > 0 ? '共テまで あと <b>' + k.d + '</b> 日' : '共テ本番　がんばって！';
+  }
+  // 苦手な記述：2回以上間違えた，または正解より間違いが多い記述（間違いの多い順）
+  function weakList() {
+    var L = STM.filter(function (o) { var r = ST[o.k]; return inC(o.it) && r && (r[1] >= 2 || r[1] > r[0]); });
+    shuffle(L);
+    return L.sort(function (a, b) { var x = ST[a.k], y = ST[b.k]; return (y[1] - y[0]) - (x[1] - x[0]) || y[1] - x[1]; });
+  }
+  $('tdWeak').onclick = function () {
+    var L = weakList().slice(0, 20); if (!L.length) return;
+    startSes(shuffle(L).map(function (o) { return { t: 's', k: o.k }; }), '苦手な記述');
+  };
+  // 共通テストまでの日数（本試験の1日目．2日間の試験中は「本番」）
+  var KYOTSU = [[2027, 0, 16], [2028, 0, 15]];
+  function kyotsuLeft() {
+    var t = today();
+    for (var i = 0; i < KYOTSU.length; i++) {
+      var d = Math.round(Date.UTC(KYOTSU[i][0], KYOTSU[i][1], KYOTSU[i][2]) / 86400000) - t;
+      if (d >= -1) return { d: d };
+    }
+    return null;
   }
   $('tdGoalSel').onchange = function () { CFG.goal = +this.value; sv('cfc-cfg', CFG); updToday(); };
   $('tdCont').onclick = function () { if (LAST.id && BYID[LAST.id]) { goTo(LAST.id); var el = $('q-' + LAST.id); if (el) { var nav = document.getElementById('nav'); window.scrollTo(0, el.getBoundingClientRect().top + window.pageYOffset - (nav ? nav.offsetHeight : 0) - 8); } } };
@@ -1635,6 +1711,39 @@
   $('bkGo').onclick = function () { openCfg(); $('expBtn').click(); };
   $('bkLater').onclick = function () { CFG.snooze = today() + 7; sv('cfc-cfg', CFG); updBackupNote(); };
   updBackupNote();
+  // ---------------------------------------------------------------- 使い方ガイド（はじめて開いたときだけ．設定からいつでも）
+  (function guide() {
+    var g = $('guide'); if (!g) return;
+    var pages = g.querySelectorAll('.gpg'), dots = $('gDots'), k = 0;
+    dots.innerHTML = Array.prototype.map.call(pages, function () { return '<i></i>'; }).join('');
+    function show(i) {
+      k = Math.max(0, Math.min(pages.length - 1, i));
+      Array.prototype.forEach.call(pages, function (x, j) { x.classList.toggle('on', j === k); });
+      Array.prototype.forEach.call(dots.children, function (x, j) { x.classList.toggle('on', j === k); });
+      $('gPrev').hidden = k === 0; $('gSkip').hidden = k > 0;
+      $('gNext').textContent = k === pages.length - 1 ? 'はじめる' : '次へ →';
+    }
+    function close() { g.classList.remove('on'); try { localStorage.setItem('cfc-guide', '1'); } catch (e) { } }
+    function openG() { show(0); g.classList.add('on'); }
+    $('gNext').onclick = function () { if (k === pages.length - 1) close(); else show(k + 1); };
+    $('gPrev').onclick = function () { show(k - 1); };
+    $('gSkip').onclick = close;
+    g.addEventListener('click', function (e) { if (e.target === g) close(); });
+    var x0 = null, y0 = 0, gb = $('gBody');
+    gb.addEventListener('touchstart', function (e) { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }, { passive: true });
+    gb.addEventListener('touchend', function (e) {
+      if (x0 === null) return; var dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0; x0 = null;
+      if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) show(k + (dx < 0 ? 1 : -1));
+    }, { passive: true });
+    $('guideOpen').onclick = function () { cfg.classList.remove('on'); setTimeout(openG, 230); };
+    var seen = ''; try { seen = localStorage.getItem('cfc-guide') || ''; } catch (e) { }
+    if (seen) return;
+    var fresh = !CT.n && !Object.keys(marks).length && !Object.keys(ST).length;
+    if (!fresh) { try { localStorage.setItem('cfc-guide', '1'); } catch (e) { } return; }   // すでに使っている人には出さない
+    if (/^#import/.test(location.hash)) return;
+    var nn = $('newsNote'); if (nn) { nn.hidden = true; try { localStorage.setItem('cfc-news', 'kisekae1'); } catch (e) { } }   // 着せ替えのお知らせはガイドに含める
+    setTimeout(openG, 350);
+  })();
   fromHash();
   render();
   updRev();

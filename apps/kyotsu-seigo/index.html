@@ -111,7 +111,7 @@ try{var c=JSON.parse(localStorage.getItem("cfc-cfg")||"{}")||{},d=document.docum
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>化学ファイナルチェックお試し</title>
-<link rel="stylesheet" href="katex/katex.min.css?v=202611161146">
+<link rel="stylesheet" href="katex/katex.min.css?v=202611180116">
 <style>
 :root{--navy:#13254a;--teal:#1f4e8c;--amber:#d18f1f;--ink:#1f2328;--sub:#5b6270;--line:#e3e6ea;--line2:#cfd5dc;--bg:#f6f7f9;--card:#fff;--soft:#eef1f5;--glass:rgba(255,255,255,.97);--hd:#13254a;--onGold:#13254a;--navyD:#13254a;--ok:#1a7f4b;--ng:#c0392b;--okbg:#e8f5ee;--ngbg:#fbeceb;--fz:1}
 html[data-theme="dark"]{--ink:#e6e8ee;--sub:#9aa2b2;--line:#2c3446;--line2:#3a4357;--bg:#0f1420;--card:#171d2b;--soft:#222a3b;--glass:rgba(23,29,43,.97);--hd:#cdd9f3;--ok:#3fbf7f;--ng:#ff6b5e;--okbg:#14301f;--ngbg:#3a1b1b;--teal:#5b8fd9;--navyD:#2c5394;color-scheme:dark}
@@ -786,6 +786,51 @@ html[data-skin="french"] .kpv-hd{background:repeating-linear-gradient(90deg,var(
 .calg i.l4{background:var(--navy);box-shadow:inset 0 0 0 2px var(--gold)}
 .calg i.fut{opacity:.35}
 .calg i.td{outline:1.5px solid var(--gold2);outline-offset:1px}
+
+/* ---- 使いやすさ（v39）：取り消し・親指の届く位置・苦手・共テまでの日数・使い方ガイド ---- */
+@supports (overflow:clip){.card,.dcard{overflow:clip}}
+.ubar{display:flex;gap:8px;align-items:stretch;margin-top:10px}
+.ubar .dnext,.ubar .next{flex:1;width:auto;margin:0}
+.after .ubar{margin:0 12px 14px}
+.undo{flex:0 0 auto;border:1px solid var(--line2);background:var(--card);color:var(--ink);border-radius:10px;padding:8px 12px;font-size:13px;font-weight:700;cursor:pointer}
+.ubar.hm{align-items:center;margin:2px 12px 12px}
+.ubar.hm .uhint{font-size:11.5px;color:var(--sub);line-height:1.4}
+body.running .top{display:none}
+body.running .dcard:not(.done) .dbtns{position:sticky;bottom:0;z-index:4;background:var(--card);box-shadow:0 -6px 12px -8px rgba(0,0,0,.25);padding-bottom:calc(14px + env(safe-area-inset-bottom))}
+body.running .dcard.done .dfoot{position:sticky;bottom:0;z-index:4;background:var(--soft);margin:0 -14px -14px;padding:0 14px calc(12px + env(safe-area-inset-bottom));box-shadow:0 -6px 12px -8px rgba(0,0,0,.25)}
+body.running .dcard.done .dfoot .ubar{margin-top:0;padding-top:10px}
+body.running .card:not(.open) .reveal{position:sticky;bottom:calc(10px + env(safe-area-inset-bottom));z-index:4;box-shadow:0 4px 14px rgba(0,0,0,.28)}
+body.running .card.open .after:not(:empty){position:sticky;bottom:0;z-index:4;background:var(--soft);padding-top:10px;padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -6px 12px -8px rgba(0,0,0,.25)}
+.td-k{font-size:12px;font-weight:700;color:var(--hd);background:var(--soft);border-radius:999px;padding:2px 9px}
+.td-k b{font-size:15px;margin:0 1px}
+.td-k[hidden]{display:none}
+.td-btns{display:flex;flex-wrap:wrap}
+.td-btns button{flex:1 1 150px}
+.wsth{font-size:14px;margin:16px 0 4px;color:var(--hd)}
+#wstGo{flex-basis:100%}
+.gbox{max-width:440px;padding-bottom:calc(14px + env(safe-area-inset-bottom))}
+.gbody{position:relative;min-height:250px;touch-action:pan-y}
+.gpg{display:none;text-align:center;padding:6px 6px 0;animation:gin .25s ease}
+.gpg.on{display:block}
+@keyframes gin{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.gpg{animation:none}}
+.gpg .gic{font-size:42px;line-height:1.2;margin:4px 0 2px}
+.gpg h2{font-size:19px;color:var(--hd);margin:4px 0 10px}
+.gpg p{font-size:14.5px;line-height:1.75;margin:6px 0}
+.gpg .gsm{font-size:12.5px;color:var(--sub)}
+.gpg ul{text-align:left;font-size:14px;line-height:1.7;margin:6px auto;padding-left:1.3em;max-width:340px}
+.gdemo{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line2);border-radius:10px;padding:8px 12px;margin:4px 0 8px;background:var(--card)}
+.gdemo .glb{font-weight:800;color:var(--hd)}.gdemo .gtx{color:var(--sub);font-size:13px;margin-right:6px}
+.gdemo .gb{display:inline-flex;align-items:center;justify-content:center;width:34px;height:30px;border:1px solid var(--line2);border-radius:7px;font-weight:800}
+.gdemo .gb.o{color:#2f6fd6}.gdemo .gb.x{color:#d6602f}.gdemo .gb.on{border-color:currentColor;box-shadow:0 0 0 2px currentColor inset}
+.gdots{display:flex;justify-content:center;gap:6px;margin:12px 0 10px}
+.gdots i{width:7px;height:7px;border-radius:50%;background:var(--line2);transition:.2s}
+.gdots i.on{background:var(--navy);width:18px;border-radius:4px}
+.gnav{display:flex;gap:8px}
+.gnav button{flex:1;border:0;border-radius:10px;padding:12px;font-size:15px;font-weight:700;cursor:pointer;background:var(--navy);color:#fff}
+.gnav button.sec{flex:0 0 auto;background:var(--soft);color:var(--ink)}
+.gnav button[hidden]{display:none}
+html[data-theme="dark"] .gnav button:not(.sec),html[data-theme="dark"] .gdots i.on{background:var(--navyD)}
 </style>
 </head>
 <body>
@@ -804,9 +849,9 @@ html[data-skin="french"] .kpv-hd{background:repeating-linear-gradient(90deg,var(
 <p class="cv-sub">共通テスト・センター試験　正誤問題の分野別整理</p>
 <div class="course" id="course" role="group" aria-label="コース"><button type="button" data-c="chem"><b>化学</b><small>化学基礎＋化学　全10章</small></button><button type="button" data-c="kiso"><b>化学基礎</b><small>化学基礎のみ　第1〜4章</small></button></div>
 <div class="today" id="todayBox">
-<div class="td-top"><span class="td-l">今日</span><span class="td-n"><b id="tdN">0</b> / <select id="tdGoalSel" aria-label="1日の目標"><option value="10">10</option><option value="20">20</option><option value="30">30</option><option value="50">50</option><option value="100">100</option></select> 問</span><span class="td-s" id="tdS"></span></div>
+<div class="td-top"><span class="td-l">今日</span><span class="td-n"><b id="tdN">0</b> / <select id="tdGoalSel" aria-label="1日の目標"><option value="10">10</option><option value="20">20</option><option value="30">30</option><option value="50">50</option><option value="100">100</option></select> 問</span><span class="td-k" id="tdK" hidden></span><span class="td-s" id="tdS"></span></div>
 <div class="td-bar"><i id="tdBar"></i></div>
-<div class="td-btns"><button type="button" id="tdCont" hidden><b>▶ 続きから</b><small id="tdContL"></small></button><button type="button" id="tdRec" hidden><b>★ 今日のおすすめ</b><small id="tdRecL"></small></button></div>
+<div class="td-btns"><button type="button" id="tdCont" hidden><b>▶ 続きから</b><small id="tdContL"></small></button><button type="button" id="tdRec" hidden><b>★ 今日のおすすめ</b><small id="tdRecL"></small></button><button type="button" id="tdWeak" hidden><b>✎ 苦手な記述</b><small id="tdWeakL"></small></button></div>
 </div>
 <button type="button" class="go-run" id="openSetup"><span class="gi">▶</span><span class="gt"><b>演習モードではじめる</b><span>章・出典・問題数を選んでランダム出題　タイマーも使えます</span></span><span class="ga">→</span></button>
 <div class="acts">
@@ -944,6 +989,7 @@ html[data-skin="french"] .kpv-hd{background:repeating-linear-gradient(90deg,var(
 <div class="setup" id="cfg" role="dialog" aria-modal="true" aria-label="設定">
 <div class="sbox cfgb">
 <h2>設定</h2>
+<div class="row" style="margin:0 0 6px"><button type="button" id="guideOpen">？ 使い方を見る</button></div>
 <fieldset><legend>文字の大きさ</legend><div class="opts">
 <label><input type="radio" name="fz" value="0.9"><span>小</span></label>
 <label><input type="radio" name="fz" value="1" checked><span>標準</span></label>
@@ -1008,10 +1054,23 @@ html[data-skin="french"] .kpv-hd{background:repeating-linear-gradient(90deg,var(
 <div class="sfoot"><span class="pn"></span><button type="button" id="cfgClose">閉じる</button></div>
 </div></div>
 
-<script src="katex/katex.min.js?v=202611161146"></script>
-<script src="katex/mhchem.min.js?v=202611161146"></script>
-<script src="data.js?v=202611161146"></script>
-<script src="qrcode.js?v=202611161146" defer></script>
-<script src="app.js?v=202611161146"></script>
+<div class="setup" id="guide" role="dialog" aria-modal="true" aria-label="使い方">
+<div class="sbox gbox">
+<div class="gbody" id="gBody">
+<div class="gpg on"><div class="gic">👋</div><h2>ようこそ</h2><p>共通テスト・センター試験の<b>正誤問題</b>を，記述ごとに ○× で判定しながら解いていくサイトです．</p><p class="gsm">登録は不要．記録はこの端末に保存されます．</p></div>
+<div class="gpg"><div class="gic">✏️</div><h2>解き方</h2><div class="gdemo"><span class="glb">①</span><span class="gtx">記述</span><span class="gb o">○</span><span class="gb x on">×</span></div><p>各記述が正しければ <b>○</b>，誤りを含めば <b>×</b> をタップして「<b>答え合わせ</b>」．</p><p class="gsm">押し間違えたら，答え合わせのあとに出る「<b>↩ 取り消す</b>」で記録を戻せます．</p></div>
+<div class="gpg"><div class="gic">🗂️</div><h2>問題の選び方</h2><ul><li><b>分野を選ぶ</b>・<b>#単元から選ぶ</b>：一覧で解く</li><li><b>演習モード</b>：ランダム出題．タイマーも使えます</li><li><b>一問一答</b>：記述を1つずつテンポよく</li></ul></div>
+<div class="gpg"><div class="gic">🔁</div><h2>くり返して覚える</h2><p>間違えた記述は，<b>翌日 → 3日後 → 1週間後</b>に「<b>今日の復習</b>」で出てきます．</p><p>ホームの「<b>今日</b>」で，1日の目標・連続日数・<b>苦手な記述</b>をチェックできます．</p></div>
+<div class="gpg"><div class="gic">🎨</div><h2>自分好みに</h2><p>「<b>設定</b>」で文字の大きさや，<b>推し色</b>・スタイルを変えられます．</p><p class="gsm">機種変更のときは，設定の「記録の引き継ぎ」で記録を移せます．この使い方は設定からいつでも見られます．</p></div>
+</div>
+<div class="gdots" id="gDots"></div>
+<div class="gnav"><button type="button" id="gSkip" class="sec">スキップ</button><button type="button" id="gPrev" class="sec" hidden>← 戻る</button><button type="button" id="gNext">次へ →</button></div>
+</div></div>
+
+<script src="katex/katex.min.js?v=202611180116"></script>
+<script src="katex/mhchem.min.js?v=202611180116"></script>
+<script src="data.js?v=202611180116"></script>
+<script src="qrcode.js?v=202611180116" defer></script>
+<script src="app.js?v=202611180116"></script>
 </body>
 </html>
