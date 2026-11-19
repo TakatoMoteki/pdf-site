@@ -136,7 +136,7 @@ try{var c=JSON.parse(localStorage.getItem("cfc-cfg")||"{}")||{},d=document.docum
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>化学ファイナルチェックお試し</title>
-<link rel="stylesheet" href="katex/katex.min.css?v=202611180356">
+<link rel="stylesheet" href="katex/katex.min.css?v=202611190047">
 <style>
 :root{--navy:#13254a;--teal:#1f4e8c;--amber:#d18f1f;--ink:#1f2328;--sub:#5b6270;--line:#e3e6ea;--line2:#cfd5dc;--bg:#f6f7f9;--card:#fff;--soft:#eef1f5;--glass:rgba(255,255,255,.97);--hd:#13254a;--onGold:#13254a;--navyD:#13254a;--ok:#1a7f4b;--ng:#c0392b;--okbg:#e8f5ee;--ngbg:#fbeceb;--fz:1}
 html[data-theme="dark"]{--ink:#e6e8ee;--sub:#9aa2b2;--line:#2c3446;--line2:#3a4357;--bg:#0f1420;--card:#171d2b;--soft:#222a3b;--glass:rgba(23,29,43,.97);--hd:#cdd9f3;--ok:#3fbf7f;--ng:#ff6b5e;--okbg:#14301f;--ngbg:#3a1b1b;--teal:#5b8fd9;--navyD:#2c5394;color-scheme:dark}
@@ -287,6 +287,7 @@ table.tb td{border:1px solid #888;padding:3px 8px}
 .tv.go{color:var(--ng);border:1.5px solid var(--ng)}
 .jg.ok .jb.on{box-shadow:0 0 0 2px var(--ok)}
 .jg.ng .jb.on{box-shadow:0 0 0 2px var(--ng)}
+.jg.shown::after{content:"";display:inline-block;width:20px;text-align:center;flex:none;font-family:"Hiragino Sans","Noto Sans JP",sans-serif;line-height:1}
 .jg.ok::after{content:"✓";color:var(--ok);font-weight:700}
 .jg.ng::after{content:"✗";color:var(--ng);font-weight:700}
 .jp{margin:10px 0 4px;border:1px solid var(--line);border-radius:8px;padding:6px 10px}
@@ -518,7 +519,7 @@ body.kiso .kb2,body.kiso .ichem{display:none}
 .wq[hidden]{display:none!important}
 .wc[hidden]{display:inline-block;visibility:hidden}
 .card:not(.haswc) .wc{display:none}
-.wc{font-size:11px;font-weight:700;color:var(--ng);min-width:22px;text-align:left;white-space:nowrap}
+.wc{font-size:11px;font-weight:700;color:var(--ng);min-width:2.6em;text-align:left;white-space:nowrap;flex:none}
 .dcard .meta .wq{margin-left:auto}
 
 /* ---- 章の色分け：化学基礎＝淡い黄色，化学＝淡い紺．化学は理論（グラフ）・無機（結晶格子）・有機（ベンゼン環）の模様 */
@@ -1096,10 +1097,10 @@ html[data-theme="dark"] .gnav button:not(.sec),html[data-theme="dark"] .gdots i.
 <div class="gnav"><button type="button" id="gSkip" class="sec">スキップ</button><button type="button" id="gPrev" class="sec" hidden>← 戻る</button><button type="button" id="gNext">次へ →</button></div>
 </div></div>
 
-<script src="katex/katex.min.js?v=202611180356"></script>
-<script src="katex/mhchem.min.js?v=202611180356"></script>
-<script src="data.js?v=202611180356"></script>
-<script src="qrcode.js?v=202611180356" defer></script>
-<script src="app.js?v=202611180356"></script>
+<script src="katex/katex.min.js?v=202611190047"></script>
+<script src="katex/mhchem.min.js?v=202611190047"></script>
+<script src="data.js?v=202611190047"></script>
+<script src="qrcode.js?v=202611190047" defer></script>
+<script src="app.js?v=202611190047"></script>
 </body>
 </html>
