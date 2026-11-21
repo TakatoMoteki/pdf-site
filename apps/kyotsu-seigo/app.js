@@ -11,9 +11,17 @@
   // コース：化学（全章）／化学基礎（第1〜3章）．記録はコースに関係なく共通
   var COURSE = 'chem';
   try { if ((JSON.parse(localStorage.getItem('cfc-cfg') || '{}') || {}).course === 'kiso') COURSE = 'kiso'; } catch (e) {}
-  function chIn(n) { return COURSE === 'chem' || n <= KISO; }
+  // 過去問（kako）／演習編＝予想問題（ens）．演習編は化学の章だけ
+  var SRC = 'kako';
+  try { if ((JSON.parse(localStorage.getItem('cfc-cfg') || '{}') || {}).src === 'ens') SRC = 'ens'; } catch (e) {}
+  function chIn(n) { return SRC === 'ens' ? n > KISO : (COURSE === 'chem' || n <= KISO); }
   function inC(it) { return chIn(it.ch); }
-  var D = window.CFC_DATA;
+  function firstCh() { for (var i = 1; i <= 10; i++) if (chIn(i)) return i; return 1; }
+  var D = window.CFC_DATA.filter(function (it) { return SRC === 'ens' ? !!it.e : !it.e; });
+  // 問題の出典の表示（過去問は年度と試験名，演習編は冊子の番号と題名）
+  function lbl(it) { return it.e ? it.q : it.y + '年度 ' + it.ex; }
+  function lbl2(it) { return it.e ? it.q : it.y + '年度 ' + it.ex + '　' + it.q; }
+  function hasMk(it, m) { return (it.mk || []).indexOf(m) >= 0; }
   var BYID = {};
   D.forEach(function (it) { BYID[it.id] = it; });
 
@@ -250,10 +258,12 @@
     return m === 'y' ? '<span class="mark ok">○ できた</span>' : m === 'n' ? '<span class="mark ng">× まちがえた</span>' : '<span class="mark"></span>';
   }
   function metaHTML(it) {
+    if (it.e) return '<span class="no">' + it.ch + '–' + it.n + '</span>' + exBadge(it) + '<span>' + esc(it.q) + '</span>';
     return '<span class="no">' + it.ch + '–' + it.n + '</span><span>' + it.y + '年度</span>' + exBadge(it) + '<span>' + it.q + '</span>';
   }
   // 試験名の札．化学基礎は頭に「基」をつける
   function exBadge(it) {
+    if (it.e) return '<span class="badge e">予想</span>' + (it.mk || []).map(function (m) { return '<span class="mkb' + (m === '頻出' ? ' hin' : ' mi') + '">' + m + '</span>'; }).join('');
     var b = '<span class="badge ' + (it.c ? 'c' : '') + '">' + it.ex + '</span>';
     return it.ch <= KISO ? '<span class="exk" title="化学基礎"><i>基</i>' + b + '</span>' : b;
   }
@@ -284,13 +294,13 @@
       (!opts.run && it.tg && it.tg.length ? '<div class="tgs">' + it.tg.map(function (i) { return '<button type="button" class="tg" data-t="' + i + '">#' + TAGS[i] + '</button>'; }).join('') + '</div>' : '') +
       hint +
       '<div class="pb">' + blocks(it.P) + panel + '</div>' +
-      '<div class="orig">' + (REPORT_URL ? '<a class="rpt" target="_blank" rel="noopener" href="' + esc(reportUrl(it)) + '">⚑ 誤りを報告</a>' : '') + '<button type="button" class="ob">' + (it.perm ? '紙面で見る（元の番号）' : '紙面で見る') + '</button><img class="img" alt="紙面（問題）" data-src="' + it.pi + '" style="aspect-ratio:' + (1 / it.par).toFixed(4) + '"></div>' +
+      '<div class="orig">' + (REPORT_URL ? '<a class="rpt" target="_blank" rel="noopener" href="' + esc(reportUrl(it)) + '">⚑ 誤りを報告</a>' : '') + (it.pi ? '<button type="button" class="ob">' + (it.perm ? '紙面で見る（元の番号）' : '紙面で見る') + '</button><img class="img" alt="紙面（問題）" data-src="' + it.pi + '" style="aspect-ratio:' + (1 / it.par).toFixed(4) + '">' : '') + '</div>' +
       '<button type="button" class="reveal">' + ((it.ns || it.sel) ? '答え合わせ' : '解答を見る') + '</button>' +
       '<div class="ansbox">' +
       '<div class="res"></div>' +
       '<div class="ansline"><span class="lbl">正解</span><span class="v">' + it.a + '</span></div>' +
       '<div class="kb"></div>' +
-      '<div class="orig k"><button type="button" class="ob">' + (it.perm ? '解説を紙面で見る（元の番号）' : '解説を紙面で見る') + '</button><img class="img" alt="紙面（解説）" data-src="' + it.ki + '" style="aspect-ratio:' + (1 / it.kar).toFixed(4) + '"></div>' +
+      (it.ki ? '<div class="orig k"><button type="button" class="ob">' + (it.perm ? '解説を紙面で見る（元の番号）' : '解説を紙面で見る') + '</button><img class="img" alt="紙面（解説）" data-src="' + it.ki + '" style="aspect-ratio:' + (1 / it.kar).toFixed(4) + '"></div>' : '') +
       '<div class="self"><button type="button" class="y">○ できた</button><button type="button" class="n">× まちがえた</button></div>' +
       '<div class="after"></div>' +
       '</div>';
@@ -466,6 +476,7 @@
     };
     Array.prototype.forEach.call(el.querySelectorAll('.orig'), function (o) {
       var b = o.querySelector('.ob'), im = o.querySelector('img');
+      if (!b) return;
       b.onclick = function () {
         var on = o.classList.toggle('on');
         if (on && !im.getAttribute('src')) im.src = im.dataset.src;
@@ -521,7 +532,7 @@
   segs('fsrc', function (f) { fsrc = f; });
   segs('fst', function (f) { fst = f; });
   function pass(it, f) {
-    return f === 'all' || (f === 'kyotsu' && !it.c) || (f === 'center' && it.c) || (f === 'ng' && marks[it.id] === 'n') ||
+    return f === 'all' || (f === 'kyotsu' && (it.e ? hasMk(it, '頻出') : !it.c)) || (f === 'center' && (it.e ? hasMk(it, '未出題') : it.c)) || (f === 'ng' && marks[it.id] === 'n') ||
       (f === 'un' && !marks[it.id]) || (f === 'ngun' && marks[it.id] !== 'y') || (f === 'w2' && qW(it.id) >= 2);
   }
   function stat() {
@@ -555,7 +566,7 @@
       c.classList.toggle('on', i + 1 === ch && !searching());
     });
   }
-  function fromHash() { var m = (location.hash || '').match(/^#ch(\d{1,2})$/); ch = m ? +m[1] : 1; if (ch < 1 || ch > CH.length) ch = 1; if (!chIn(ch)) { ch = 1; if (m) history.replaceState(null, '', location.pathname + location.search + '#ch1'); } }
+  function fromHash() { var m = (location.hash || '').match(/^#ch(\d{1,2})$/); ch = m ? +m[1] : firstCh(); if (ch < 1 || ch > CH.length) ch = firstCh(); if (!chIn(ch)) { ch = firstCh(); if (m) history.replaceState(null, '', location.pathname + location.search + '#ch' + ch); } }
   // 一覧は最初の数問だけすぐ表示し，残りは少しずつ描画する
   var RJ = null;
   function later(f) { if (window.requestIdleCallback) requestIdleCallback(f, { timeout: 120 }); else setTimeout(f, 16); }
@@ -582,7 +593,7 @@
     ses = null;
     if (searching()) return renderSearch();
     // センターの問題がない章では「センター」を選べないので，すべてに戻す
-    if (fsrc === 'center' && !D.some(function (it) { return it.ch === ch && it.c; })) {
+    if (fsrc === 'center' && !D.some(function (it) { return it.ch === ch && pass(it, 'center'); })) {
       fsrc = 'all';
       Array.prototype.forEach.call(document.querySelectorAll('#fsrc button'), function (y) { y.classList.toggle('on', y.dataset.f === 'all'); });
     }
@@ -595,7 +606,7 @@
     if (!L.length) { var e = document.createElement('div'); e.className = 'empty'; e.textContent = '該当する問題はありません'; M.appendChild(e); }
     var g = null, gens = [];
     L.forEach(function (it) {
-      var gg = it.c ? 'センター試験' : '共通テスト';
+      var gg = it.e ? '演習編（予想問題）' : it.c ? 'センター試験' : '共通テスト';
       if (gg !== g) { g = gg; gens.push(el2('grp', gg)); }
       gens.push(cardGen(it));
     });
@@ -762,7 +773,7 @@
   }
   // 誤植・質問の報告：Google フォームの「事前入力したURL」の {ID} を問題の情報に置きかえる（空なら報告ボタンを出さない）
   var REPORT_URL = '';
-  function reportUrl(it) { return REPORT_URL.replace('{ID}', encodeURIComponent(it.ch + '–' + it.n + '　' + it.y + '年度 ' + it.ex + ' ' + it.q + '（' + it.id + '）')); }
+  function reportUrl(it) { return REPORT_URL.replace('{ID}', encodeURIComponent(it.ch + '–' + it.n + '　' + lbl2(it) + '（' + it.id + '）')); }
   function plain(h) { var d = document.createElement('div'); d.innerHTML = h; return d.textContent; }
 
   // ================================================================ 検索
@@ -1041,7 +1052,7 @@
     else if (k === 'z' || k === 'backspace') { var u = M.querySelector('.ubar .undo'); if (u) { ev.preventDefault(); u.click(); } }
   });
   function sLi(o) {
-    return '<li data-id="' + o.id + '"><div class="dm">' + o.it.ch + '–' + o.it.n + '　' + o.it.y + '年度 ' + o.it.ex + '　→ この記述は' + (o.v ? '正しい' : '誤り') + '</div><div class="dt"><b>' + o.l + '</b> ' + (o.b ? blocks(o.b) : '（問題文・図を参照）') + '</div></li>';
+    return '<li data-id="' + o.id + '"><div class="dm">' + o.it.ch + '–' + o.it.n + '　' + lbl(o.it) + '　→ この記述は' + (o.v ? '正しい' : '誤り') + '</div><div class="dt"><b>' + o.l + '</b> ' + (o.b ? blocks(o.b) : '（問題文・図を参照）') + '</div></li>';
   }
   function sesResult() {
     var my = ses, R = my.res.filter(Boolean);
@@ -1052,7 +1063,7 @@
     var li = wrong.map(function (r) {
       if (r.e.t === 's') return sLi(SBY[r.e.k]);
       var it = BYID[r.e.id];
-      return '<li data-id="' + it.id + '"><div class="dm">問題　' + it.ch + '–' + it.n + '　' + it.y + '年度 ' + it.ex + '</div><div class="dt">' + esc(it.q) + '</div></li>';
+      return '<li data-id="' + it.id + '"><div class="dm">問題　' + it.ch + '–' + it.n + '　' + lbl(it) + '</div><div class="dt">' + esc(it.e ? '' : it.q) + '</div></li>';
     }).join('');
     M.innerHTML = '<div class="result"><h2>' + esc(my.title) + '　結果</h2>' +
       (sR.length ? '<div class="score"><b>' + sOk + '</b> / ' + sR.length + ' 記述 正解</div>' : '') +
@@ -1123,10 +1134,10 @@
     if (x[0] === 's') {
       var o = SBY[x[1]]; if (!o) return '';
       var st = o.stem ? '<div class="dsm">' + o.stem.h + '</div>' : '';
-      return '<li data-id="' + o.id + '"><div class="dm">' + ic + ' ' + o.it.ch + '–' + o.it.n + '　' + o.it.y + '年度 ' + o.it.ex + '　→ この記述は' + (o.v ? '正しい' : '誤り') + '</div>' + st + '<div class="dt"><b>' + o.l + '</b> ' + (o.b ? blocks(o.b) : '（問題文・図を参照）') + '</div></li>';
+      return '<li data-id="' + o.id + '"><div class="dm">' + ic + ' ' + o.it.ch + '–' + o.it.n + '　' + lbl(o.it) + '　→ この記述は' + (o.v ? '正しい' : '誤り') + '</div>' + st + '<div class="dt"><b>' + o.l + '</b> ' + (o.b ? blocks(o.b) : '（問題文・図を参照）') + '</div></li>';
     }
     var it = BYID[x[1]]; if (!it) return '';
-    return '<li data-id="' + it.id + '"><div class="dm">' + ic + ' 問題　' + it.ch + '–' + it.n + '　' + it.y + '年度 ' + it.ex + '</div><div class="dt">' + esc(it.q) + '</div></li>';
+    return '<li data-id="' + it.id + '"><div class="dm">' + ic + ' 問題　' + it.ch + '–' + it.n + '　' + lbl(it) + '</div><div class="dt">' + esc(it.e ? '' : it.q) + '</div></li>';
   }
   function showRvLog() {
     var L = rvLog();
@@ -1247,7 +1258,7 @@
     h += '<h3>よく間違える問題</h3>';
     if (!WQ.length) h += '<p class="shint">まだありません．答え合わせで間違えると，ここに集まります．</p>';
     else h += '<p class="shint">答え合わせで間違えた回数（記述の ○× や一問一答で同じ記述を何度も間違えたときは，その回数）の多い順．タップでその問題へ．</p><ul class="wlist wq2">' + WQ.slice(0, 20).map(function (it) {
-      return '<li data-id="' + it.id + '"><div class="wm"><span>' + it.ch + '–' + it.n + '　' + it.y + '年度 ' + esc(it.ex) + '　' + esc(it.q) + '</span><span><b>間違い ' + qW(it.id) + '回</b>' + (QW[it.id] && QW[it.id][0] ? '　正解 ' + QW[it.id][0] + '回' : '') + '</span></div></li>';
+      return '<li data-id="' + it.id + '"><div class="wm"><span>' + it.ch + '–' + it.n + '　' + esc(lbl2(it)) + '</span><span><b>間違い ' + qW(it.id) + '回</b>' + (QW[it.id] && QW[it.id][0] ? '　正解 ' + QW[it.id][0] + '回' : '') + '</span></div></li>';
     }).join('') + '</ul>';
     if (WQ.length) h += '<div class="bline" style="margin-top:8px"><button type="button" id="wqrun">間違えた ' + Math.min(WQ.length, 20) + ' 問を演習モードで解く</button></div>';
     // よく間違える記述
@@ -1258,7 +1269,7 @@
     if (!W.length) h += '<p class="shint">まだありません．問題の記述に ○× をつけて答え合わせをすると，ここに集まります．</p>';
     else h += '<ul class="wlist">' + W.slice(0, 20).map(function (o) {
       var r = ST[o.k];
-      return '<li data-id="' + o.id + '"><div class="wm"><span>' + o.it.ch + '–' + o.it.n + '　' + o.it.y + '年度 ' + esc(o.it.ex) + '</span><span><b>×' + r[1] + '</b>　○' + r[0] + '</span><span>正解：' + (o.v ? '○ 正しい' : '× 誤り') + '</span></div>' +
+      return '<li data-id="' + o.id + '"><div class="wm"><span>' + o.it.ch + '–' + o.it.n + '　' + esc(lbl(o.it)) + '</span><span><b>×' + r[1] + '</b>　○' + r[0] + '</span><span>正解：' + (o.v ? '○ 正しい' : '× 誤り') + '</span></div>' +
         '<div class="wt"><b>' + o.l + '</b> ' + (o.b ? blocks(o.b) : '（問題文・図を参照）') + '</div></li>';
     }).join('') + '</ul>';
     h += '<div class="bline">' + (W.length ? '<button type="button" id="wdrill">間違えた ' + W.length + ' 記述を一問一答</button>' : '') +
@@ -1373,13 +1384,14 @@
     $('oshiReset').onclick = function () { delete CFG.oc; delete CFG.ac; delete CFG.sk; mode = 'std'; save(); };
     sync();
     // お知らせ（はじめて開いたとき）
-    var NEWS = 'kisekae1', nn = $('newsNote');
+    var NEWS = 'ens1', nn = $('newsNote');
     var seen = ''; try { seen = localStorage.getItem('cfc-news') || ''; } catch (e) { }
     function done() { try { localStorage.setItem('cfc-news', NEWS); } catch (e) { } nn.hidden = true; }
     if (nn && seen !== NEWS) {
       nn.hidden = false;
       $('newsX').onclick = done;
-      $('newsGo').onclick = function () { done(); openCfg(); setTimeout(function () { var o = $('oshiSet'); if (o) o.scrollIntoView({ block: 'start', behavior: 'smooth' }); }, 60); };
+      $('newsGo').onclick = function () { done(); var b = document.querySelector('#srcsw button[data-s="ens"]'); if (b && SRC !== 'ens') b.click(); };
+      if (SRC === 'ens') nn.hidden = true;
     }
   })();
   cfg.addEventListener('click', function (e) { if (e.target === cfg) cfg.classList.remove('on'); });
@@ -1652,7 +1664,7 @@
     $('tdS').textContent = s ? '🔥 ' + s + '日連続' : '今日から始めよう';
     var it = LAST.id && BYID[LAST.id] && inC(BYID[LAST.id]) ? BYID[LAST.id] : null;
     $('tdCont').hidden = !it;
-    if (it) $('tdContL').textContent = it.ch + '–' + it.n + '　' + it.y + '年度 ' + it.ex;
+    if (it) $('tdContL').textContent = it.ch + '–' + it.n + '　' + lbl(it);
     var r = recTag();
     $('tdRec').hidden = !r;
     if (r) { $('tdRecL').textContent = '#' + TAGS[r.i] + '（' + r.why + '）から ' + Math.min(5, r.its.length) + ' 問'; $('tdRec').dataset.t = r.i; }
@@ -1707,7 +1719,29 @@
         location.reload();
       };
     });
-    document.body.classList.toggle('kiso', COURSE === 'kiso');
+    document.body.classList.toggle('kiso', COURSE === 'kiso' && SRC !== 'ens');
+    document.body.classList.toggle('ens', SRC === 'ens');
+    Array.prototype.forEach.call(document.querySelectorAll('#srcsw button'), function (b) {
+      b.classList.toggle('on', b.dataset.s === SRC);
+      b.onclick = function () {
+        if (b.dataset.s === SRC) return;
+        var c = ld('cfc-cfg', {}); c.src = b.dataset.s; sv('cfc-cfg', c);
+        history.replaceState(null, '', location.pathname + location.search + (b.dataset.s === 'ens' ? '#ch5' : '#ch1'));
+        location.reload();
+      };
+    });
+    if (SRC === 'ens') {
+      // 「出典」の代わりに「マーク」（頻出・未出題）で絞り込む
+      var rl = { kyotsu: '頻出', center: '未出題' };
+      Array.prototype.forEach.call(document.querySelectorAll('#fsrc button'), function (b) { if (rl[b.dataset.f]) { b.textContent = rl[b.dataset.f]; b.dataset.label = ''; } });
+      Array.prototype.forEach.call(document.querySelectorAll('input[name="src"],input[name="dsrc"]'), function (x) {
+        var sp = x.parentNode.querySelector('span'); if (rl[x.value] && sp) sp.textContent = rl[x.value] + 'のみ';
+        var lg = x.closest('fieldset') && x.closest('fieldset').querySelector('legend'); if (lg) lg.textContent = 'マーク';
+      });
+      var fl = document.querySelector('#fsrc') && document.querySelector('#fsrc').parentNode.querySelector('.fl'); if (fl) fl.textContent = 'マーク';
+      var it0 = $('introP'); if (it0) it0.innerHTML = '演習編：共通テスト（2021〜2026年度）の出題を分析した<b>予想問題</b>（理論・無機・有機）　全<span id="nAll"></span>問．各記述を ○× で判定してから「答え合わせ」．<br><small>頻出：共通テストで\u20093\u2009題以上出題されているテーマ／未出題：共通テストの正誤問題としてはまだ出題されていないテーマ</small>';
+      var cs = document.querySelector('.cv-sub'); if (cs) cs.textContent = '演習編　共通テスト対策の予想問題';
+    }
     var n = $('nAll'); if (n) n.textContent = D.filter(inC).length;
   })();
   // 書き出しのすすめ：記録が増えてきて，しばらく書き出していないとき
@@ -1752,7 +1786,7 @@
     var fresh = !CT.n && !Object.keys(marks).length && !Object.keys(ST).length;
     if (!fresh) { try { localStorage.setItem('cfc-guide', '1'); } catch (e) { } return; }   // すでに使っている人には出さない
     if (/^#import/.test(location.hash)) return;
-    var nn = $('newsNote'); if (nn) { nn.hidden = true; try { localStorage.setItem('cfc-news', 'kisekae1'); } catch (e) { } }   // 着せ替えのお知らせはガイドに含める
+    var nn = $('newsNote'); if (nn) { nn.hidden = true; try { localStorage.setItem('cfc-news', 'ens1'); } catch (e) { } }   // 新しい人にはお知らせを出さない（ガイドで紹介）
     setTimeout(openG, 350);
   })();
   fromHash();
