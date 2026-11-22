@@ -1582,7 +1582,27 @@
 
   // ================================================================ オフライン
   if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
-    window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
+    // 更新のお知らせ：新しい版が入ったら「更新する」を出す（はじめて入れたときは出さない）
+    var hadCtrl = !!navigator.serviceWorker.controller, updShown = false;
+    function showUpd() {
+      if (updShown) return; updShown = true;
+      var b = $('updBar'); if (!b) return;
+      b.hidden = false; requestAnimationFrame(function () { b.classList.add('on'); });
+      $('updGo').onclick = function () { location.reload(); };
+      $('updLater').onclick = function () { b.classList.remove('on'); setTimeout(function () { b.hidden = true; }, 250); };
+    }
+    window.CFC_showUpd = showUpd;   // テスト用
+    navigator.serviceWorker.addEventListener('controllerchange', function () { if (hadCtrl) showUpd(); hadCtrl = true; });
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('sw.js').then(function (reg) {
+        // 開き直したときや，しばらくして戻ってきたときに新しい版がないか確かめる
+        var last = Date.now();
+        document.addEventListener('visibilitychange', function () {
+          if (document.visibilityState === 'visible' && Date.now() - last > 60000) { last = Date.now(); reg.update().catch(function () {}); }
+        });
+        setInterval(function () { if (document.visibilityState === 'visible') reg.update().catch(function () {}); }, 30 * 60000);
+      }).catch(function () {});
+    });
   }
 
   // ---------------------------------------------------------------- 上部の帯：章ボタンと検索

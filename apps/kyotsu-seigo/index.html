@@ -136,7 +136,7 @@ try{var c=JSON.parse(localStorage.getItem("cfc-cfg")||"{}")||{},d=document.docum
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>化学ファイナルチェックお試し</title>
-<link rel="stylesheet" href="katex/katex.min.css?v=202611210355">
+<link rel="stylesheet" href="katex/katex.min.css?v=202611220839">
 <style>
 :root{--navy:#13254a;--teal:#1f4e8c;--amber:#d18f1f;--ink:#1f2328;--sub:#5b6270;--line:#e3e6ea;--line2:#cfd5dc;--bg:#f6f7f9;--card:#fff;--soft:#eef1f5;--glass:rgba(255,255,255,.97);--hd:#13254a;--onGold:#13254a;--navyD:#13254a;--ok:#1a7f4b;--ng:#c0392b;--okbg:#e8f5ee;--ngbg:#fbeceb;--fz:1}
 html[data-theme="dark"]{--ink:#e6e8ee;--sub:#9aa2b2;--line:#2c3446;--line2:#3a4357;--bg:#0f1420;--card:#171d2b;--soft:#222a3b;--glass:rgba(23,29,43,.97);--hd:#cdd9f3;--ok:#3fbf7f;--ng:#ff6b5e;--okbg:#14301f;--ngbg:#3a1b1b;--teal:#5b8fd9;--navyD:#2c5394;color-scheme:dark}
@@ -871,6 +871,14 @@ body.ens #course{display:none}
 .mkb{font-size:10.5px;font-weight:700;padding:1px 6px;border-radius:4px;margin-left:3px;color:#fff}
 .mkb.hin{background:#13254a}.mkb.mi{background:#0f7a6b}
 html[data-theme="dark"] .mkb.hin{background:#3b5aa0}
+
+/* ---- 更新のお知らせ ---- */
+.updbar{position:fixed;left:50%;top:calc(10px + env(safe-area-inset-top));transform:translate(-50%,-140%);z-index:60;display:flex;align-items:center;gap:8px;background:var(--card);color:var(--ink);border:1px solid var(--line2);border-radius:999px;padding:6px 6px 6px 14px;box-shadow:0 6px 20px rgba(0,0,0,.18);font-size:13.5px;font-weight:700;transition:transform .25s ease;white-space:nowrap}
+.updbar.on{transform:translate(-50%,0)}
+.updbar button{border:0;border-radius:999px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;background:var(--navy);color:#fff}
+.updbar button.sec{background:var(--soft);color:var(--ink)}
+.updbar[hidden]{display:none}
+@media (prefers-reduced-motion:reduce){.updbar{transition:none}}
 </style>
 </head>
 <body>
@@ -1095,6 +1103,7 @@ html[data-theme="dark"] .mkb.hin{background:#3b5aa0}
 <div class="sfoot"><span class="pn"></span><button type="button" id="cfgClose">閉じる</button></div>
 </div></div>
 
+<div class="updbar" id="updBar" hidden role="status"><span>🔄 新しい版があります</span><button type="button" id="updGo">更新する</button><button type="button" id="updLater" class="sec">あとで</button></div>
 <div class="setup" id="guide" role="dialog" aria-modal="true" aria-label="使い方">
 <div class="sbox gbox">
 <div class="gbody" id="gBody">
@@ -1108,10 +1117,14 @@ html[data-theme="dark"] .mkb.hin{background:#3b5aa0}
 <div class="gnav"><button type="button" id="gSkip" class="sec">スキップ</button><button type="button" id="gPrev" class="sec" hidden>← 戻る</button><button type="button" id="gNext">次へ →</button></div>
 </div></div>
 
-<script src="katex/katex.min.js?v=202611210355"></script>
-<script src="katex/mhchem.min.js?v=202611210355"></script>
-<script src="data.js?v=202611210355"></script>
-<script src="qrcode.js?v=202611210355" defer></script>
-<script src="app.js?v=202611210355"></script>
+<script src="katex/katex.min.js?v=202611220839"></script>
+<script src="katex/mhchem.min.js?v=202611220839"></script>
+<script>
+/* 問題データは，開いている側（過去問／演習編）の分だけ読み込む */
+(function () { var e = false; try { e = (JSON.parse(localStorage.getItem('cfc-cfg') || '{}') || {}).src === 'ens'; } catch (x) {}
+  document.write('<script src="' + (e ? 'data_e.js' : 'data.js') + '?v=202611220839"><\/script>'); })();
+</script>
+<script src="qrcode.js?v=202611220839" defer></script>
+<script src="app.js?v=202611220839"></script>
 </body>
 </html>
