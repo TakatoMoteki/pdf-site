@@ -11,10 +11,10 @@
   // コース：化学（全章）／化学基礎（第1〜3章）．記録はコースに関係なく共通
   var COURSE = 'chem';
   try { if ((JSON.parse(localStorage.getItem('cfc-cfg') || '{}') || {}).course === 'kiso') COURSE = 'kiso'; } catch (e) {}
-  // 過去問（kako）／演習編＝予想問題（ens）．演習編は化学の章だけ
+  // 過去問（kako）／演習編＝予想問題（ens）．どちらも「化学／化学基礎」のコースに従う
   var SRC = 'kako';
   try { if ((JSON.parse(localStorage.getItem('cfc-cfg') || '{}') || {}).src === 'ens') SRC = 'ens'; } catch (e) {}
-  function chIn(n) { return SRC === 'ens' ? n > KISO : (COURSE === 'chem' || n <= KISO); }
+  function chIn(n) { return COURSE === 'chem' || n <= KISO; }
   function inC(it) { return chIn(it.ch); }
   function firstCh() { for (var i = 1; i <= 10; i++) if (chIn(i)) return i; return 1; }
   var D = window.CFC_DATA.filter(function (it) { return SRC === 'ens' ? !!it.e : !it.e; });
@@ -115,7 +115,9 @@
     var again = false, back = false;
     (keys || []).forEach(function (k) { var r = ST[k]; if (!r) return; if (!ok && r[1] >= 2) again = true; if (ok && r[1] >= 1) back = true; });
     var t = CFC_OSHI.say(ok, { streak: STK.ok, down: STK.ng, again: again, back: back });
-    return t ? '<span class="praise' + (ok ? '' : ' ngp') + '">' + esc(t) + '</span>' : '';
+    if (!t) return '';
+    var ps = t.split('|');   // 連投（メンヘラ彼女）は吹き出しを分けて，少しずつ届く
+    return ps.map(function (x, i) { return '<span class="praise' + (ok ? '' : ' ngp') + (ps.length > 1 ? ' pm' : '') + (i === ps.length - 1 ? ' plast' : '') + '" style="animation-delay:' + (i * 0.35) + 's">' + esc(x) + '</span>'; }).join('');
   }
   function wqHTML(id) { var w = qW(id); return '<span class="wq' + (w >= 3 ? ' w3' : '') + '"' + (w ? '' : ' hidden') + ' title="間違えた回数">間違い ' + w + '回</span>'; }
   function wcHTML(id, s) { var w = sW(id, s); return '<span class="wc"' + (w ? '' : ' hidden') + ' title="この記述を間違えた回数">×' + w + '</span>'; }
@@ -1384,7 +1386,7 @@
     $('oshiReset').onclick = function () { delete CFG.oc; delete CFG.ac; delete CFG.sk; mode = 'std'; save(); };
     sync();
     // お知らせ（はじめて開いたとき）
-    var NEWS = 'ens1', nn = $('newsNote');
+    var NEWS = 'ens2', nn = $('newsNote');
     var seen = ''; try { seen = localStorage.getItem('cfc-news') || ''; } catch (e) { }
     function done() { try { localStorage.setItem('cfc-news', NEWS); } catch (e) { } nn.hidden = true; }
     if (nn && seen !== NEWS) {
@@ -1595,6 +1597,7 @@
     navigator.serviceWorker.addEventListener('controllerchange', function () { if (hadCtrl) showUpd(); hadCtrl = true; });
     window.addEventListener('load', function () {
       navigator.serviceWorker.register('sw.js').then(function (reg) {
+        if (!reg || !reg.update) return;
         // 開き直したときや，しばらくして戻ってきたときに新しい版がないか確かめる
         var last = Date.now();
         document.addEventListener('visibilitychange', function () {
@@ -1739,14 +1742,14 @@
         location.reload();
       };
     });
-    document.body.classList.toggle('kiso', COURSE === 'kiso' && SRC !== 'ens');
+    document.body.classList.toggle('kiso', COURSE === 'kiso');
     document.body.classList.toggle('ens', SRC === 'ens');
     Array.prototype.forEach.call(document.querySelectorAll('#srcsw button'), function (b) {
       b.classList.toggle('on', b.dataset.s === SRC);
       b.onclick = function () {
         if (b.dataset.s === SRC) return;
         var c = ld('cfc-cfg', {}); c.src = b.dataset.s; sv('cfc-cfg', c);
-        history.replaceState(null, '', location.pathname + location.search + (b.dataset.s === 'ens' ? '#ch5' : '#ch1'));
+        history.replaceState(null, '', location.pathname + location.search + '#ch1');
         location.reload();
       };
     });
@@ -1759,7 +1762,7 @@
         var lg = x.closest('fieldset') && x.closest('fieldset').querySelector('legend'); if (lg) lg.textContent = 'マーク';
       });
       var fl = document.querySelector('#fsrc') && document.querySelector('#fsrc').parentNode.querySelector('.fl'); if (fl) fl.textContent = 'マーク';
-      var it0 = $('introP'); if (it0) it0.innerHTML = '演習編：共通テスト（2021〜2026年度）の出題を分析した<b>予想問題</b>（理論・無機・有機）　全<span id="nAll"></span>問．各記述を ○× で判定してから「答え合わせ」．<br><small>頻出：共通テストで\u20093\u2009題以上出題されているテーマ／未出題：共通テストの正誤問題としてはまだ出題されていないテーマ</small>';
+      var it0 = $('introP'); if (it0) it0.innerHTML = '演習編：共通テスト（2021〜2026年度）の出題を分析した<b>予想問題</b>（' + (COURSE === 'kiso' ? '化学基礎' : '化学基礎・理論・無機・有機') + '）　全<span id="nAll"></span>問．各記述を ○× で判定してから「答え合わせ」．<br><small>頻出：共通テストで\u20093\u2009題以上出題されているテーマ／未出題：共通テストの正誤問題としてはまだ出題されていないテーマ</small>';
       var cs = document.querySelector('.cv-sub'); if (cs) cs.textContent = '演習編　共通テスト対策の予想問題';
     }
     var n = $('nAll'); if (n) n.textContent = D.filter(inC).length;
@@ -1806,7 +1809,7 @@
     var fresh = !CT.n && !Object.keys(marks).length && !Object.keys(ST).length;
     if (!fresh) { try { localStorage.setItem('cfc-guide', '1'); } catch (e) { } return; }   // すでに使っている人には出さない
     if (/^#import/.test(location.hash)) return;
-    var nn = $('newsNote'); if (nn) { nn.hidden = true; try { localStorage.setItem('cfc-news', 'ens1'); } catch (e) { } }   // 新しい人にはお知らせを出さない（ガイドで紹介）
+    var nn = $('newsNote'); if (nn) { nn.hidden = true; try { localStorage.setItem('cfc-news', 'ens2'); } catch (e) { } }   // 新しい人にはお知らせを出さない（ガイドで紹介）
     setTimeout(openG, 350);
   })();
   fromHash();

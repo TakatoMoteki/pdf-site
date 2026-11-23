@@ -25,6 +25,22 @@
       hard: ['また同じとこ…！今日こそ覚えよ？', 'これ前も間違えたよね？ メモしよ ✍︎', 'ゆめかわでも見逃せないやつ…！解説もう一回♡', '本番でやったら泣くやつ 🥲 ここで止めよ', '次も間違えたら…わかってるよね？♡（圧）'],
       // 3問以上続けて不正解のとき
       down: ['いったん深呼吸しよ☁︎ 解説ゆっくり読も', '連続ミスはつかれてるサインかも 🫧 ひと休みもあり', '落ち込まないで♡ 間違えた数だけ強くなる'] },
+    menhera: { name: 'メンヘラ彼女', P: '#2a1f27', A: '#b86fd6', bg: '#f7f1fc', card: '#ffffff', soft: '#efe3f8', line: '#e3d3f2', line2: '#2a1f27', ink: '#352a3e', sub: '#8a7499',
+      font: '"M PLUS Rounded 1c","Hiragino Maru Gothic ProN","Hiragino Sans",sans-serif', fontUrl: 'M+PLUS+Rounded+1c:wght@500;700;800&family=Hachi+Maru+Pop',
+      // 「|」で区切ると，吹き出しが続けて何個も届く（連投）
+      praise: ['正解♡ ねえ，それ私のために覚えたんだよね？', 'えらい♡ でもそのドヤ顔，ほかの子に見せないでね', '正解…！ 化学ばっかり見てないで私のことも見て？', 'すき|すき|正解するとこも全部すき♡',
+        '天才♡ ほかの参考書と浮気したら許さないからね', '正解！ 今のスクショして待ち受けにする♡', '覚えててくれたんだ…うれしくて既読つけたまま3時間ながめてた', 'えらいえらい♡ ずっと隣で見てるよ．ずっとね',
+        '正解♡ 今の解き方，私以外に教えちゃだめだよ', '完璧…♡ 合格したら一生一緒だよ？ 約束ね', '正解♡ 位置情報ずっとオンにしといてね', 'やっぱり私がいないとだめだね♡（正解だけど）'],
+      back: ['前は間違えてたのに…私のために覚えてくれたの？♡', 'リベンジ成功♡ 前に間違えたこと，私はずっと覚えてるけどね', '苦手克服…！こっそり復習してたの，全部知ってるよ♡ 全部ね', 'やっとわかってくれたね♡|ずっと待ってた|ずっと'],
+      combo: { 3: '3連続…♡ 今日は寝るまで一緒だよね？', 5: '5連続|すき|すき|好きが止まらないんだけど♡', 10: '10連続！ みんなに自慢したい…けどやっぱり私だけの秘密♡ 誰にも言わないで', 20: '20連続…！|もう一生離さない|離れようとしても無駄だよ♡' },
+      comboN: '連続…♡ ねえ，私のこと置いてかないでね',
+      ng: ['え…なんで間違えたの？ 私のこと考えてなかったでしょ', 'ちがうよ？|解説読んで|既読つけて|ねえ', 'ねえ，今ほかのこと考えてた？ 誰のこと？', '間違えてもいいよ♡ 私だけは味方だから．私だけはね',
+        '既読スルーみたいな解き方しないで 🥺', 'その記述，最後まで読んだ？ 私のLINEも最後まで読んでる？', 'もう…次は正解してくれるって信じてるから．信じてるからね？', '不正解…|もしかして|私に飽きた？'],
+      hard: ['これ前も間違えたよね？ 覚えてくれてないの…？', '同じとこ2回目…私との約束も忘れちゃうタイプ？', 'ねえ|なんで|なんで同じとこ間違えるの|解説読むまで寝かさないよ♡',
+        'また？ 今日はこの問題と私だけ見てて．ほかは見ないで', 'ノートに書いて？ 私の名前の横に♡', '何回目？ 数えてるよ．ちゃんと全部数えてるからね'],
+      down: ['ちょっと休も？ 疲れてる顔も好きだけど', '何回間違えても嫌いになんてならないよ♡ 絶対離れないから', 'いったん深呼吸…私はずっとここで待ってるから', '不安になってきた…|私のこと，嫌いになってないよね？'],
+      // 夜中（0〜4時）にときどき
+      night: ['こんな時間まで勉強？ 私には「おやすみ」もくれないのに', '夜ふかしするなら通話つないだままにして♡', '寝落ちするまで見張ってるね♡ …ほんとは早く寝てほしいけど'] },
     street: { name: 'ストリート', P: '#141414', A: '#ff2e88', bg: '#fbfbfa', card: '#ffffff', soft: '#f1f1f0', line: '#d9d9d7', line2: '#141414', ink: '#141414', sub: '#5f5f5c',
       font: '"Zen Kaku Gothic New","Hiragino Sans",sans-serif', latin: '"Anton","Impact",sans-serif', fontUrl: 'Anton&family=Zen+Kaku+Gothic+New:wght@500;700;900',
       praise: ['NICE. 正解，強すぎ', 'BOOM. 余裕', 'ガチ正解', 'さすがすぎる'] },
@@ -63,8 +79,9 @@
       if (!sk) return '';
       function pick(a) { return a && a.length ? a[Math.floor(Math.random() * a.length)] : ''; }
       if (ok) {
-        if (sk.combo && c.streak >= 3) { var cm = sk.combo[c.streak]; if (!cm && c.streak > 20 && c.streak % 10 === 0) cm = c.streak + '連続 ✧ もう止まらない♡'; if (cm) return cm; }
+        if (sk.combo && c.streak >= 3) { var cm = sk.combo[c.streak]; if (!cm && c.streak > 20 && c.streak % 10 === 0) cm = c.streak + (sk.comboN || '連続 ✧ もう止まらない♡'); if (cm) return cm; }
         if (sk.back && c.back) return pick(sk.back);
+        if (sk.night && new Date().getHours() < 4 && Math.random() < .3) return pick(sk.night);
         return pick(sk.praise);
       }
       if (!sk.ng) return '';
@@ -72,7 +89,7 @@
       if (c.down >= 3 && sk.down && c.down % 3 === 0) return pick(sk.down);
       return pick(sk.ng);
     },
-    praise: function () { var k = document.documentElement.getAttribute('data-skin'), sk = SKINS[k]; return sk ? sk.praise[Math.floor(Math.random() * sk.praise.length)] : ''; },
+    praise: function () { var k = document.documentElement.getAttribute('data-skin'), sk = SKINS[k]; return sk ? sk.praise[Math.floor(Math.random() * sk.praise.length)].split('|').join(' ') : ''; },
     apply: function (cfg) {
       var de = document.documentElement, st = de.style;
       var sk = cfg && SKINS[cfg.sk] ? SKINS[cfg.sk] : null;
@@ -116,7 +133,7 @@
       if (sk) {
         v['--bg'] = sk.bg; v['--card'] = sk.card; v['--soft'] = sk.soft; v['--line'] = sk.line; v['--line2'] = sk.line2; v['--ink'] = sk.ink; v['--sub'] = sk.sub;
         v['--glass'] = sk.card; v['--skin-font'] = sk.font; v['--skin-latin'] = sk.latin || sk.font;
-        if (P === '#141414' || P === '#2b2926') { v['--hd'] = P; v['--gc-ac'] = P; v['--gc-bt'] = P; v['--kr-fg'] = P; v['--ky-bg'] = P; v['--ky-bd'] = P; }
+        if (P === '#141414' || P === '#2b2926' || P === '#2a1f27') { v['--hd'] = P; v['--gc-ac'] = P; v['--gc-bt'] = P; v['--kr-fg'] = P; v['--ky-bg'] = P; v['--ky-bd'] = P; }
       }
       Object.keys(v).forEach(function (k) { st.setProperty(k, v[k]); });
       if (mt) mt.content = dark ? '#0f1420' : (sk ? sk.bg : Pp);
@@ -136,7 +153,7 @@ try{var c=JSON.parse(localStorage.getItem("cfc-cfg")||"{}")||{},d=document.docum
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>化学ファイナルチェックお試し</title>
-<link rel="stylesheet" href="katex/katex.min.css?v=202611220839">
+<link rel="stylesheet" href="katex/katex.min.css?v=202611230540">
 <style>
 :root{--navy:#13254a;--teal:#1f4e8c;--amber:#d18f1f;--ink:#1f2328;--sub:#5b6270;--line:#e3e6ea;--line2:#cfd5dc;--bg:#f6f7f9;--card:#fff;--soft:#eef1f5;--glass:rgba(255,255,255,.97);--hd:#13254a;--onGold:#13254a;--navyD:#13254a;--ok:#1a7f4b;--ng:#c0392b;--okbg:#e8f5ee;--ngbg:#fbeceb;--fz:1}
 html[data-theme="dark"]{--ink:#e6e8ee;--sub:#9aa2b2;--line:#2c3446;--line2:#3a4357;--bg:#0f1420;--card:#171d2b;--soft:#222a3b;--glass:rgba(23,29,43,.97);--hd:#cdd9f3;--ok:#3fbf7f;--ng:#ff6b5e;--okbg:#14301f;--ngbg:#3a1b1b;--teal:#5b8fd9;--navyD:#2c5394;color-scheme:dark}
@@ -717,6 +734,25 @@ html[data-skin="yume"] .res .praise{display:table;margin:6px 0 0}
 /* ---- スタイル共通 */
 html[data-skin] body{font-family:var(--skin-font)}
 html[data-skin] .cv-en{font-family:var(--skin-latin)}
+/* メンヘラ彼女（地雷系：黒×ピンク，ハート，リボン，連投LINE） */
+html[data-skin="menhera"] body{background-color:var(--bg);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48'%3E%3Cpath d='M12 16c-2-3-7-2-7 2 0 3 4 5 7 8 3-3 7-5 7-8 0-4-5-5-7-2z' fill='%23c595e8' fill-opacity='.45'/%3E%3Cpath d='M36 40c-1.4-2.1-5-1.4-5 1.4 0 2.1 2.8 3.5 5 5.6 2.2-2.1 5-3.5 5-5.6 0-2.8-3.6-3.5-5-1.4z' fill='%232a1f27' fill-opacity='.22'/%3E%3Cpath d='M36 6l-1.6 3 2.2 2-2.2 3' stroke='%232a1f27' stroke-opacity='.0' fill='none'/%3E%3C/svg%3E");background-size:48px 48px}
+html[data-skin="menhera"] .card,html[data-skin="menhera"] .chc,html[data-skin="menhera"] .act,html[data-skin="menhera"] .tsec .tgrp,html[data-skin="menhera"] .dcard,html[data-skin="menhera"] .result{border:1.5px solid var(--line2);border-radius:16px;box-shadow:4px 4px 0 #d8b6f0}
+html[data-skin="menhera"] .card,html[data-skin="menhera"] .dcard{outline:1.5px dashed #d8b6f0;outline-offset:-6px}
+html[data-skin="menhera"] .chc.on{box-shadow:4px 4px 0 var(--gold)}
+html[data-skin="menhera"] .reveal,html[data-skin="menhera"] .dnext,html[data-skin="menhera"] .go-run,html[data-skin="menhera"] .chbtn,html[data-skin="menhera"] .nbar .sbtn,html[data-skin="menhera"] .seg{border-radius:999px}
+html[data-skin="menhera"] .chsec .sech::before{content:"🖤 "}
+html[data-skin="menhera"] .chsec .sech::after{content:" 🎀"}
+html[data-skin="menhera"] .cv-en{color:var(--navy);letter-spacing:.02em}
+html[data-skin="menhera"] .cv-en em{color:var(--gold);font-family:"Hachi Maru Pop",var(--skin-font)}
+html[data-skin="menhera"] .praise{background:#2a1f27;color:#efe4fa;border-radius:18px 18px 18px 4px;padding:6px 14px;font-size:13.5px;line-height:1.55;font-weight:400;font-family:"Hachi Maru Pop",var(--skin-font);position:relative;animation:mhIn .35s ease-out both}
+html[data-skin="menhera"] .praise.ngp{background:#efe4fa;color:#2a1f27;border:1.5px solid #2a1f27}
+html[data-skin="menhera"] .praise.pm:not(.plast)::after{content:none}
+html[data-skin="menhera"] .praise::after{content:"既読";position:absolute;right:-30px;bottom:1px;font-size:10px;font-family:var(--skin-font);color:var(--sub)}
+html[data-skin="menhera"] .praise.ngp.plast::after,html[data-skin="menhera"] .praise.ngp:not(.pm)::after{content:"既読 💔";right:-46px}
+html[data-skin="menhera"] .res .praise,html[data-skin="menhera"] .dv .praise{display:table;margin:6px 50px 0 0}
+html[data-skin="menhera"] .res .praise.pm+.praise.pm,html[data-skin="menhera"] .dv .praise.pm+.praise.pm{margin-top:3px}
+@keyframes mhIn{from{opacity:0;transform:translateY(6px) scale(.96)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){html[data-skin="menhera"] .praise{animation:none}}
 /* ゆめかわ */
 html[data-skin="yume"] body{background-color:var(--bg);background-image:radial-gradient(#f7c6df 1.2px,transparent 1.5px),radial-gradient(#d9ccf6 1.2px,transparent 1.5px);background-size:26px 26px,26px 26px;background-position:0 0,13px 13px}
 html[data-skin="yume"] .card,html[data-skin="yume"] .chc,html[data-skin="yume"] .act,html[data-skin="yume"] .tsec .tgrp,html[data-skin="yume"] .dcard,html[data-skin="yume"] .result{border-radius:20px;border-width:1.5px}
@@ -779,6 +815,7 @@ html[data-skin="yume"] .kpv-card,html[data-skin="k1"] .kpv-card{border-radius:16
 html[data-skin="yume"] .kpv-go,html[data-skin="yume"] .kpv-ch,html[data-skin="yume"] .kpv-sb,html[data-skin="k1"] .kpv-go,html[data-skin="k1"] .kpv-ch,html[data-skin="k1"] .kpv-sb{border-radius:999px}
 html[data-skin="yume"] .kpv-bd{background-image:radial-gradient(#f7c6df 1.2px,transparent 1.5px),radial-gradient(#d9ccf6 1.2px,transparent 1.5px);background-size:20px 20px;background-position:0 0,10px 10px}
 html[data-skin="k1"] .kpv-bd{background-image:linear-gradient(90deg,rgba(168,200,232,.2) 50%,transparent 50%),linear-gradient(rgba(168,200,232,.2) 50%,transparent 50%);background-size:16px 16px}
+html[data-skin="menhera"] .kpv-card{border:1.5px solid #2a1f27;border-radius:14px;box-shadow:2px 2px 0 #dcc6f3}html[data-skin="menhera"] .kpv-go,html[data-skin="menhera"] .kpv-ch,html[data-skin="menhera"] .kpv-sb{border-radius:999px}html[data-skin="menhera"] .kpv-bd{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='44'%3E%3Cpath d='M11 15c-2-3-7-2-7 2 0 3 4 5 7 8 3-3 7-5 7-8 0-4-5-5-7-2z' fill='%23d8b6f0' fill-opacity='.55'/%3E%3Cpath d='M33 37c-1.3-2-4.6-1.3-4.6 1.3 0 2 2.6 3.3 4.6 5.3 2-2 4.6-3.3 4.6-5.3 0-2.6-3.3-3.3-4.6-1.3z' fill='%232a1f27' fill-opacity='.12'/%3E%3C/svg%3E");background-size:34px 34px}
 html[data-skin="street"] .kpv-card{border:1.5px solid #141414;border-radius:3px;box-shadow:3px 3px 0 var(--gold)}
 html[data-skin="street"] .kpv-go,html[data-skin="street"] .kpv-ch,html[data-skin="street"] .kpv-sb{border-radius:3px}
 html[data-skin="street"] .kpv-hd b{font-family:var(--skin-latin);letter-spacing:.02em}
@@ -866,7 +903,6 @@ html[data-theme="dark"] .gnav button:not(.sec),html[data-theme="dark"] .gdots i.
 /* ---- 演習編（予想問題） ---- */
 .srcsw{margin-top:14px}
 .srcsw+.course{margin-top:8px}
-body.ens #course{display:none}
 .badge.e{background:#5b4a8a;color:#fff}
 .mkb{font-size:10.5px;font-weight:700;padding:1px 6px;border-radius:4px;margin-left:3px;color:#fff}
 .mkb.hin{background:#13254a}.mkb.mi{background:#0f7a6b}
@@ -895,7 +931,7 @@ html[data-theme="dark"] .mkb.hin{background:#3b5aa0}
 <div class="cv-rule"></div>
 <h1>化学<small>ファイナルチェック</small></h1>
 <p class="cv-sub">共通テスト・センター試験　正誤問題の分野別整理</p>
-<div class="course srcsw" id="srcsw" role="group" aria-label="問題の種類"><button type="button" data-s="kako"><b>過去問</b><small>共テ・センター　正誤問題</small></button><button type="button" data-s="ens"><b>演習編</b><small>予想問題　理論・無機・有機</small></button></div>
+<div class="course srcsw" id="srcsw" role="group" aria-label="問題の種類"><button type="button" data-s="kako"><b>過去問</b><small>共テ・センター　正誤問題</small></button><button type="button" data-s="ens"><b>演習編</b><small>予想問題　基礎・理論・無機・有機</small></button></div>
 <div class="course" id="course" role="group" aria-label="コース"><button type="button" data-c="chem"><b>化学</b><small>化学基礎＋化学　全10章</small></button><button type="button" data-c="kiso"><b>化学基礎</b><small>化学基礎のみ　第1〜4章</small></button></div>
 <div class="today" id="todayBox">
 <div class="td-top"><span class="td-l">今日</span><span class="td-n"><b id="tdN">0</b> / <select id="tdGoalSel" aria-label="1日の目標"><option value="10">10</option><option value="20">20</option><option value="30">30</option><option value="50">50</option><option value="100">100</option></select> 問</span><span class="td-k" id="tdK" hidden></span><span class="td-s" id="tdS"></span></div>
@@ -909,11 +945,11 @@ html[data-theme="dark"] .mkb.hin{background:#3b5aa0}
 <button type="button" class="act" id="goStats"><span class="ai">📊</span><span><b>成績</b><small>章別・単元別</small></span></button>
 <button type="button" class="act" id="goCfg"><span class="ai">⚙️</span><span><b>設定</b><small>文字・画面・引き継ぎ</small></span></button>
 </div>
-<div class="bknote news" id="newsNote" hidden><span class="bki">📘</span><span class="bkt"><b>NEW　演習編</b>共通テストの出題を分析した予想問題（理論・無機・有機）を追加しました．上の「演習編」に切り替えると，過去問と同じように ○× で解けます．記録や復習は過去問と別に管理されます．</span><span class="bkb"><button type="button" id="newsGo">演習編を開く</button><button type="button" id="newsX" class="sec">閉じる</button></span></div>
+<div class="bknote news" id="newsNote" hidden><span class="bki">📘</span><span class="bkt"><b>NEW　演習編に化学基礎</b>演習編（共通テストの出題を分析した予想問題）に，化学基礎の 61 問を追加しました．上の「演習編」に切り替え，「化学／化学基礎」でコースを選べます．記録や復習は過去問と別に管理されます．</span><span class="bkb"><button type="button" id="newsGo">演習編を開く</button><button type="button" id="newsX" class="sec">閉じる</button></span></div>
 <div class="bknote" id="bkNote" hidden><span class="bki">💾</span><span class="bkt"><b>記録のバックアップ</b><span id="bkText"></span></span><span class="bkb"><button type="button" id="bkGo">書き出す</button><button type="button" id="bkLater" class="sec">あとで</button></span></div>
 <div class="cv-band"></div>
 </div></header>
-<div class="intro"><p id="introP"><span class="ichem">化学：共通テスト 2021〜2026（本試・追試）／センター試験 2015〜2020（本試・追試），</span>化学基礎：共通テスト 2021〜2026（本試・追試）／センター試験 2015〜2020（本試・追試）　全<span id="nAll">546</span>問．各記述を ○× で判定してから「答え合わせ」．</p>
+<div class="intro"><p id="introP"><span class="ichem">化学：共通テスト 2021〜2026（本試・追試）／センター試験 2015〜2020（本試・追試），</span>化学基礎：共通テスト 2021〜2026（本試・追試）／センター試験 2015〜2020（本試・追試）　全<span id="nAll">607</span>問．各記述を ○× で判定してから「答え合わせ」．</p>
 <details><summary>（改）とある問題について</summary>見出しに（改）とある問題は，誤りを含む記述の数が問題ごとにばらばらになるように記述を改め，各記述に ○× をつける形式にした改題です．</details></div>
 <section class="chsec"><div class="sech">分野を選ぶ</div><div class="chgrid" id="chgrid"></div></section>
 <section class="chsec tsec" id="tsec"><div class="sech">#単元から選ぶ<small>章をまたいで，単元ごとに問題を集めます．いくつでも選べます</small></div><div id="tagwrap"></div></section>
@@ -1117,14 +1153,14 @@ html[data-theme="dark"] .mkb.hin{background:#3b5aa0}
 <div class="gnav"><button type="button" id="gSkip" class="sec">スキップ</button><button type="button" id="gPrev" class="sec" hidden>← 戻る</button><button type="button" id="gNext">次へ →</button></div>
 </div></div>
 
-<script src="katex/katex.min.js?v=202611220839"></script>
-<script src="katex/mhchem.min.js?v=202611220839"></script>
+<script src="katex/katex.min.js?v=202611230540"></script>
+<script src="katex/mhchem.min.js?v=202611230540"></script>
 <script>
 /* 問題データは，開いている側（過去問／演習編）の分だけ読み込む */
 (function () { var e = false; try { e = (JSON.parse(localStorage.getItem('cfc-cfg') || '{}') || {}).src === 'ens'; } catch (x) {}
-  document.write('<script src="' + (e ? 'data_e.js' : 'data.js') + '?v=202611220839"><\/script>'); })();
+  document.write('<script src="' + (e ? 'data_e.js' : 'data.js') + '?v=202611230540"><\/script>'); })();
 </script>
-<script src="qrcode.js?v=202611220839" defer></script>
-<script src="app.js?v=202611220839"></script>
+<script src="qrcode.js?v=202611230540" defer></script>
+<script src="app.js?v=202611230540"></script>
 </body>
 </html>
