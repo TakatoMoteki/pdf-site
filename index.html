@@ -353,5 +353,20 @@ header{animation:fadeDown .9s cubic-bezier(.2,.8,.2,1) both}
     load();
 
   </script>
+<script>
+/* 隠しジェスチャー：タイトルを2秒以内に5回タップでプリント置き場へ */
+(function(){
+  var t = document.querySelector('header h1') || document.querySelector('h1');
+  if (!t) return;
+  var n = 0, timer = null;
+  t.style.webkitUserSelect = 'none'; t.style.userSelect = 'none';
+  t.addEventListener('click', function(){
+    n++;
+    clearTimeout(timer);
+    timer = setTimeout(function(){ n = 0; }, 2000);
+    if (n >= 5) { n = 0; location.href = 'temp/'; }
+  });
+})();
+</script>
 </body>
 </html>
