@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta name="theme-color" content="#fafaf7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0d0e14" media="(prefers-color-scheme: dark)">
+<title>プリント置き場</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#fafaf7;--surface:#ffffff;--ink:#16171f;--ink-soft:#6b6d7c;--grid:rgba(20,22,40,0.09);--line:#e8e6df;--accent:#1f9d6b;--accent-soft:rgba(31,157,107,0.10);--danger:#d6452f;--shadow:0 2px 12px rgba(20,22,40,0.05);--shadow-lift:0 18px 48px rgba(20,22,40,0.14)}
+[data-theme="dark"]{--paper:#0d0e14;--surface:#161824;--ink:#ececf2;--ink-soft:#8b8da3;--grid:rgba(180,190,255,0.085);--line:#262838;--accent:#4fd19a;--accent-soft:rgba(79,209,154,0.12);--danger:#ff7a64;--shadow:0 2px 12px rgba(0,0,0,0.3);--shadow-lift:0 18px 48px rgba(0,0,0,0.55)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:"Zen Kaku Gothic New",-apple-system,sans-serif;background:var(--paper);color:var(--ink);min-height:100vh;background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:26px 26px;transition:background-color .4s,color .4s}
+header{padding:22px 40px;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:100;background:color-mix(in srgb,var(--paper) 80%,transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.title-row{display:flex;align-items:center;gap:14px}
+.title-symbol{font-family:"Space Grotesk",sans-serif;font-size:34px;font-weight:700;color:var(--accent);line-height:1;letter-spacing:-.03em;text-shadow:0 0 22px var(--accent)}
+h1{font-size:24px;font-weight:700}
+.meta{font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--ink-soft);margin-top:6px}
+.icon-btn{height:44px;min-width:44px;border-radius:13px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.container{max-width:860px;margin:0 auto;padding:40px 32px 80px}
+.drop{border:2px dashed var(--accent);border-radius:18px;padding:36px 20px;text-align:center;background:var(--accent-soft);cursor:pointer;margin-bottom:14px;transition:transform .2s,background .2s}
+.drop.over{transform:scale(1.02);background:color-mix(in srgb,var(--accent) 22%,transparent)}
+.drop strong{display:block;font-size:17px;margin-bottom:6px}
+.drop span{font-size:12px;color:var(--ink-soft)}
+.status{font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--ink-soft);margin-bottom:20px;display:flex;flex-direction:column;gap:4px}
+.admin-bar{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--ink-soft);margin-bottom:16px}
+.admin-bar button{background:none;border:none;color:var(--ink-soft);text-decoration:underline;cursor:pointer;font-family:inherit;font-size:12px}
+.list{display:flex;flex-direction:column;gap:12px}
+.item{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px;box-shadow:var(--shadow);transition:transform .2s,box-shadow .2s;animation:fadeUp .6s cubic-bezier(.2,.8,.2,1) both}
+.item:hover{transform:translateY(-2px);box-shadow:var(--shadow-lift),0 0 0 1px var(--accent)}
+.info{display:flex;align-items:center;gap:14px;min-width:0;flex:1}
+.mark{width:42px;height:42px;border-radius:11px;background:var(--accent-soft);color:var(--accent);display:flex;align-items:center;justify-content:center;font-family:"Space Grotesk",monospace;font-weight:700;font-size:12px;flex-shrink:0}
+.name{font-size:15px;font-weight:500;word-break:break-word}
+.fmeta{font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--ink-soft);margin-top:3px}
+.actions{display:flex;gap:8px;flex-shrink:0}
+.btn{padding:9px 16px;border-radius:10px;border:1px solid transparent;font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;font-family:inherit;text-align:center}
+.btn:disabled{opacity:.5;cursor:wait}
+.btn-view{background:var(--accent);color:#fff}
+.btn-dl{background:transparent;color:var(--ink-soft);border-color:var(--line)}
+.btn-del{background:transparent;color:var(--danger);border-color:var(--line)}
+.empty{padding:60px 20px;text-align:center;color:var(--ink-soft)}
+.spinner{display:inline-block;width:30px;height:30px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+.lock{max-width:400px;margin:60px auto 0;background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:32px 28px;box-shadow:var(--shadow-lift)}
+.lock h3{font-size:18px;margin-bottom:10px}
+.lock p{font-size:12px;color:var(--ink-soft);line-height:1.7;margin-bottom:16px}
+.lock input{width:100%;padding:14px 16px;border-radius:12px;border:1px solid var(--line);font-size:15px;background:var(--paper);color:var(--ink);margin-bottom:12px;font-family:"JetBrains Mono",monospace}
+.lock .err{color:var(--danger);font-size:12px;margin-bottom:10px;display:none}
+.lock .btn{width:100%}
+.hidden{display:none!important}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:600px){header{padding:16px 20px}.container{padding:24px 18px 60px}.item{flex-direction:column;align-items:stretch;gap:10px}.actions .btn{flex:1;padding:8px}.name{font-size:13px}}
+@media(prefers-reduced-motion:reduce){.item,.spinner{animation:none}}
+</style>
+</head>
+<body>
+<header>
+  <div class="title-row"><span class="title-symbol">Tmp</span><div><h1>プリント置き場</h1><div class="meta" id="meta">管理者専用</div></div></div>
+  <button class="icon-btn" id="theme-toggle" title="テーマ切り替え">🌙</button>
+</header>
+<div class="container">
+  <div class="lock hidden" id="lock">
+    <h3>管理者専用ページ</h3>
+    <p>アクセス用トークン（print-box の Contents 読み書き権限）を貼り付けてください。この端末のブラウザにだけ保存されます。</p>
+    <div class="err" id="tok-err"></div>
+    <input type="password" id="tok-in" placeholder="github_pat_..." autocomplete="off">
+    <button class="btn btn-view" id="tok-save">開く</button>
+  </div>
+  <div class="hidden" id="main">
+    <div class="admin-bar"><span>非公開リポジトリ：print-box</span><button id="logout">この端末からトークンを削除</button></div>
+    <div class="drop" id="drop">
+      <strong>📥 PDFをここにドラッグ＆ドロップ</strong>
+      <span>またはタップしてファイルを選択（複数可）</span>
+      <input type="file" id="file" accept="application/pdf,.pdf" multiple hidden>
+    </div>
+    <div class="status" id="status"></div>
+    <div class="list" id="list"><div class="empty"><span class="spinner"></span></div></div>
+  </div>
+</div>
+<script>
+(function(){
+var OWNER='TakatoMoteki', REPO='print-box', BRANCH='main', DIR='files', KEY='printbox-gh-token';
+var API='https://api.github.com/repos/'+OWNER+'/'+REPO;
+function $(id){return document.getElementById(id)}
+function store(k,v){try{if(v===undefined)return localStorage.getItem(k);if(v===null)localStorage.removeItem(k);else localStorage.setItem(k,v)}catch(e){return null}}
+function applyTheme(t){document.documentElement.setAttribute('data-theme',t);$('theme-toggle').textContent=t==='dark'?'☀️':'🌙';store('pdf-site-theme',t)}
+applyTheme(store('pdf-site-theme')||(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'));
+$('theme-toggle').onclick=function(){applyTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark')};
+function tok(){return store(KEY)||''}
+function encPath(p){return p.split('/').map(encodeURIComponent).join('/')}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function human(b){b=+b||0;if(b>=1048576)return(b/1048576).toFixed(1)+' MB';if(b>=1024)return Math.round(b/1024)+' KB';return b+' B'}
+function nowStr(){var d=new Date(),p=function(n){return String(n).padStart(2,'0')};return d.getFullYear()+'/'+p(d.getMonth()+1)+'/'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes())}
+function b64ToUtf8(b){var bin=atob(b.replace(/\s/g,''));var u=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return new TextDecoder().decode(u)}
+function utf8ToB64(s){var u=new TextEncoder().encode(s),bin='';for(var i=0;i<u.length;i++)bin+=String.fromCharCode(u[i]);return btoa(bin)}
+function fileToB64(f){return new Promise(function(res,rej){var fr=new FileReader();fr.onload=function(){res(String(fr.result).split(',')[1])};fr.onerror=rej;fr.readAsDataURL(f)})}
+function addStatus(t){var d=document.createElement('div');d.textContent=t;$('status').appendChild(d);return d}
+async function gh(path,opts){
+  opts=opts||{};
+  var h={'Accept':opts.raw?'application/vnd.github.raw':'application/vnd.github+json','Authorization':'Bearer '+tok()};
+  if(opts.body)h['Content-Type']='application/json';
+  var url=API+'/contents/'+encPath(path)+(opts.method?'':'?ref='+BRANCH);
+  var r=await fetch(url,{method:opts.method||'GET',headers:h,body:opts.body,cache:'no-store'});
+  if(!r.ok){var m='';try{m=(await r.json()).message}catch(e){}var err=new Error(r.status+' '+m);err.status=r.status;throw err}
+  if(opts.raw)return r.blob();
+  return r.status===204?null:r.json();
+}
+async function readList(){
+  try{var j=await gh(DIR+'/list.json');return{data:JSON.parse(b64ToUtf8(j.content)),sha:j.sha}}
+  catch(e){if(e.status===404)return{data:{files:[]},sha:null};throw e}
+}
+async function updateList(fn,msg){
+  for(var i=0;i<3;i++){
+    try{
+      var L=await readList();
+      L.data.files=fn(L.data.files||[]);
+      var body={message:msg,content:utf8ToB64(JSON.stringify(L.data,null,1)),branch:BRANCH};
+      if(L.sha)body.sha=L.sha;
+      await gh(DIR+'/list.json',{method:'PUT',body:JSON.stringify(body)});
+      return;
+    }catch(e){if((e.status!==409&&e.status!==422)||i===2)throw e}
+  }
+}
+var busy=false;
+async function upload(files){
+  if(busy)return;busy=true;
+  var list=Array.prototype.slice.call(files||[]);
+  for(var k=0;k<list.length;k++){
+    var f=list[k];
+    if(!/\.pdf$/i.test(f.name)){addStatus(f.name+'：PDFではないのでスキップ');continue}
+    var name=f.name.normalize('NFC').replace(/[\/\\]/g,'_');
+    var row=addStatus(name+'：アップロード中…');
+    try{
+      var b64=await fileToB64(f);
+      var sha=null;
+      try{sha=(await gh(DIR+'/'+name)).sha}catch(e){if(e.status!==404)throw e}
+      var body={message:'upload '+name,content:b64,branch:BRANCH};
+      if(sha)body.sha=sha;
+      await gh(DIR+'/'+name,{method:'PUT',body:JSON.stringify(body)});
+      var size=f.size,when=nowStr();
+      await updateList(function(fs){fs=fs.filter(function(x){return x.name!==name});fs.unshift({name:name,size:size,uploaded:when});return fs},'list add '+name);
+      row.textContent=name+'：✅ 完了';
+    }catch(e){row.textContent=name+'：❌ 失敗（'+e.message+'）'}
+  }
+  busy=false;render();
+}
+async function openFile(name,btn,download){
+  var win=download?null:window.open('','_blank');
+  btn.disabled=true;var label=btn.textContent;btn.textContent='…';
+  try{
+    var blob=await gh(DIR+'/'+name,{raw:true});
+    var url=URL.createObjectURL(new Blob([blob],{type:'application/pdf'}));
+    if(download){var a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove()}
+    else if(win){win.location.href=url}else{location.href=url}
+    setTimeout(function(){URL.revokeObjectURL(url)},60000);
+  }catch(e){if(win)win.close();alert('取得に失敗しました：'+e.message)}
+  btn.disabled=false;btn.textContent=label;
+}
+async function del(name){
+  if(!confirm(name+' を削除しますか？'))return;
+  try{
+    var j=await gh(DIR+'/'+name);
+    await gh(DIR+'/'+name,{method:'DELETE',body:JSON.stringify({message:'delete '+name,sha:j.sha,branch:BRANCH})});
+  }catch(e){if(e.status!==404){alert('削除に失敗しました：'+e.message);return}}
+  try{await updateList(function(fs){return fs.filter(function(x){return x.name!==name})},'list remove '+name)}
+  catch(e){alert('一覧の更新に失敗しました：'+e.message)}
+  render();
+}
+async function render(){
+  var el=$('list');
+  try{
+    var files=(await readList()).data.files||[];
+    $('meta').textContent=files.length+' files';
+    if(!files.length){el.innerHTML='<div class="empty">まだプリントはありません</div>';return}
+    el.innerHTML=files.map(function(f,i){
+      return '<div class="item"><div class="info"><div class="mark">PDF</div><div style="min-width:0">'+
+        '<div class="name">'+esc(f.name)+'</div><div class="fmeta">'+human(f.size)+(f.uploaded?' · '+esc(f.uploaded):'')+'</div></div></div>'+
+        '<div class="actions"><button class="btn btn-view" data-i="'+i+'">閲覧</button>'+
+        '<button class="btn btn-dl" data-i="'+i+'">DL</button>'+
+        '<button class="btn btn-del" data-i="'+i+'">削除</button></div></div>';
+    }).join('');
+    el.querySelectorAll('.btn-view').forEach(function(b){b.onclick=function(){openFile(files[b.dataset.i].name,b,false)}});
+    el.querySelectorAll('.btn-dl').forEach(function(b){b.onclick=function(){openFile(files[b.dataset.i].name,b,true)}});
+    el.querySelectorAll('.btn-del').forEach(function(b){b.onclick=function(){del(files[b.dataset.i].name)}});
+  }catch(e){
+    if(e.status===401){store(KEY,null);show();return}
+    el.innerHTML='<div class="empty">読み込みに失敗しました（'+esc(e.message)+'）</div>';
+  }
+}
+function show(){
+  var on=!!tok();
+  $('lock').classList.toggle('hidden',on);
+  $('main').classList.toggle('hidden',!on);
+  if(on)render();else $('meta').textContent='管理者専用';
+}
+$('tok-save').onclick=async function(){
+  var t=$('tok-in').value.trim();if(!t)return;
+  try{
+    var r=await fetch(API,{headers:{'Accept':'application/vnd.github+json','Authorization':'Bearer '+t},cache:'no-store'});
+    var j=await r.json();
+    if(!r.ok)throw new Error('トークンが無効か、print-box へのアクセス権がありません（'+r.status+'）');
+    if(j.permissions&&!j.permissions.push)throw new Error('書き込み権限がありません');
+    store(KEY,t);$('tok-in').value='';$('tok-err').style.display='none';show();
+  }catch(e){$('tok-err').textContent=e.message;$('tok-err').style.display='block'}
+};
+$('tok-in').addEventListener('keydown',function(e){if(e.key==='Enter')$('tok-save').click()});
+$('logout').onclick=function(){if(confirm('この端末からトークンを削除しますか？')){store(KEY,null);show()}};
+var drop=$('drop');
+drop.onclick=function(){$('file').click()};
+$('file').onchange=function(){var fs=Array.prototype.slice.call(this.files);this.value='';upload(fs)};
+['dragenter','dragover'].forEach(function(ev){drop.addEventListener(ev,function(e){e.preventDefault();drop.classList.add('over')})});
+['dragleave','drop'].forEach(function(ev){drop.addEventListener(ev,function(e){e.preventDefault();drop.classList.remove('over')})});
+drop.addEventListener('drop',function(e){upload(e.dataTransfer.files)});
+window.addEventListener('dragover',function(e){e.preventDefault()});
+window.addEventListener('drop',function(e){e.preventDefault();if(tok()&&!drop.contains(e.target))upload(e.dataTransfer.files)});
+show();
+})();
+</script>
+</body>
+</html>
