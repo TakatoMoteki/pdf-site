@@ -57,7 +57,7 @@ while read rel_folder; do
   find "$src_sub" -maxdepth 1 \( -name "*.pdf" -o -name "*.PDF" \) | while read src_pdf; do
     raw_filename=$(basename "$src_pdf")
     # サニタイズ: .pdf.pdf を .pdf にし、絵文字や一部の特殊記号を削除
-    clean_name=$(echo "$raw_filename" | sed 's/\.pdf\.pdf$/.pdf/i' | perl -CS -pe 's/[\x{10000}-\x{10FFFF}\x{25FB}\x{FE0F}]//g')
+    clean_name=$(echo "$raw_filename" | sed 's/\.pdf\.pdf$/.pdf/i' | perl -CS -MUnicode::Normalize -pe 's/[\x{10000}-\x{10FFFF}\x{25FB}\x{FE0F}]//g; $_=NFC($_)')
     
     dst_pdf="$dst_sub/$clean_name"
     if [ -f "$dst_pdf" ]; then
@@ -77,7 +77,7 @@ while read rel_folder; do
     > .found_check
     find "$src_sub" -maxdepth 1 \( -name "*.pdf" -o -name "*.PDF" \) | while read src_pdf; do
       raw_src=$(basename "$src_pdf")
-      clean_src=$(echo "$raw_src" | sed 's/\.pdf\.pdf$/.pdf/i' | perl -CS -pe 's/[\x{10000}-\x{10FFFF}\x{25FB}\x{FE0F}]//g')
+      clean_src=$(echo "$raw_src" | sed 's/\.pdf\.pdf$/.pdf/i' | perl -CS -MUnicode::Normalize -pe 's/[\x{10000}-\x{10FFFF}\x{25FB}\x{FE0F}]//g; $_=NFC($_)')
       if [ "$clean_src" = "$dst_filename" ]; then
         echo "1" > .found_check
         break
